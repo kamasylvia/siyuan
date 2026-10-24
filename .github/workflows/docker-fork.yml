@@ -100,9 +100,9 @@ jobs:
             echo "app/package.json version does not match kernel Ver; mac client remote connection requires equality"
             exit 1
           }
+          # Docker 部署模式强制要求鉴权；smoke 容器为一次性隔离环境，显式绕过以便裸起内核
           docker run -d --name smoke-${{ matrix.id }} -p 6806:6806 \
             -e PUID=1000 -e PGID=1000 \
-            # Docker 部署模式强制要求鉴权；smoke 容器为一次性隔离环境，显式绕过以便裸起内核
             -e SIYUAN_ACCESS_AUTH_CODE_BYPASS=true \
             -v "$RUNNER_TEMP/smoke-workspace:/siyuan/workspace" \
             "${IMAGE}:${{ matrix.id }}-${{ github.run_id }}"
