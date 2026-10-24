@@ -1,0 +1,197 @@
+name: Docker Image (fork)
+
+# fork 自用镜像构建：推送 GHCR，不依赖官方发布基础设施。
+# 官方 dockerimage.yml 保持不动（其 owner 门槛在 fork 上本就不触发），本文件独立演进。
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "镜像版本标签（不带 v 前缀，如 3.8.8-fork.1）；留空时用分支名（/ 替换为 -）"
+        required: false
+        type: string
+      platforms:
+        description: "构建平台，逗号分隔；arm64 需仓库可用 ubuntu-24.04-arm 运行器（私有仓可能不可用）"
+        required: false
+        type: string
+        default: "linux/amd64,linux/arm64"
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: fork-docker-image
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build:
+    name: Build ${{ matrix.id }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: amd64
+            platform: linux/amd64
+            runner: ubuntu-24.04
+          - id: arm64
+            platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    # 手动触发时可输入 platforms 收窄本次构建范围；tag 推送始终全量
+    if: ${{ github.event_name == 'push' || contains(inputs.platforms, matrix.platform) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      # 镜像标签必须与代码版本一致，防止 fork 未同步到该官方版本时打出错标镜像
+      - name: Validate requested version matches source
+        env:
+          REQUESTED: ${{ github.event_name == 'push' && github.ref_name || inputs.version }}
+        run: |
+          if [ -n "$REQUESTED" ]; then
+            version="${REQUESTED#v}"
+            package_version=$(jq -er .version app/package.json)
+            if [ "$version" != "$package_version" ]; then
+              echo "Requested version ($version) does not match package.json ($package_version); sync the fork to that official version first"
+              exit 1
+            fi
+          fi
+
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
+      - name: Compute lowercase image name
+        run: echo "IMAGE=${REGISTRY}/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ONNX 段随镜像从源码编译，层缓存在 GHCR buildcache 标签上：
+      # 首次构建很慢（ONNX 编译数十分钟），后续命中缓存后只重建变更层
+      - name: Build and push platform image
+        run: |
+          docker buildx build --push --platform "${{ matrix.platform }}" --provenance=mode=min \
+            --cache-from "type=registry,ref=${IMAGE}:buildcache-${{ matrix.id }}" \
+            --cache-to "type=registry,ref=${IMAGE}:buildcache-${{ matrix.id }},mode=max" \
+            --metadata-file "$RUNNER_TEMP/docker-metadata.json" --progress plain \
+            -t "${IMAGE}:${{ matrix.id }}-${{ github.run_id }}" .
+
+      - name: Smoke test (boot kernel and check version)
+        run: |
+          test "$(jq -er .version app/package.json)" = "$(sed -n 's/^const Ver = "\(.*\)"/\1/p' kernel/util/working.go)" || {
+            echo "app/package.json version does not match kernel Ver; mac client remote connection requires equality"
+            exit 1
+          }
+          docker run -d --name smoke-${{ matrix.id }} -p 6806:6806 \
+            -e PUID=1000 -e PGID=1000 \
+            -v "$RUNNER_TEMP/smoke-workspace:/siyuan/workspace" \
+            "${IMAGE}:${{ matrix.id }}-${{ github.run_id }}"
+          ok=""
+          for i in $(seq 1 30); do
+            if response=$(curl -sf http://127.0.0.1:6806/api/system/version 2>/dev/null); then
+              if echo "$response" | jq -e '.code == 0 and (.data | length > 0)' >/dev/null; then
+                ok=1
+                echo "Kernel version: $response"
+                break
+              fi
+            fi
+            sleep 4
+          done
+          docker logs smoke-${{ matrix.id }} 2>&1 | tail -20 || true
+          docker rm -f smoke-${{ matrix.id }} >/dev/null || true
+          if [ -z "$ok" ]; then
+            echo "Smoke test failed: kernel did not report a version in time"
+            exit 1
+          fi
+
+      - name: Export digest
+        run: |
+          mkdir -p "$RUNNER_TEMP/digests"
+          digest=$(jq -r '."containerimage.digest"' "$RUNNER_TEMP/docker-metadata.json")
+          if [[ ! "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+            echo "Missing platform image digest"
+            exit 1
+          fi
+          echo "$digest" > "$RUNNER_TEMP/digests/${{ matrix.id }}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.id }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    name: Merge manifest and tag
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Compute lowercase image name
+        run: echo "IMAGE=${REGISTRY}/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute tags and create multi-arch manifest
+        working-directory: ${{ runner.temp }}/digests
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          TAGS=""
+          if [ "$EVENT_NAME" = "push" ]; then
+            # tag 推送：v 前缀去掉作为版本标签，并更新 latest
+            TAGS=("${GITHUB_REF_NAME#v}" "latest")
+          elif [ -n "$INPUT_VERSION" ]; then
+            TAGS=("$INPUT_VERSION")
+          else
+            TAGS=("$(echo "${GITHUB_REF_NAME}" | sed 's#/#-#g')")
+          fi
+          # 追加 commit 短 SHA 标签，便于回溯
+          TAGS+=("sha-${GITHUB_SHA::7}")
+          args=()
+          for tag in "${TAGS[@]}"; do
+            args+=("-t" "${IMAGE}:${tag}")
+          done
+          while read -r digest; do
+            [ -n "$digest" ] && args+=("${IMAGE}@${digest}")
+          done < <(cat ./*)
+          docker buildx imagetools create "${args[@]}"
+          docker buildx imagetools inspect "${IMAGE}:${TAGS[0]}"
