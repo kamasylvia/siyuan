@@ -308,11 +308,18 @@ export class Files extends Model {
             const type = actionElement?.getAttribute("data-type");
             const page = parseInt(pagerElement.getAttribute("data-page") || "1", 10);
             const pageCount = parseInt(pagerElement.getAttribute("data-page-count") || "1", 10);
-            if (type === "prev" && page > 1) {
-                this.docTreePages.set(pagerElement.getAttribute("data-box") + "\t" + pagerElement.getAttribute("data-path"), page - 1);
-                this.refreshDocTreePage(pagerElement.getAttribute("data-box"), pagerElement.getAttribute("data-path"));
+            let targetPage = 0;
+            if (type === "first" && page > 1) {
+                targetPage = 1;
+            } else if (type === "prev" && page > 1) {
+                targetPage = page - 1;
             } else if (type === "next" && page < pageCount) {
-                this.docTreePages.set(pagerElement.getAttribute("data-box") + "\t" + pagerElement.getAttribute("data-path"), page + 1);
+                targetPage = page + 1;
+            } else if (type === "last" && page < pageCount) {
+                targetPage = pageCount;
+            }
+            if (targetPage) {
+                this.docTreePages.set(pagerElement.getAttribute("data-box") + "\t" + pagerElement.getAttribute("data-path"), targetPage);
                 this.refreshDocTreePage(pagerElement.getAttribute("data-box"), pagerElement.getAttribute("data-path"));
             }
         });
@@ -2269,7 +2276,7 @@ aria-label="${ariaLabel}">${getDocDisplayName(item.name, item.titleEmpty, true)}
 </li>`;
     }
 
-    // 文档树分页控件：追加在目录子列表末尾，支持前后翻页与输入页码跳转 https://github.com/siyuan-note/siyuan/issues/12164
+    // 文档树分页控件：首页/上一页/跳页输入/总页数/下一页/尾页，追加在目录子列表末尾 https://github.com/siyuan-note/siyuan/issues/12164
     private genPagerHTML(data: IFileTreeList) {
         const page = data.page || 1;
         const pageCount = data.pageCount || 1;
@@ -2279,10 +2286,12 @@ aria-label="${ariaLabel}">${getDocDisplayName(item.name, item.titleEmpty, true)}
         const paddingLeft = (data.path.split("/").length - 1) * 18;
         return `<li class="b3-list-item file-tree-pager" data-box="${data.box}" data-path="${data.path}" data-page="${page}" data-page-count="${pageCount}"
 style="--file-toggle-width:${paddingLeft + 18}px;--file-action-offset:${paddingLeft + 20}px">
-    <span style="padding-left: ${paddingLeft}px" class="file-tree-pager__btn" data-type="prev"${page <= 1 ? " data-disabled=\"true\"" : ""}><svg><use xlink:href="#iconLeft"></use></svg></span>
+    <span style="padding-left: ${paddingLeft}px" class="file-tree-pager__btn" data-type="first"${page <= 1 ? " data-disabled=\"true\"" : ""}><svg><use xlink:href="#iconDoubleLeft"></use></svg></span>
+    <span class="file-tree-pager__btn" data-type="prev"${page <= 1 ? " data-disabled=\"true\"" : ""}><svg><use xlink:href="#iconLeft"></use></svg></span>
     <input class="b3-text-field file-tree-pager__input" data-type="jump" value="${page}" aria-label="${window.siyuan.languages.docTreeJumpPage}">
     <span class="file-tree-pager__total">/ ${pageCount}</span>
     <span class="file-tree-pager__btn" data-type="next"${page >= pageCount ? " data-disabled=\"true\"" : ""}><svg><use xlink:href="#iconRight"></use></svg></span>
+    <span class="file-tree-pager__btn" data-type="last"${page >= pageCount ? " data-disabled=\"true\"" : ""}><svg><use xlink:href="#iconDoubleRight"></use></svg></span>
 </li>`;
     }
 

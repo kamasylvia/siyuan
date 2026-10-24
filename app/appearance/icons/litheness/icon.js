@@ -588,6 +588,14 @@ document.body.insertAdjacentHTML('afterbegin', `<svg id="iconsLitheness" style="
   <symbol id="iconRight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
     <path d="m9 18 6-6-6-6"/>
   </symbol>
+  <symbol id="iconDoubleLeft" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m11 17-5-5 5-5"/>
+    <path d="m18 17-5-5 5-5"/>
+  </symbol>
+  <symbol id="iconDoubleRight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m6 17 5-5-5-5"/>
+    <path d="m13 17 5-5-5-5"/>
+  </symbol>
   <symbol id="iconDown" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
     <path d="m6 9 6 6 6-6"/>
   </symbol>
