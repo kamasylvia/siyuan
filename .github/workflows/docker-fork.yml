@@ -10,14 +10,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "镜像版本标签（不带 v 前缀，如 3.8.8-fork.1）；留空时用分支名（/ 替换为 -）"
+        description: "镜像版本标签（不带 v 前缀，如 3.8.8）；留空时用分支名（/ 替换为 -）"
         required: false
         type: string
-      platforms:
-        description: "构建平台，逗号分隔；arm64 需仓库可用 ubuntu-24.04-arm 运行器（私有仓可能不可用）"
-        required: false
-        type: string
-        default: "linux/amd64,linux/arm64"
 
 permissions:
   contents: read
@@ -45,8 +40,6 @@ jobs:
           - id: arm64
             platform: linux/arm64
             runner: ubuntu-24.04-arm
-    # 手动触发时可输入 platforms 收窄本次构建范围；tag 推送始终全量
-    if: ${{ github.event_name == 'push' || contains(inputs.platforms, matrix.platform) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
