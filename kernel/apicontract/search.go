@@ -127,6 +127,7 @@ type EmbedBlockOptions struct {
 	HeadingMode  float64 `json:"headingMode" api:"optional,nullable"`
 	Breadcrumb   bool    `json:"breadcrumb" api:"optional,nullable"`
 	Notebook     string  `json:"notebook" api:"optional,nullable,ignoretype"`
+	RenderMode   string  `json:"renderMode" api:"optional,nullable"` // "table" 时返回轻量纯文本结果，用于嵌入块表格渲染
 }
 
 type GetEmbedBlockRequest struct {

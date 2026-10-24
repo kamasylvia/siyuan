@@ -2606,6 +2606,39 @@ export class Gutter {
                         }
                     }]
                 }, {
+                    id: "embedRenderMode",
+                    label: window.siyuan.languages.embedRenderMode,
+                    type: "submenu",
+                    submenu: [{
+                        id: "embedRenderModeDefault",
+                        label: window.siyuan.languages.default,
+                        iconHTML: "",
+                        checked: !nodeElement.getAttribute("custom-render-mode"),
+                        click() {
+                            nodeElement.removeAttribute("custom-render-mode");
+                            fetchPost("/api/attr/setBlockAttrs", {
+                                id,
+                                attrs: {"custom-render-mode": ""}
+                            });
+                            nodeElement.removeAttribute("data-render");
+                            blockRender(protyle, nodeElement);
+                        }
+                    }, {
+                        id: "embedRenderModeTable",
+                        label: window.siyuan.languages.embedRenderModeTable,
+                        iconHTML: "",
+                        checked: nodeElement.getAttribute("custom-render-mode") === "table",
+                        click() {
+                            nodeElement.setAttribute("custom-render-mode", "table");
+                            fetchPost("/api/attr/setBlockAttrs", {
+                                id,
+                                attrs: {"custom-render-mode": "table"}
+                            });
+                            nodeElement.removeAttribute("data-render");
+                            blockRender(protyle, nodeElement);
+                        }
+                    }]
+                }, {
                     id: "embedHeadingLevel",
                     label: window.siyuan.languages.embedHeadingLevel,
                     type: "submenu",

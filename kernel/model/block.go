@@ -1808,7 +1808,8 @@ func getBlock(id string, tree *parse.Tree) (ret *Block, err error) {
 	return
 }
 
-func getEmbeddedBlock(trees map[string]*parse.Tree, sqlBlock *sql.Block, headingMode int, breadcrumb bool) (block *Block, blockPaths []*BlockPath) {
+func getEmbeddedBlock(trees map[string]*parse.Tree, sqlBlock *sql.Block, headingMode int, breadcrumb bool,
+	renderMode string) (block *Block, blockPaths []*BlockPath) {
 	tree, _ := trees[sqlBlock.RootID]
 	if nil == tree {
 		if IsEncryptedBox(sqlBlock.Box) {
@@ -1842,6 +1843,35 @@ func getEmbeddedBlock(trees map[string]*parse.Tree, sqlBlock *sql.Block, heading
 		}
 	}
 	if nil == b {
+		return
+	}
+
+	// 表格渲染模式返回轻量结果：仅携带纯文本名称与面包屑路径，不渲染完整块 DOM https://github.com/siyuan-note/siyuan/issues/12164
+	if "table" == renderMode {
+		name := ""
+		if ast.NodeDocument == def.Type {
+			name = path.Base(b.HPath)
+		} else {
+			paths := buildBlockBreadcrumb(def, nil, false, headingMode)
+			if 0 < len(paths) {
+				name = util.UnescapeHTML(paths[len(paths)-1].Name)
+			}
+		}
+		block = &Block{
+			Box:     def.Box,
+			Path:    def.Path,
+			HPath:   b.HPath,
+			ID:      def.ID,
+			RootID:  b.RootID,
+			Type:    def.Type.String(),
+			Content: name,
+		}
+		if breadcrumb {
+			blockPaths = buildBlockBreadcrumb(def, nil, true, headingMode)
+		}
+		if 1 > len(blockPaths) {
+			blockPaths = []*BlockPath{}
+		}
 		return
 	}
 

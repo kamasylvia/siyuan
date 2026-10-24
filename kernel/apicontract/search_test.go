@@ -74,9 +74,13 @@ func TestSearchSubtypeCompatibility(t *testing.T) {
 }
 
 func TestSearchEmbedCompatibility(t *testing.T) {
-	request, err := SearchEmbedBlock.Decode(strings.NewReader(`{"embedBlockID":" id ","stmt":" sql ","excludeIDs":[null," block "],"headingMode":2.9,"breadcrumb":null,"notebook":123}`))
-	if err != nil || request.EmbedBlockID != " id " || request.Stmt != " sql " || int(request.HeadingMode) != 2 || request.Breadcrumb || request.Notebook != "" || len(request.ExcludeIDs) != 2 || request.ExcludeIDs[0] != nil || *request.ExcludeIDs[1] != " block " {
+	request, err := SearchEmbedBlock.Decode(strings.NewReader(`{"embedBlockID":" id ","stmt":" sql ","excludeIDs":[null," block "],"headingMode":2.9,"breadcrumb":null,"notebook":123,"renderMode":null}`))
+	if err != nil || request.EmbedBlockID != " id " || request.Stmt != " sql " || int(request.HeadingMode) != 2 || request.Breadcrumb || request.Notebook != "" || request.RenderMode != "" || len(request.ExcludeIDs) != 2 || request.ExcludeIDs[0] != nil || *request.ExcludeIDs[1] != " block " {
 		t.Fatalf("embed input changed: %+v, %v", request, err)
+	}
+	request, err = SearchEmbedBlock.Decode(strings.NewReader(`{"embedBlockID":"id","stmt":"sql","excludeIDs":[],"renderMode":"table"}`))
+	if err != nil || request.RenderMode != "table" {
+		t.Fatalf("embed render mode changed: %+v, %v", request, err)
 	}
 	for _, body := range []string{`{"embedBlockID":"id"}`, `{"embedBlockID":"id","includeIDs":null}`, `{"embedBlockID":"id","includeIDs":[null]}`} {
 		if _, err := GetEmbedBlock.Decode(strings.NewReader(body)); err == nil {

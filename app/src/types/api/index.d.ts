@@ -1092,7 +1092,7 @@ export type FileTreeDocTreeData = { "tree": Array<FileTreeDocFile | null> | null
 
 export type FileTreeDuplicateData = { "hPath": string; "id": string; "notebook": string; "path": string; };
 
-export type FileTreeFile = { "alias": string; "bookmark": string; "childrenSortMode": number | null; "count": number; "ctime": number; "dueFlashcardCount": number; "flashcardCount": number; "hCtime": string; "hMtime": string; "hSize": string; "icon": string; "id": string; "memo": string; "mtime": number; "name": string; "name1": string; "newFlashcardCount": number; "path": string; "size": number; "sort": number; "subFileCount": number; "titleEmpty"?: boolean; };
+export type FileTreeFile = { "alias": string; "bookmark": string; "childrenSortMode": number | null; "count": number; "ctime": number; "dueFlashcardCount": number; "flashcardCount": number; "hCtime": string; "hMtime": string; "hSize": string; "icon": string; "id": string; "isAsset"?: boolean; "memo": string; "mtime": number; "name": string; "name1": string; "newFlashcardCount": number; "path": string; "size": number; "sort": number; "subFileCount": number; "titleEmpty"?: boolean; };
 
 export type FileTreeGetDocData = { "blockCount": number; "box": string; "content": string; "docInfo"?: DocInfo; "eof": boolean; "headingNumbers": Record<string, string> | null; "id": string; "isBacklinkExpand": boolean; "isSyncing": boolean; "keywords": Array<string> | null; "mode": number; "parent2ID": string; "parentID": string; "path": string; "publishAccessRequired": boolean; "reqId": JSONValue; "rootID": string; "scroll": boolean; "type": string; };
 
@@ -1102,11 +1102,11 @@ export type FileTreeHeadingDocRequestInput = { "previousPath"?: string | null; "
 
 export type FileTreeIDRequestInput = { "id": string; };
 
-export type FileTreeListData = { "box": string; "effectiveSortMode": number; "files": Array<FileTreeFile | null> | null; "path": string; };
+export type FileTreeListData = { "box": string; "effectiveSortMode": number; "files": Array<FileTreeFile | null> | null; "page": number; "pageCount": number; "path": string; "totals": number; };
 
 export type FileTreeListItemDocRequestInput = { "previousPath"?: string | null; "srcListItemID": string; "targetNoteBook": string; "targetPath"?: string | null; "toTop"?: boolean | null; };
 
-export type FileTreeListRequestInput = { "app"?: string | null; "flashcard"?: boolean | null; "ignoreMaxListHint"?: boolean | null; "maxListCount"?: number | null; "notebook": string; "path": string; "showHidden"?: boolean | null; "sort"?: number | null; };
+export type FileTreeListRequestInput = { "app"?: string | null; "flashcard"?: boolean | null; "ignoreMaxListHint"?: boolean | null; "maxListCount"?: number | null; "notebook": string; "page"?: number | null; "path": string; "showHidden"?: boolean | null; "sort"?: number | null; };
 
 export type FileTreeMoveIDsRequestInput = { "callback"?: JSONValue | null; "fromIDs": Array<string>; "toID": string; };
 
@@ -1224,7 +1224,7 @@ export type GetCloudRepoSnapshotsRequestInput = { "endTime"?: number; "page": nu
 
 export type GetCurrentAttrViewImagesRequestInput = { "blockID"?: string | null; "groupID"?: string | null; "id": string; "query"?: string | null; "viewID"?: string | null; };
 
-export type GetEmbedBlockRequestInput = { "breadcrumb"?: boolean | null; "embedBlockID": string; "headingMode"?: number | null; "includeIDs": Array<string>; "notebook"?: string | null; };
+export type GetEmbedBlockRequestInput = { "breadcrumb"?: boolean | null; "embedBlockID": string; "headingMode"?: number | null; "includeIDs": Array<string>; "notebook"?: string | null; "renderMode"?: string | null; };
 
 export type GetInstalledIconRequestInput = { "keyword"?: string | null; };
 
@@ -1832,7 +1832,7 @@ export type SearchBlockRequestInput = { "groupBy"?: number | null; "method"?: nu
 
 export type SearchBlocksData = { "blocks": Array<SearchBlock | null> | null; "matchedBlockCount": number; "matchedRootCount": number; "pageCount": number; };
 
-export type SearchEmbedBlockRequestInput = { "breadcrumb"?: boolean | null; "embedBlockID": string; "excludeIDs": Array<string | null>; "headingMode"?: number | null; "notebook"?: string | null; "stmt": string; };
+export type SearchEmbedBlockRequestInput = { "breadcrumb"?: boolean | null; "embedBlockID": string; "excludeIDs": Array<string | null>; "headingMode"?: number | null; "notebook"?: string | null; "renderMode"?: string | null; "stmt": string; };
 
 export type SearchHeadingFilterInput = { "h1"?: boolean | null; "h2"?: boolean | null; "h3"?: boolean | null; "h4"?: boolean | null; "h5"?: boolean | null; "h6"?: boolean | null; };
 

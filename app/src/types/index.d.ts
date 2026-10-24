@@ -931,6 +931,7 @@ interface IFile {
     count: number;
     subFileCount: number;
     childrenSortMode?: number | null;
+    isAsset?: boolean;
 }
 
 interface IFileTreeList {
@@ -938,6 +939,9 @@ interface IFileTreeList {
     box: string;
     path: string;
     effectiveSortMode?: number;
+    page?: number;
+    totals?: number;
+    pageCount?: number;
 }
 
 interface IBlockTree {

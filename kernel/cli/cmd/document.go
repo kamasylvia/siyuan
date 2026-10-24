@@ -50,7 +50,7 @@ var documentListCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		files, _, err := model.ListDocTree(notebook, listPath, 0, false, false, 128)
+		files, _, err := model.ListDocTree(notebook, listPath, 0, false, false, 128, 0)
 		if err != nil {
 			return err
 		}

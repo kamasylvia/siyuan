@@ -331,6 +331,53 @@ body.body--harmony {
 }
 
 .file-tree {
+  // 文档树分页控件：目录子列表末尾的前后翻页与跳页输入
+  .file-tree-pager {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    padding-right: 8px;
+    color: var(--b3-theme-on-surface);
+    font-size: 12px;
+    user-select: none;
+
+    .file-tree-pager__btn {
+      display: flex;
+      align-items: center;
+      border-radius: var(--b3-border-radius);
+      cursor: pointer;
+      padding: 2px;
+
+      &:hover {
+        background-color: var(--b3-list-icon-hover);
+      }
+
+      &[data-disabled="true"] {
+        opacity: .38;
+        cursor: not-allowed;
+        background-color: transparent;
+      }
+
+      svg {
+        height: 12px;
+        width: 12px;
+      }
+    }
+
+    .file-tree-pager__input {
+      height: 20px;
+      padding: 0 4px;
+      text-align: center;
+      width: 36px;
+      font-size: 12px;
+    }
+
+    .file-tree-pager__total {
+      opacity: .68;
+    }
+  }
+
   .block__icons:not(.protyle-wysiwyg *) .block__icon:not(.backlinkList__toggle),
   &:not(.fullscreen) .block__icons:not(.protyle-wysiwyg *) .fn__space {
     display: none;

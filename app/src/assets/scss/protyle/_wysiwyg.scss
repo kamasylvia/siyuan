@@ -1017,6 +1017,43 @@ body[data-format-painter] .protyle-wysiwyg[data-readonly="false"] {
   display: none;
 }
 
+// 嵌入块表格渲染模式：SQL 结果以目录表格呈现，行点击跳转对应块
+.protyle-wysiwyg .embed-table {
+  width: 100%;
+  overflow: auto;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  td {
+    border-top: 1px dashed var(--b3-border-color);
+    padding: 4px 8px 4px 0;
+  }
+
+  &__row {
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--b3-list-hover);
+    }
+  }
+
+  &__title {
+    max-width: 50%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__path {
+    color: var(--b3-theme-on-surface-light);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+}
+
 .protyle-wysiwyg[data-readonly="false"] .img .protyle-image-caption {
   margin-top: 12px;
 }

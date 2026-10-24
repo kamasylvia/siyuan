@@ -165,7 +165,7 @@ func TestListDocTreeUsesPathIDForInvalidPropertiesID(t *testing.T) {
 				cache.RemoveDocIALInBox(fixture.sourcePath, fixture.box.ID)
 			})
 
-			files, _, err := ListDocTree(fixture.box.ID, "/", util.SortModeNameASC, false, false, 128)
+			files, _, err := ListDocTree(fixture.box.ID, "/", util.SortModeNameASC, false, false, 128, 0)
 			if nil != err {
 				t.Fatalf("list documents failed: %v", err)
 			}
@@ -246,7 +246,7 @@ func TestResolveDocTreeSortModeInheritance(t *testing.T) {
 		t.Fatalf("global fallback was not resolved: mode=%d, err=%v", mode, err)
 	}
 
-	files, _, err := ListDocTree(fixture.box.ID, "/", util.SortModeNameASC, false, false, 128)
+	files, _, err := ListDocTree(fixture.box.ID, "/", util.SortModeNameASC, false, false, 128, 0)
 	if nil != err {
 		t.Fatalf("list root documents failed: %v", err)
 	}

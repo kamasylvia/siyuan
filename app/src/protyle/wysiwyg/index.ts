@@ -4921,6 +4921,23 @@ export class WYSIWYG {
                 return;
             }
             const ctrlIsPressed = isOnlyMeta(event);
+            // 嵌入块表格模式：点击行跳转到对应块
+            const embedTableRowElement = hasClosestByClassName(event.target, "embed-table__row");
+            if (embedTableRowElement) {
+                const rowId = embedTableRowElement.getAttribute("data-id");
+                if (rowId) {
+                    checkFold(rowId, (zoomIn) => {
+                        openFileById({
+                            app: protyle.app,
+                            id: rowId,
+                            action: zoomIn ? [Constants.CB_GET_FOCUS, Constants.CB_GET_ALL] : [Constants.CB_GET_FOCUS, Constants.CB_GET_CONTEXT],
+                            zoomIn
+                        });
+                    });
+                }
+                event.stopPropagation();
+                return;
+            }
             const backlinkBreadcrumbItemElement = hasClosestByClassName(event.target, "protyle-breadcrumb__item");
             if (backlinkBreadcrumbItemElement) {
                 const breadcrumbId = backlinkBreadcrumbItemElement.getAttribute("data-id");

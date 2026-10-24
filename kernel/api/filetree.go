@@ -1193,8 +1193,13 @@ func listDocsByPathContract(c *gin.Context, request apicontract.FileTreeListRequ
 		}
 	}
 	showHidden := options.ShowHidden
+	// 文档树分页 https://github.com/siyuan-note/siyuan/issues/12164
+	page := 1
+	if nil != options.Page && *options.Page > 1 {
+		page = int(*options.Page)
+	}
 
-	files, totals, err := model.ListDocTree(notebook, p, effectiveSortMode, flashcard, showHidden, maxListCount)
+	files, totals, err := model.ListDocTree(notebook, p, effectiveSortMode, flashcard, showHidden, maxListCount, page)
 	if err != nil {
 		ret.Code = -1
 		ret.Msg = err.Error()
@@ -1224,14 +1229,23 @@ func listDocsByPathContract(c *gin.Context, request apicontract.FileTreeListRequ
 		if hintErr != nil {
 			return apicontract.Failure[apicontract.FileTreeListData](-1, hintErr.Error())
 		}
-		if !ignoreHint {
+		// 翻页请求不再重复提示截断
+		if page <= 1 && !ignoreHint {
 			if nil == util.NotificationsCfg.Load() || util.NotificationsCfg.Load().DocTreeMaxList {
 				util.PushMsgWithApp(app, fmt.Sprintf(model.Conf.Language(48), len(files)), 7000)
 			}
 		}
 	}
 
-	return apicontract.Success(apicontract.FileTreeListData{Box: notebook, Path: p, Files: fileTreeFileContracts(files), EffectiveSortMode: effectiveSortMode})
+	pageCount := 1
+	if maxListCount < totals {
+		pageCount = (totals + maxListCount - 1) / maxListCount
+	}
+	if page < 1 {
+		page = 1
+	}
+
+	return apicontract.Success(apicontract.FileTreeListData{Box: notebook, Path: p, Files: fileTreeFileContracts(files), EffectiveSortMode: effectiveSortMode, Page: page, Totals: totals, PageCount: pageCount})
 }
 
 var getDoc = contractHandler(apicontract.GetDoc, getDocContract)

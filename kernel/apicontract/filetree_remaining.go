@@ -139,6 +139,7 @@ type FileTreeListOptions struct {
 	MaxListCount      *float64 `json:"maxListCount" api:"optional"`
 	ShowHidden        bool     `json:"showHidden" api:"optional,nullable"`
 	IgnoreMaxListHint bool     `json:"ignoreMaxListHint" api:"optional,nullable"`
+	Page              *float64 `json:"page" api:"optional"` // 文档树分页页码，从 1 开始
 	App               string   `json:"app" api:"optional,nullable"`
 }
 type FileTreeListRequest struct {
@@ -265,6 +266,7 @@ type FileTreeFile struct {
 	Sort              int    `json:"sort"`
 	SubFileCount      int    `json:"subFileCount"`
 	ChildrenSortMode  *int   `json:"childrenSortMode"`
+	IsAsset           bool   `json:"isAsset,omitempty"` // 文档树中混入的 assets 资产条目（目录或文件）
 	NewFlashcardCount int    `json:"newFlashcardCount"`
 	DueFlashcardCount int    `json:"dueFlashcardCount"`
 	FlashcardCount    int    `json:"flashcardCount"`
@@ -274,6 +276,9 @@ type FileTreeListData struct {
 	Path              string          `json:"path"`
 	Files             []*FileTreeFile `json:"files"`
 	EffectiveSortMode int             `json:"effectiveSortMode"`
+	Page              int             `json:"page"`      // 当前页码，从 1 开始
+	Totals            int             `json:"totals"`    // 截断前的完整文档数
+	PageCount         int             `json:"pageCount"` // 按 maxListCount 计算的总页数
 }
 type FileTreeGetDocData struct {
 	ID                    string            `json:"id"`

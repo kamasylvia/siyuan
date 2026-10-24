@@ -25482,6 +25482,9 @@
         "id": {
           "type": "string"
         },
+        "isAsset": {
+          "type": "boolean"
+        },
         "memo": {
           "type": "string"
         },
@@ -25896,15 +25899,27 @@
             }
           ]
         },
+        "page": {
+          "type": "integer"
+        },
+        "pageCount": {
+          "type": "integer"
+        },
         "path": {
           "type": "string"
+        },
+        "totals": {
+          "type": "integer"
         }
       },
       "required": [
         "box",
         "effectiveSortMode",
         "files",
-        "path"
+        "page",
+        "pageCount",
+        "path",
+        "totals"
       ],
       "additionalProperties": false
     },
@@ -25999,6 +26014,16 @@
         },
         "notebook": {
           "type": "string"
+        },
+        "page": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "path": {
           "type": "string"
@@ -27983,6 +28008,16 @@
           }
         },
         "notebook": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "renderMode": {
           "anyOf": [
             {
               "type": "string"
@@ -39177,6 +39212,16 @@
           ]
         },
         "notebook": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "renderMode": {
           "anyOf": [
             {
               "type": "string"

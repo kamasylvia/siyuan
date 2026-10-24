@@ -12,6 +12,7 @@ import {finishCustomEmbedRender, finishEmptyEmbedRender, IEmbedRenderLoadingStat
 import {getHostCapabilities} from "../../util/hostCapabilities";
 import {isDirectHeadingEmbed} from "./embedHeading";
 import {isFoldedRenderContent} from "./foldedContent";
+import {genEmbedTableHTML, isTableEmbed} from "./embedTable";
 
 /**
  * 渲染嵌入块
@@ -85,6 +86,7 @@ ${content}
                         includeIDs,
                         headingMode: ["0", "1", "2"].includes(item.getAttribute("custom-heading-mode")) ? parseInt(item.getAttribute("custom-heading-mode")) : window.siyuan.config.editor.headingEmbedMode,
                         breadcrumb,
+                        renderMode: isTableEmbed(item) ? "table" : "",
                         notebook: isEncryptedBox(protyle.notebookId) ? protyle.notebookId : ""
                     }, (response) => {
                         renderEmbed(response.data.blocks || [], protyle, item, top, undefined, onEmbedRender);
@@ -100,6 +102,7 @@ ${content}
                 headingMode: ["0", "1", "2"].includes(item.getAttribute("custom-heading-mode")) ? parseInt(item.getAttribute("custom-heading-mode")) : window.siyuan.config.editor.headingEmbedMode,
                 excludeIDs: [item.getAttribute("data-node-id"), protyle.block.rootID],
                 breadcrumb,
+                renderMode: isTableEmbed(item) ? "table" : "",
                 notebook: isEncryptedBox(protyle.notebookId) ? protyle.notebookId : ""
             }, (response) => {
                 renderEmbed(response.data.blocks, protyle, item, top, undefined, onEmbedRender);
@@ -117,32 +120,40 @@ const renderEmbed = (blocks: {
     if (rotateElement) {
         rotateElement.classList.remove("fn__rotate");
     }
+    const tableMode = isTableEmbed(item);
     let html = "";
-    blocks.forEach((blocksItem, index) => {
-        let breadcrumbHTML = "";
-        if (blocksItem.blockPaths.length !== 0) {
-            breadcrumbHTML = genBreadcrumb(blocksItem.blockPaths, true);
-        }
-        let popover = "";
-        if (index !== 0) {
-            popover = `<div class="protyle-icons"><span data-id="${blocksItem.block.id}" data-action="openFloat" aria-label="${window.siyuan.languages.refPopover}" data-position="4north" class="ariaLabel protyle-icon protyle-icon--last protyle-icon--first"><svg><use xlink:href="#iconPictureInPicture"></use></svg></span></div>`;
-        } else {
-            const popoverElement = item.querySelectorAll(".protyle-icon")[2];
-            if (popoverElement) {
-                popoverElement.setAttribute("data-id", blocksItem.block.id);
+    if (!tableMode) {
+        blocks.forEach((blocksItem, index) => {
+            let breadcrumbHTML = "";
+            if (blocksItem.blockPaths.length !== 0) {
+                breadcrumbHTML = genBreadcrumb(blocksItem.blockPaths, true);
             }
-        }
-        const childOperationAttr = blocksItem.allowChildOperation ? " data-allow-child-operation=\"true\"" : "";
-        const rootIDAttr = blocksItem.block.rootID ? ` data-root-id="${blocksItem.block.rootID}"` : "";
-        const headingAttr = blocks.length === 1 && isDirectHeadingEmbed(Lute.UnEscapeHTMLStr(item.getAttribute("data-content")),
-            blocksItem.block.id, blocksItem.block.type) ? " data-embed-heading=\"true\"" : "";
-        html += `<div class="protyle-wysiwyg__embed" data-id="${blocksItem.block.id}"${rootIDAttr}${childOperationAttr}${headingAttr}>
+            let popover = "";
+            if (index !== 0) {
+                popover = `<div class="protyle-icons"><span data-id="${blocksItem.block.id}" data-action="openFloat" aria-label="${window.siyuan.languages.refPopover}" data-position="4north" class="ariaLabel protyle-icon protyle-icon--last protyle-icon--first"><svg><use xlink:href="#iconPictureInPicture"></use></svg></span></div>`;
+            } else {
+                const popoverElement = item.querySelectorAll(".protyle-icon")[2];
+                if (popoverElement) {
+                    popoverElement.setAttribute("data-id", blocksItem.block.id);
+                }
+            }
+            const childOperationAttr = blocksItem.allowChildOperation ? " data-allow-child-operation=\"true\"" : "";
+            const rootIDAttr = blocksItem.block.rootID ? ` data-root-id="${blocksItem.block.rootID}"` : "";
+            const headingAttr = blocks.length === 1 && isDirectHeadingEmbed(Lute.UnEscapeHTMLStr(item.getAttribute("data-content")),
+                blocksItem.block.id, blocksItem.block.type) ? " data-embed-heading=\"true\"" : "";
+            html += `<div class="protyle-wysiwyg__embed" data-id="${blocksItem.block.id}"${rootIDAttr}${childOperationAttr}${headingAttr}>
 ${popover}${breadcrumbHTML}${blocksItem.block.content}
 </div>`;
-    });
+        });
+    }
     if (blocks.length > 0) {
-        item.firstElementChild.insertAdjacentHTML("afterend", normalizeHTMLAssetIFrameBlockDOM(html));
-        improveBreadcrumbAppearance(item.querySelector(".protyle-wysiwyg__embed"));
+        if (tableMode) {
+            // 表格模式渲染为可点击目录表格，不渲染面包屑与全文
+            item.firstElementChild.insertAdjacentHTML("afterend", normalizeHTMLAssetIFrameBlockDOM(genEmbedTableHTML(blocks)));
+        } else {
+            item.firstElementChild.insertAdjacentHTML("afterend", normalizeHTMLAssetIFrameBlockDOM(html));
+            improveBreadcrumbAppearance(item.querySelector(".protyle-wysiwyg__embed"));
+        }
     } else {
         item.firstElementChild.insertAdjacentHTML("afterend", `<div class="protyle-wysiwyg__embed ft__smaller ft__secondary b3-form__space--small" contenteditable="false">${errorTip || window.siyuan.languages.refExpired}</div>`);
     }

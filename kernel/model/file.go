@@ -72,6 +72,7 @@ type File struct {
 	Sort             int    `json:"sort"`
 	SubFileCount     int    `json:"subFileCount"`
 	ChildrenSortMode *int   `json:"childrenSortMode"`
+	IsAsset          bool   `json:"isAsset,omitempty"` // 文档树中混入的 assets 资产条目（目录或文件）
 
 	NewFlashcardCount int `json:"newFlashcardCount"`
 	DueFlashcardCount int `json:"dueFlashcardCount"`
@@ -483,7 +484,9 @@ func ResolveDocTreeSortMode(boxID, listPath string) (sortMode int, err error) {
 	return
 }
 
-func ListDocTree(boxID, listPath string, sortMode int, flashcard, showHidden bool, maxListCount int) (ret []*File, totals int, err error) {
+// ListDocTree 在 maxListCount 截断的基础上支持按页返回，page 从 1 开始，0 视为第一页。
+// totals 始终返回完整数量，供前端计算页数并实现分页导航 https://github.com/siyuan-note/siyuan/issues/12164
+func ListDocTree(boxID, listPath string, sortMode int, flashcard, showHidden bool, maxListCount int, page int) (ret []*File, totals int, err error) {
 	//os.MkdirAll("pprof", 0755)
 	//cpuProfile, _ := os.Create("pprof/cpu_profile_list_doc_tree")
 	//pprof.StartCPUProfile(cpuProfile)
@@ -623,20 +626,90 @@ func ListDocTree(boxID, listPath string, sortMode int, flashcard, showHidden boo
 		logging.LogWarnf("query root block ref count elapsed [%dms]", elapsed)
 	}
 
+	// 文档树混入资产文件：根列表追加 assets 目录，展开 assets 时返回其中的文件，PDF/图片等可点击预览
+	if !flashcard && !IsEncryptedBox(boxID) {
+		if "/assets/" == listPath {
+			docs = append(docs, box.assetTreeFiles()...)
+		} else if "/" == listPath {
+			if assetDir := box.assetTreeDir(); nil != assetDir {
+				docs = append(docs, assetDir)
+			}
+		}
+	}
+
 	start = time.Now()
 	box.fillSort(&docs)
 	sortDocTreeFiles(docs, sortMode)
 	ret = append(ret, docs...)
 
 	totals = len(ret)
-	if maxListCount < len(ret) {
-		ret = ret[:maxListCount]
+	if maxListCount < totals {
+		if page > 1 {
+			offset := (page - 1) * maxListCount
+			if offset >= totals {
+				ret = []*File{}
+			} else {
+				end := offset + maxListCount
+				if end > totals {
+					end = totals
+				}
+				ret = ret[offset:end]
+			}
+		} else {
+			ret = ret[:maxListCount]
+		}
 	}
 	ret = ret[:]
 
 	elapsed = time.Since(start).Milliseconds()
 	if 200 < elapsed {
 		logging.LogInfof("sort docs elapsed [%dms]", elapsed)
+	}
+	return
+}
+
+// assetTreeDir 返回文档树根列表中展示的 assets 目录条目，目录不存在或为空时返回 nil
+func (box *Box) assetTreeDir() *File {
+	files := box.assetTreeFiles()
+	if 1 > len(files) {
+		return nil
+	}
+	return &File{
+		Path:         "/assets/",
+		Name:         "assets",
+		SubFileCount: len(files),
+		IsAsset:      true,
+	}
+}
+
+// assetTreeFiles 返回笔记本 assets 目录下的文件列表，用于文档树展示；子目录忽略
+func (box *Box) assetTreeFiles() (ret []*File) {
+	assetsDir := filepath.Join(util.DataDir, box.ID, "assets")
+	entries, err := os.ReadDir(assetsDir)
+	if nil != err {
+		return
+	}
+	ret = []*File{}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		info, infoErr := entry.Info()
+		if nil != infoErr {
+			continue
+		}
+		mTime := info.ModTime()
+		ret = append(ret, &File{
+			Path:    "/assets/" + entry.Name(),
+			Name:    entry.Name(),
+			Size:    uint64(info.Size()),
+			HSize:   humanize.BytesCustomCeil(uint64(info.Size()), 2),
+			Mtime:   mTime.Unix(),
+			CTime:   mTime.Unix(),
+			HMtime:  mTime.Format("2006-01-02 15:04:05") + ", " + util.HumanizeTime(mTime, Conf.Lang),
+			HCtime:  mTime.Format("2006-01-02 15:04:05") + ", " + util.HumanizeTime(mTime, Conf.Lang),
+			IsAsset: true,
+		})
 	}
 	return
 }

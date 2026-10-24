@@ -127,7 +127,7 @@ func ReorderDocTree(sourceIDs []string, targetID, position string, preview, remo
 		return nil, err
 	}
 	// 隐藏文档和超过显示上限的文档也必须参与排序。
-	docs, _, err := ListDocTree(box.ID, listPath, mode, false, true, int(^uint(0)>>1))
+	docs, _, err := ListDocTree(box.ID, listPath, mode, false, true, int(^uint(0)>>1), 0)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +163,7 @@ func ReorderDocTree(sourceIDs []string, targetID, position string, preview, remo
 		if sourceParent != "/" {
 			sourceParent += ".sy"
 		}
-		sourceDocs, _, loadErr := ListDocTree(source.BoxID, sourceParent, util.SortModeCustom, false, true, int(^uint(0)>>1))
+		sourceDocs, _, loadErr := ListDocTree(source.BoxID, sourceParent, util.SortModeCustom, false, true, int(^uint(0)>>1), 0)
 		if loadErr != nil {
 			return nil, loadErr
 		}

@@ -1388,6 +1388,10 @@ export class MobileFiles extends Model {
         }
         let fileHTML = "";
         data.files.forEach((item: IFile) => {
+            if (item.isAsset) {
+                // 移动端暂不展示文档树资产条目
+                return;
+            }
             fileHTML += this.genFileHTML(item);
         });
         const effectiveSortMode = getResponseEffectiveSortMode(data, data.box);
@@ -1439,6 +1443,10 @@ export class MobileFiles extends Model {
     private async onLsSelect(data: IFileTreeList, filePath: string, setStorage: boolean, isSetCurrent: boolean) {
         let fileHTML = "";
         data.files.forEach((item: IFile) => {
+            if (item.isAsset) {
+                // 移动端暂不展示文档树资产条目
+                return;
+            }
             fileHTML += this.genFileHTML(item);
         });
         if (fileHTML === "") {

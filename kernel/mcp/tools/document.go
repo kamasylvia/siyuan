@@ -166,7 +166,7 @@ func documentList(args map[string]any) (CallToolResult, error) {
 		fsPath = bt.Path
 	}
 
-	files, _, err := model.ListDocTree(notebook, fsPath, 0, false, false, 128)
+	files, _, err := model.ListDocTree(notebook, fsPath, 0, false, false, 128, 0)
 	if err != nil {
 		return CallToolResult{Content: []ContentItem{{Type: "text", Text: fmt.Sprintf("list docs failed: %s", err)}}, IsError: true}, nil
 	}

@@ -193,7 +193,7 @@ func buildBlockChildren(block *Block) (err error) {
 	if IsBoxDoc(block.Box, block.ID) {
 		listPath = "/"
 	}
-	files, _, err := ListDocTree(block.Box, listPath, util.SortModeUnassigned, false, false, Conf.FileTree.Load().MaxListCount)
+	files, _, err := ListDocTree(block.Box, listPath, util.SortModeUnassigned, false, false, Conf.FileTree.Load().MaxListCount, 0)
 	if err != nil {
 		return
 	}

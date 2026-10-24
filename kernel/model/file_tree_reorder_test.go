@@ -57,7 +57,7 @@ func TestDocTreeReorderEqualValuesPersist(t *testing.T) {
 	if err != nil || result.Conflict || !result.Changed {
 		t.Fatalf("equal-value move failed: %+v, %v", result, err)
 	}
-	files, _, err := ListDocTree(f.box.ID, "/", util.SortModeUnassigned, false, true, 100)
+	files, _, err := ListDocTree(f.box.ID, "/", util.SortModeUnassigned, false, true, 100, 0)
 	if err != nil || len(files) != 2 || files[0].ID != f.sourceID || files[1].ID != f.targetID {
 		t.Fatalf("manual tie order was not displayed: %+v, %v", files, err)
 	}

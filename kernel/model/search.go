@@ -225,19 +225,22 @@ func UpdateEmbedBlock(id, content string) (err error) {
 	return
 }
 
-func GetEmbedBlock(embedBlockID string, includeIDs []string, headingMode int, breadcrumb bool) (ret []*EmbedBlock) {
-	return getEmbedBlock(embedBlockID, includeIDs, headingMode, breadcrumb, true, "")
+func GetEmbedBlock(embedBlockID string, includeIDs []string, headingMode int, breadcrumb bool, renderMode string) (ret []*EmbedBlock) {
+	return getEmbedBlock(embedBlockID, includeIDs, headingMode, breadcrumb, renderMode, true, "")
 }
 
-func GetEmbedBlockInBox(embedBlockID string, includeIDs []string, headingMode int, breadcrumb bool, boxID string) (ret []*EmbedBlock) {
-	return getEmbedBlock(embedBlockID, includeIDs, headingMode, breadcrumb, true, boxID)
+func GetEmbedBlockInBox(embedBlockID string, includeIDs []string, headingMode int, breadcrumb bool, renderMode string,
+	boxID string) (ret []*EmbedBlock) {
+	return getEmbedBlock(embedBlockID, includeIDs, headingMode, breadcrumb, renderMode, true, boxID)
 }
 
-func GetEmbedBlockForPublish(embedBlockID string, includeIDs []string, headingMode int, breadcrumb bool) (ret []*EmbedBlock) {
-	return getEmbedBlock(embedBlockID, includeIDs, headingMode, breadcrumb, false, "")
+func GetEmbedBlockForPublish(embedBlockID string, includeIDs []string, headingMode int, breadcrumb bool,
+	renderMode string) (ret []*EmbedBlock) {
+	return getEmbedBlock(embedBlockID, includeIDs, headingMode, breadcrumb, renderMode, false, "")
 }
 
-func getEmbedBlock(embedBlockID string, includeIDs []string, headingMode int, breadcrumb, updateIndex bool, boxID string) (ret []*EmbedBlock) {
+func getEmbedBlock(embedBlockID string, includeIDs []string, headingMode int, breadcrumb bool, renderMode string,
+	updateIndex bool, boxID string) (ret []*EmbedBlock) {
 	validIDs := validEmbedBlockIDs(includeIDs, 1024)
 	var sqlBlocks []*sql.Block
 	if boxID != "" {
@@ -262,7 +265,7 @@ func getEmbedBlock(embedBlockID string, includeIDs []string, headingMode int, br
 		return m[sqlBlocks[i].ID] < m[sqlBlocks[j].ID]
 	})
 
-	ret = buildEmbedBlock(embedBlockID, []string{}, headingMode, breadcrumb, "", sqlBlocks, updateIndex, boxID)
+	ret = buildEmbedBlock(embedBlockID, []string{}, headingMode, breadcrumb, renderMode, "", sqlBlocks, updateIndex, boxID)
 	return
 }
 
@@ -320,23 +323,24 @@ func GetQueryEmbedStatement(embedBlockID string) (stmt, boxID string, err error)
 	return
 }
 
-func SearchEmbedBlock(embedBlockID, stmt string, excludeIDs []string, headingMode int, breadcrumb bool) (ret []*EmbedBlock) {
-	return SearchEmbedBlockInBox(embedBlockID, stmt, excludeIDs, headingMode, breadcrumb, "")
+func SearchEmbedBlock(embedBlockID, stmt string, excludeIDs []string, headingMode int, breadcrumb bool, renderMode string) (ret []*EmbedBlock) {
+	return SearchEmbedBlockInBox(embedBlockID, stmt, excludeIDs, headingMode, breadcrumb, renderMode, "")
 }
 
 // SearchEmbedBlockInBox 与 SearchEmbedBlock 一致，但按 boxID 路由 SQL 到加密 content db。
 // 加密笔记本的嵌入块查询走独立加密库（全局 siyuan.db 不含加密数据），boxID 为空时落回全局库。
-func SearchEmbedBlockInBox(embedBlockID, stmt string, excludeIDs []string, headingMode int, breadcrumb bool, boxID string) (ret []*EmbedBlock) {
-	return searchEmbedBlockInBox(embedBlockID, stmt, excludeIDs, headingMode, breadcrumb, boxID, true)
+func SearchEmbedBlockInBox(embedBlockID, stmt string, excludeIDs []string, headingMode int, breadcrumb bool,
+	renderMode string, boxID string) (ret []*EmbedBlock) {
+	return searchEmbedBlockInBox(embedBlockID, stmt, excludeIDs, headingMode, breadcrumb, renderMode, boxID, true)
 }
 
 func SearchEmbedBlockForPublish(embedBlockID, stmt string, excludeIDs []string, headingMode int, breadcrumb bool,
-	boxID string) (ret []*EmbedBlock) {
-	return searchEmbedBlockInBox(embedBlockID, stmt, excludeIDs, headingMode, breadcrumb, boxID, false)
+	renderMode string, boxID string) (ret []*EmbedBlock) {
+	return searchEmbedBlockInBox(embedBlockID, stmt, excludeIDs, headingMode, breadcrumb, renderMode, boxID, false)
 }
 
-func searchEmbedBlockInBox(embedBlockID, stmt string, excludeIDs []string, headingMode int, breadcrumb bool, boxID string,
-	updateIndex bool) (ret []*EmbedBlock) {
+func searchEmbedBlockInBox(embedBlockID, stmt string, excludeIDs []string, headingMode int, breadcrumb bool,
+	renderMode string, boxID string, updateIndex bool) (ret []*EmbedBlock) {
 	confSearchSnapshot := Conf.LoadSearch()
 
 	var sqlBlocks []*sql.Block
@@ -345,12 +349,12 @@ func searchEmbedBlockInBox(embedBlockID, stmt string, excludeIDs []string, headi
 	} else {
 		sqlBlocks = sql.SelectBlocksRawStmtNoParse(stmt, confSearchSnapshot.Limit)
 	}
-	ret = buildEmbedBlock(embedBlockID, excludeIDs, headingMode, breadcrumb, treenode.GetEmbedBlockRefID(stmt), sqlBlocks, updateIndex, boxID)
+	ret = buildEmbedBlock(embedBlockID, excludeIDs, headingMode, breadcrumb, renderMode, treenode.GetEmbedBlockRefID(stmt), sqlBlocks, updateIndex, boxID)
 	return
 }
 
-func buildEmbedBlock(embedBlockID string, excludeIDs []string, headingMode int, breadcrumb bool, embedBlockRefID string,
-	sqlBlocks []*sql.Block, updateIndex bool, boxID string) (ret []*EmbedBlock) {
+func buildEmbedBlock(embedBlockID string, excludeIDs []string, headingMode int, breadcrumb bool, renderMode string,
+	embedBlockRefID string, sqlBlocks []*sql.Block, updateIndex bool, boxID string) (ret []*EmbedBlock) {
 	var tmp []*sql.Block
 	for _, b := range sqlBlocks {
 		if "query_embed" == b.Type { // 嵌入块不再嵌入
@@ -382,7 +386,7 @@ func buildEmbedBlock(embedBlockID string, excludeIDs []string, headingMode int, 
 	}
 
 	for _, sb := range sqlBlocks {
-		block, blockPaths := getEmbeddedBlock(trees, sb, headingMode, breadcrumb)
+		block, blockPaths := getEmbeddedBlock(trees, sb, headingMode, breadcrumb, renderMode)
 		if nil == block {
 			continue
 		}

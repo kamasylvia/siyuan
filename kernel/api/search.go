@@ -208,7 +208,7 @@ var searchTemplate = contractHandler(apicontract.SearchTemplate, func(c *gin.Con
 })
 
 var getEmbedBlock = contractHandler(apicontract.GetEmbedBlock, func(c *gin.Context, request apicontract.GetEmbedBlockRequest) apicontract.Response[apicontract.EmbedBlocksData] {
-	embedBlockID, headingMode, breadcrumb := request.EmbedBlockID, int(request.HeadingMode), request.Breadcrumb
+	embedBlockID, headingMode, breadcrumb, renderMode := request.EmbedBlockID, int(request.HeadingMode), request.Breadcrumb, request.RenderMode
 	includeIDs := append([]string(nil), request.IncludeIDs...)
 	notebook := ""
 	if model.IsEncryptedBox(request.Notebook) {
@@ -221,13 +221,13 @@ var getEmbedBlock = contractHandler(apicontract.GetEmbedBlock, func(c *gin.Conte
 		if !model.CheckBlockIdAccessableByPublishAccess(c, publishAccess, embedBlockID) {
 			return apicontract.Failure[apicontract.EmbedBlocksData](-1, fmt.Sprintf(model.Conf.Language(15), embedBlockID))
 		}
-		blocks = model.GetEmbedBlockForPublish(embedBlockID, includeIDs, headingMode, breadcrumb)
+		blocks = model.GetEmbedBlockForPublish(embedBlockID, includeIDs, headingMode, breadcrumb, renderMode)
 		blocks = model.FilterEmbedBlocksByPublishAccess(c, publishAccess, blocks)
 	} else {
 		if notebook == "" {
-			blocks = model.GetEmbedBlock(embedBlockID, includeIDs, headingMode, breadcrumb)
+			blocks = model.GetEmbedBlock(embedBlockID, includeIDs, headingMode, breadcrumb, renderMode)
 		} else {
-			blocks = model.GetEmbedBlockInBox(embedBlockID, includeIDs, headingMode, breadcrumb, notebook)
+			blocks = model.GetEmbedBlockInBox(embedBlockID, includeIDs, headingMode, breadcrumb, notebook, renderMode)
 		}
 	}
 	return apicontract.Success(apicontract.EmbedBlocksData{Blocks: embedBlockContracts(blocks)})
@@ -247,7 +247,7 @@ var updateEmbedBlock = contractHandler(apicontract.UpdateEmbedBlock, func(c *gin
 })
 
 var searchEmbedBlock = contractHandler(apicontract.SearchEmbedBlock, func(c *gin.Context, request apicontract.SearchEmbedBlockRequest) apicontract.Response[apicontract.EmbedBlocksData] {
-	embedBlockID, headingMode, breadcrumb := request.EmbedBlockID, int(request.HeadingMode), request.Breadcrumb
+	embedBlockID, headingMode, breadcrumb, renderMode := request.EmbedBlockID, int(request.HeadingMode), request.Breadcrumb, request.RenderMode
 	stmt, boxID := request.Stmt, request.Notebook
 	var excludeIDs []string
 	for _, id := range request.ExcludeIDs {
@@ -278,10 +278,10 @@ var searchEmbedBlock = contractHandler(apicontract.SearchEmbedBlock, func(c *gin
 
 	var blocks []*model.EmbedBlock
 	if isReadOnlyRole {
-		blocks = model.SearchEmbedBlockForPublish(embedBlockID, stmt, excludeIDs, headingMode, breadcrumb, boxID)
+		blocks = model.SearchEmbedBlockForPublish(embedBlockID, stmt, excludeIDs, headingMode, breadcrumb, renderMode, boxID)
 		blocks = model.FilterEmbedBlocksByPublishAccess(c, publishAccess, blocks)
 	} else {
-		blocks = model.SearchEmbedBlockInBox(embedBlockID, stmt, excludeIDs, headingMode, breadcrumb, boxID)
+		blocks = model.SearchEmbedBlockInBox(embedBlockID, stmt, excludeIDs, headingMode, breadcrumb, renderMode, boxID)
 	}
 	return apicontract.Success(apicontract.EmbedBlocksData{Blocks: embedBlockContracts(blocks)})
 })
