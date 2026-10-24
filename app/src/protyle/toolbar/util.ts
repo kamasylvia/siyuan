@@ -408,7 +408,8 @@ export const copyTextByType = async (ids: string[],
             }
             text += `[${response.data.replace("[", "\\[").replace("]", "\\]")}](siyuan://blocks/${id})`;
         } else if (type === "hPath") {
-            const response = await fetchSyncPost("/api/filetree/getHPathByID", {id});
+            // 复制完整可读路径，包含笔记本名，如 Inbox/Dir/Doc
+            const response = await fetchSyncPost("/api/filetree/getFullHPathByID", {id});
             if (response.code !== 0 || typeof response.data !== "string") {
                 continue;
             }

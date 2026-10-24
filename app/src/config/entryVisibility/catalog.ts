@@ -79,7 +79,7 @@ const copyChildren = () => [
     node("copyProtocol", lang("copyProtocol"), false),
     node("copyProtocolInMd", lang("copyProtocolInMd"), false),
     node("copyWebURL", lang("copyWebURL"), false),
-    node("copyHPath", lang("copyHPath"), false),
+    node("copyHPath", lang("copyHPath")),
     node("copyID", lang("copyID"), false),
 ];
 
