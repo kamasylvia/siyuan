@@ -168,23 +168,30 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           INPUT_VERSION: ${{ inputs.version }}
         run: |
-          TAGS=""
+          # 与官方镜像 tag 惯例一致：v 前缀为主标签（如 v3.8.8），无前缀作别名
+          VERSION=""
           if [ "$EVENT_NAME" = "push" ]; then
-            # tag 推送：v 前缀去掉作为版本标签，并更新 latest
-            TAGS=("${GITHUB_REF_NAME#v}" "latest")
+            VERSION="${GITHUB_REF_NAME#v}"
           elif [ -n "$INPUT_VERSION" ]; then
-            TAGS=("$INPUT_VERSION")
+            VERSION="${INPUT_VERSION#v}"
+          fi
+          args=()
+          if [ -n "$VERSION" ]; then
+            for tag in "v${VERSION}" "${VERSION}"; do
+              args+=("-t" "${IMAGE}:${tag}")
+            done
+            if [ "$EVENT_NAME" = "push" ]; then
+              args+=("-t" "${IMAGE}:latest")
+            fi
           else
-            TAGS=("$(echo "${GITHUB_REF_NAME}" | sed 's#/#-#g')")
+            # 分支手动触发：用分支名（/ 替换为 -）作为标签
+            args+=("-t" "${IMAGE}:$(echo "${GITHUB_REF_NAME}" | sed 's#/#-#g')")
           fi
           # 追加 commit 短 SHA 标签，便于回溯
-          TAGS+=("sha-${GITHUB_SHA::7}")
-          args=()
-          for tag in "${TAGS[@]}"; do
-            args+=("-t" "${IMAGE}:${tag}")
-          done
+          args+=("-t" "${IMAGE}:sha-${GITHUB_SHA::7}")
           while read -r digest; do
             [ -n "$digest" ] && args+=("${IMAGE}@${digest}")
           done < <(cat ./*)
           docker buildx imagetools create "${args[@]}"
-          docker buildx imagetools inspect "${IMAGE}:${TAGS[0]}"
+          if [ -n "$VERSION" ]; then primary="v${VERSION}"; else primary="$(echo "${GITHUB_REF_NAME}" | sed 's#/#-#g')"; fi
+          docker buildx imagetools inspect "${IMAGE}:${primary}"
