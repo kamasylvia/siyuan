@@ -1,0 +1,73 @@
+name: Fork macOS Client
+
+# fork 自用 mac 客户端构建:arm64 dmg,无签名(ad-hoc),供本机替换官方客户端。
+# 远程工作空间前端来自客户端本地安装包,官方客户端永远没有 fork 前端特性,须用本产物。
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fork-mac-client
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-14
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: kernel/go.mod
+          cache-dependency-path: kernel/go.sum
+          cache: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Enable pnpm
+        working-directory: app
+        run: |
+          corepack enable
+          corepack install --global "$(node -e 'console.log(require("./package.json").packageManager)')"
+
+      - name: Build kernel (darwin-arm64)
+        working-directory: kernel
+        env:
+          CGO_ENABLED: "1"
+          GOOS: darwin
+          GOARCH: arm64
+        run: go build -tags "fts5 sqlcipher" -o "../app/kernel-darwin-arm64/SiYuan-Kernel" -ldflags "-s -w"
+
+      - name: Build frontend
+        working-directory: app
+        run: |
+          pnpm install --silent
+          pnpm run build
+
+      - name: Package dmg (unsigned, ad-hoc)
+        working-directory: app
+        env:
+          ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
+        run: npx electron-builder --arm64 --mac --config electron-builder-fork-darwin-arm64.yml --publish=never
+
+      - name: Upload dmg
+        uses: actions/upload-artifact@v4
+        with:
+          name: siyuan-fork-mac-arm64-dmg
+          path: app/build/*.dmg
+          if-no-files-found: error
+          retention-days: 14
