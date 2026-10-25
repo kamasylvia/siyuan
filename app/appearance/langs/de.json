@@ -1,4 +1,6 @@
 {
+	"pdfPreview": "PDF-Asset-Links im Dokument anzeigen",
+	"pdfPreviewTip": "Wenn aktiviert, werden PDF-Asset-Links direkt im Dokument eingebettet angezeigt; beim Deaktivieren öffnet ein Klick wie gewohnt den Asset-Tab",
 	"docTreeJumpPage": "Zu Seite springen",
 	"embedRenderMode": "Rendermodus",
 	"embedRenderModeTable": "Tabelle",

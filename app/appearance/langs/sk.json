@@ -1,4 +1,6 @@
 {
+	"pdfPreview": "Zobraziť PDF odkazy v dokumente",
+	"pdfPreviewTip": "Pri zapnutí sa PDF odkazy na zdroje zobrazia priamo v dokumente; pri vypnutí kliknutie otvorí kartu zdroja ako zvyčajne",
 	"docTreeJumpPage": "Prejsť na stranu",
 	"embedRenderMode": "Režim zobrazenia",
 	"embedRenderModeTable": "Tabuľka",

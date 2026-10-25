@@ -239,6 +239,10 @@ const registerEditorEmbedsGroup = (tab: SettingTabBuilder) => {
         title: window.siyuan.languages.embedBlockBreadcrumb,
         desc: window.siyuan.languages.embedBlockBreadcrumbTip,
     });
+    group.switch("editor.pdfPreview", {
+        title: window.siyuan.languages.pdfPreview,
+        desc: window.siyuan.languages.pdfPreviewTip,
+    });
 };
 
 const registerEditorImagesGroup = (tab: SettingTabBuilder) => {

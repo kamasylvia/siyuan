@@ -1,4 +1,6 @@
 {
+	"pdfPreview": "Preview PDF asset links in the document",
+	"pdfPreviewTip": "When enabled, PDF asset links in documents are previewed inline; when disabled, clicking a PDF asset link opens it in the asset tab as usual",
 	"docTreeJumpPage": "Jump to page",
 	"embedRenderMode": "Render mode",
 	"embedRenderModeTable": "Table",

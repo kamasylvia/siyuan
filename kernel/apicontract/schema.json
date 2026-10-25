@@ -41359,6 +41359,16 @@
             }
           ]
         },
+        "pdfPreview": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "plantUMLServePath": {
           "anyOf": [
             {
@@ -45404,6 +45414,9 @@
         "pasteURLAutoConvert": {
           "type": "boolean"
         },
+        "pdfPreview": {
+          "type": "boolean"
+        },
         "plantUMLServePath": {
           "type": "string"
         },
@@ -45501,6 +45514,7 @@
         "onlySearchForDoc",
         "pageScrollButtons",
         "pasteURLAutoConvert",
+        "pdfPreview",
         "plantUMLServePath",
         "readOnly",
         "rtl",
@@ -46195,6 +46209,16 @@
           ]
         },
         "pasteURLAutoConvert": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pdfPreview": {
           "anyOf": [
             {
               "type": "boolean"

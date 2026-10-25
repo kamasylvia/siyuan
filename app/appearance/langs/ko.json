@@ -1,4 +1,6 @@
 {
+	"pdfPreview": "문서에서 PDF 바로 미리보기",
+	"pdfPreviewTip": "활성화하면 문서의 PDF 자산 링크를 인라인으로 미리 봅니다. 비활성화하면 기존과 같이 클릭 후 자산 탭에서 열립니다",
 	"docTreeJumpPage": "페이지로 이동",
 	"embedRenderMode": "렌더링 모드",
 	"embedRenderModeTable": "표",

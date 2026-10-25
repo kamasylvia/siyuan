@@ -718,6 +718,10 @@ declare namespace Config {
          */
         embedBlockBreadcrumb: boolean;
         /**
+         * Whether PDF asset links are previewed inline in the document; when off, clicking opens the asset tab as upstream
+         */
+        pdfPreview: boolean;
+        /**
          * Whether to display automatic heading numbers
          */
         headingNumber: boolean;

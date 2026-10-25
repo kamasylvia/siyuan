@@ -1,4 +1,6 @@
 {
+	"pdfPreview": "PDF-koppelingen in het document bekijken",
+	"pdfPreviewTip": "Ingeschakeld worden PDF-assetkoppelingen direct in het document getoond; uitgeschakeld opent een klik zoals gebruikelijk het asset-tabblad",
 	"docTreeJumpPage": "Naar pagina gaan",
 	"embedRenderMode": "Weergavemodus",
 	"embedRenderModeTable": "Tabel",

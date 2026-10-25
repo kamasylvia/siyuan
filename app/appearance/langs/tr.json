@@ -1,4 +1,6 @@
 {
+	"pdfPreview": "PDF bağlantılarını belgede önizle",
+	"pdfPreviewTip": "Etkinleştirildiğinde PDF varlık bağlantıları belgede satır içi önizlenir; devre dışıyken tıklamak her zamanki gibi varlık sekmesini açar",
 	"docTreeJumpPage": "Sayfaya git",
 	"embedRenderMode": "İşleme modu",
 	"embedRenderModeTable": "Tablo",

@@ -252,6 +252,7 @@ func renderVisibleBlockDOMByNodes(nodes []*ast.Node, luteEngine *lute.Lute) stri
 func renderBlockDOMByNodes(nodes []*ast.Node, luteEngine *lute.Lute) string {
 	tree := &parse.Tree{Root: &ast.Node{Type: ast.NodeDocument}, Context: &parse.Context{ParseOption: luteEngine.ParseOptions}}
 	blockRenderer := render.NewProtyleRenderer(tree, luteEngine.RenderOptions, luteEngine.ParseOptions)
+	pdfPreview := Conf.Editor.Load().PDFPreview
 	for _, node := range nodes {
 		ast.Walk(node, func(n *ast.Node, entering bool) ast.WalkStatus {
 			if entering {
@@ -267,7 +268,12 @@ func renderBlockDOMByNodes(nodes []*ast.Node, luteEngine *lute.Lute) string {
 			}
 
 			rendererFunc := blockRenderer.RendererFuncs[n.Type]
-			return rendererFunc(n, entering)
+			status := rendererFunc(n, entering)
+			// 开启后，包含 PDF 资产链接的块在渲染时于其后追加内嵌预览，无需跳转资产页签
+			if pdfPreview && !entering && n.IsBlock() {
+				writePDFAssetEmbed(blockRenderer, n)
+			}
+			return status
 		})
 	}
 	h := strings.TrimSpace(blockRenderer.Writer.String())
@@ -597,4 +603,43 @@ func renderBlockMarkdownR(id string, rendered *[]string, boxIDs ...string) (ret 
 
 	}
 	return
+}
+
+// writePDFAssetEmbed 在包含 PDF 资产链接的块渲染完成后，向渲染器追加一个内嵌 iframe 预览块。
+// iframe 节点为游离节点，仅存在于渲染输出中，不写回源数据树，块内已含 iframe 时不重复追加。
+func writePDFAssetEmbed(blockRenderer *render.ProtyleRenderer, block *ast.Node) {
+	src, found := pdfAssetEmbedSrc(block)
+	if !found {
+		return
+	}
+	embed := &ast.Node{Type: ast.NodeIFrame, Tokens: []byte(`<iframe src="` + src + `" style="width: 100%; height: 60vh;border: 0" scrolling="auto"></iframe>`)}
+	rendererFunc := blockRenderer.RendererFuncs[ast.NodeIFrame]
+	rendererFunc(embed, true)
+	rendererFunc(embed, false)
+}
+
+// pdfAssetEmbedSrc 返回块内首个 PDF 资产链接的资产路径；块内已有 iframe 块时视为用户手动管理，不再注入
+func pdfAssetEmbedSrc(block *ast.Node) (src string, found bool) {
+	hasIframe := false
+	ast.Walk(block, func(n *ast.Node, entering bool) ast.WalkStatus {
+		if !entering {
+			return ast.WalkContinue
+		}
+		if ast.NodeIFrame == n.Type {
+			hasIframe = true
+			return ast.WalkSkipChildren
+		}
+		if ast.NodeLink == n.Type && nil != n.ChildByType(ast.NodeLinkDest) {
+			dest := strings.TrimSpace(string(n.ChildByType(ast.NodeLinkDest).Tokens))
+			lower := strings.ToLower(dest)
+			if strings.HasPrefix(lower, "assets/") && strings.HasSuffix(lower, ".pdf") && "" == src {
+				src = dest
+			}
+		}
+		return ast.WalkContinue
+	})
+	if hasIframe || "" == src {
+		return "", false
+	}
+	return src, true
 }

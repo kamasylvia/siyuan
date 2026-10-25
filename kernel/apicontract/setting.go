@@ -281,6 +281,7 @@ type SettingEditor struct {
 	HeadingNumber           bool             `json:"headingNumber" api:"optional,nullable"`
 	HeadingNumberFormat     string           `json:"headingNumberFormat" api:"optional,nullable"`
 	HeadingEmbedMode        int              `json:"headingEmbedMode" api:"optional,nullable"`
+	PDFPreview              bool             `json:"pdfPreview" api:"optional,nullable"`
 	PasteURLAutoConvert     bool             `json:"pasteURLAutoConvert" api:"optional,nullable"`
 	DragHTMLFileToIframe    bool             `json:"dragHTMLFileToIframe" api:"optional,nullable"`
 	Markdown                *SettingMarkdown `json:"markdown" api:"optional,nullable"`

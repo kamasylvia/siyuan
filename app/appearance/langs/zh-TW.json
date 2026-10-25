@@ -1,4 +1,6 @@
 {
+	"pdfPreview": "在文件中直接預覽 PDF",
+	"pdfPreviewTip": "開啟後，文件中的 PDF 資產連結將直接內嵌預覽；關閉後保持預設，點擊後在資產分頁中開啟",
 	"docTreeJumpPage": "跳至頁",
 	"embedRenderMode": "渲染模式",
 	"embedRenderModeTable": "表格",

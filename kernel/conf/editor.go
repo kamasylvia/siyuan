@@ -110,6 +110,7 @@ type Editor struct {
 	HeadingNumber                   bool           `json:"headingNumber"`                   // 是否显示标题编号
 	HeadingNumberFormat             string         `json:"headingNumberFormat"`             // 标题编号格式
 	HeadingEmbedMode                int            `json:"headingEmbedMode"`                // 标题嵌入块模式，0：显示标题与下方的块，1：仅显示标题，2：仅显示标题下方的块
+	PDFPreview                      bool           `json:"pdfPreview"`                      // 是否在文档中直接预览 PDF 资产链接，关闭时保持点击后在资产页签中打开
 	PasteURLAutoConvert             bool           `json:"pasteURLAutoConvert"`             // 粘贴网址时自动转为链接
 	DragHTMLFileToIframe            bool           `json:"dragHTMLFileToIframe"`            // 是否将拖拽的 HTML 文件嵌入为 IFrame 块
 	Markdown                        *util.Markdown `json:"markdown"`                        // Markdown 配置
@@ -249,6 +250,7 @@ func NewEditor() *Editor {
 		HeadingNumber:                   false,
 		HeadingNumberFormat:             DefaultHeadingNumberFormat,
 		HeadingEmbedMode:                0,
+		PDFPreview:                      false,
 		PasteURLAutoConvert:             false,
 		DragHTMLFileToIframe:            false,
 		Markdown:                        util.NewMarkdown(),

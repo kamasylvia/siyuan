@@ -1,4 +1,6 @@
 {
+	"pdfPreview": "Pratinjau tautan PDF dalam dokumen",
+	"pdfPreviewTip": "Saat diaktifkan, tautan aset PDF dipratinjau langsung di dalam dokumen; saat dinonaktifkan, klik membukanya di tab aset seperti biasa",
 	"docTreeJumpPage": "Menuju halaman",
 	"embedRenderMode": "Mode render",
 	"embedRenderModeTable": "Tabel",
