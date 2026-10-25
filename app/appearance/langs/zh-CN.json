@@ -1,4 +1,6 @@
 {
+	"embedRenderModeRaw": "原始 SQL 行",
+	"embedRenderModeRecent": "最近浏览",
 	"pdfPreview": "在文档中直接预览 PDF",
 	"pdfPreviewTip": "开启后，文档中的 PDF 资产链接将直接内嵌预览；关闭后保持默认，点击后在资产页签中打开",
 	"docTreeJumpPage": "跳至页",

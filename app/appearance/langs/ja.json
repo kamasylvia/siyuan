@@ -1,4 +1,6 @@
 {
+	"embedRenderModeRaw": "SQL 生データ",
+	"embedRenderModeRecent": "最近閲覧",
 	"pdfPreview": "ドキュメント内で PDF を直接プレビュー",
 	"pdfPreviewTip": "有効にすると、ドキュメント内の PDF アセットリンクをインラインでプレビューします。無効の場合は従来どおり、クリック後にアセットタブで開きます",
 	"docTreeJumpPage": "ページに移動",

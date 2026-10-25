@@ -23477,6 +23477,9 @@
               "type": "null"
             }
           ]
+        },
+        "rawRows": {
+          "$ref": "#/$defs/EmbedRawTable"
         }
       },
       "required": [
@@ -23512,6 +23515,52 @@
       },
       "required": [
         "blocks"
+      ],
+      "additionalProperties": false
+    },
+    "EmbedRawTable": {
+      "type": "object",
+      "properties": {
+        "columns": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rows": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "columns",
+        "rows"
       ],
       "additionalProperties": false
     },
@@ -28006,6 +28055,16 @@
           "items": {
             "type": "string"
           }
+        },
+        "limit": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "notebook": {
           "anyOf": [
@@ -39202,6 +39261,16 @@
           }
         },
         "headingMode": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "limit": {
           "anyOf": [
             {
               "type": "number"

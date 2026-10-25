@@ -123,11 +123,12 @@ type SearchAssetContentData struct {
 }
 
 type EmbedBlockOptions struct {
-	EmbedBlockID string  `json:"embedBlockID"`
-	HeadingMode  float64 `json:"headingMode" api:"optional,nullable"`
-	Breadcrumb   bool    `json:"breadcrumb" api:"optional,nullable"`
-	Notebook     string  `json:"notebook" api:"optional,nullable,ignoretype"`
-	RenderMode   string  `json:"renderMode" api:"optional,nullable"` // "table" 时返回轻量纯文本结果，用于嵌入块表格渲染
+	EmbedBlockID string   `json:"embedBlockID"`
+	HeadingMode  float64  `json:"headingMode" api:"optional,nullable"`
+	Breadcrumb   bool     `json:"breadcrumb" api:"optional,nullable"`
+	Notebook     string   `json:"notebook" api:"optional,nullable,ignoretype"`
+	RenderMode   string   `json:"renderMode" api:"optional,nullable"` // 渲染模式："table" 轻量纯文本表格；"raw" 原始 SQL 行表格；"recent" 最近浏览
+	Limit        *float64 `json:"limit" api:"optional"`               // raw/recent 模式的行数上限
 }
 
 type GetEmbedBlockRequest struct {
@@ -142,9 +143,15 @@ type SearchEmbedBlockRequest struct {
 }
 
 type EmbedBlock struct {
-	Block               *SearchBlock `json:"block"`
-	BlockPaths          []*BlockPath `json:"blockPaths"`
-	AllowChildOperation bool         `json:"allowChildOperation"`
+	Block               *SearchBlock   `json:"block"`
+	BlockPaths          []*BlockPath   `json:"blockPaths"`
+	AllowChildOperation bool           `json:"allowChildOperation"`
+	RawRows             *EmbedRawTable `json:"rawRows,omitempty"` // raw/recent 渲染模式的原始行表格
+}
+
+type EmbedRawTable struct {
+	Columns []string   `json:"columns"`
+	Rows    [][]string `json:"rows"`
 }
 
 type EmbedBlocksData struct {

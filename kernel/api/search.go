@@ -277,6 +277,24 @@ var searchEmbedBlock = contractHandler(apicontract.SearchEmbedBlock, func(c *gin
 	}
 
 	var blocks []*model.EmbedBlock
+	if "raw" == renderMode {
+		// raw 渲染模式：执行原始只读 SQL，返回任意行表格（聚合统计等）
+		limit := 100
+		if nil != request.Limit && *request.Limit > 0 {
+			limit = int(*request.Limit)
+		}
+		blocks = model.SearchEmbedBlockRawInBox(embedBlockID, stmt, boxID, limit)
+		return apicontract.Success(apicontract.EmbedBlocksData{Blocks: embedBlockContracts(blocks)})
+	}
+	if "recent" == renderMode {
+		// recent 渲染模式：最近浏览，数据存于 storage 无法经 SQL 查询，由内核组装
+		limit := 10
+		if nil != request.Limit && *request.Limit > 0 {
+			limit = int(*request.Limit)
+		}
+		blocks = model.RecentDocsEmbedBlock(embedBlockID, limit)
+		return apicontract.Success(apicontract.EmbedBlocksData{Blocks: embedBlockContracts(blocks)})
+	}
 	if isReadOnlyRole {
 		blocks = model.SearchEmbedBlockForPublish(embedBlockID, stmt, excludeIDs, headingMode, breadcrumb, renderMode, boxID)
 		blocks = model.FilterEmbedBlocksByPublishAccess(c, publishAccess, blocks)

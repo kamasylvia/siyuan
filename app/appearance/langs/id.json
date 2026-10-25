@@ -1,4 +1,6 @@
 {
+	"embedRenderModeRaw": "Baris SQL mentah",
+	"embedRenderModeRecent": "Baru saja dilihat",
 	"pdfPreview": "Pratinjau tautan PDF dalam dokumen",
 	"pdfPreviewTip": "Saat diaktifkan, tautan aset PDF dipratinjau langsung di dalam dokumen; saat dinonaktifkan, klik membukanya di tab aset seperti biasa",
 	"docTreeJumpPage": "Menuju halaman",

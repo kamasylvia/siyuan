@@ -198,9 +198,10 @@ func ListInvalidBlockRefs(page, pageSize int, excludeBoxIDs, excludeDocIDs []str
 }
 
 type EmbedBlock struct {
-	Block               *Block       `json:"block"`
-	BlockPaths          []*BlockPath `json:"blockPaths"`
-	AllowChildOperation bool         `json:"allowChildOperation"`
+	Block               *Block         `json:"block"`
+	BlockPaths          []*BlockPath   `json:"blockPaths"`
+	AllowChildOperation bool           `json:"allowChildOperation"`
+	RawRows             *EmbedRawTable `json:"rawRows,omitempty"`
 }
 
 func UpdateEmbedBlock(id, content string) (err error) {

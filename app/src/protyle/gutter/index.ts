@@ -2637,6 +2637,34 @@ export class Gutter {
                             nodeElement.removeAttribute("data-render");
                             blockRender(protyle, nodeElement);
                         }
+                    }, {
+                        id: "embedRenderModeRaw",
+                        label: window.siyuan.languages.embedRenderModeRaw,
+                        iconHTML: "",
+                        checked: nodeElement.getAttribute("custom-render-mode") === "raw",
+                        click() {
+                            nodeElement.setAttribute("custom-render-mode", "raw");
+                            fetchPost("/api/attr/setBlockAttrs", {
+                                id,
+                                attrs: {"custom-render-mode": "raw"}
+                            });
+                            nodeElement.removeAttribute("data-render");
+                            blockRender(protyle, nodeElement);
+                        }
+                    }, {
+                        id: "embedRenderModeRecent",
+                        label: window.siyuan.languages.embedRenderModeRecent,
+                        iconHTML: "",
+                        checked: nodeElement.getAttribute("custom-render-mode") === "recent",
+                        click() {
+                            nodeElement.setAttribute("custom-render-mode", "recent");
+                            fetchPost("/api/attr/setBlockAttrs", {
+                                id,
+                                attrs: {"custom-render-mode": "recent"}
+                            });
+                            nodeElement.removeAttribute("data-render");
+                            blockRender(protyle, nodeElement);
+                        }
                     }]
                 }, {
                     id: "embedHeadingLevel",

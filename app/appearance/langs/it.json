@@ -1,4 +1,6 @@
 {
+	"embedRenderModeRaw": "Righe SQL grezze",
+	"embedRenderModeRecent": "Visti di recente",
 	"pdfPreview": "Anteprima dei link PDF nel documento",
 	"pdfPreviewTip": "Quando attivo, i link alle risorse PDF vengono visualizzati direttamente nel documento; quando disattivo, un clic apre la scheda della risorsa come al solito",
 	"docTreeJumpPage": "Vai alla pagina",

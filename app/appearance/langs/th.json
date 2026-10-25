@@ -1,4 +1,6 @@
 {
+	"embedRenderModeRaw": "แถว SQL ดิบ",
+	"embedRenderModeRecent": "ดูล่าสุด",
 	"pdfPreview": "ดูตัวอย่างลิงก์ PDF ในเอกสาร",
 	"pdfPreviewTip": "เมื่อเปิดใช้ ลิงก์เนื้อหา PDF จะแสดงฝังในเอกสารโดยตรง เมื่อปิดใช้ การคลิกจะเปิดในแท็บเนื้อหาตามปกติ",
 	"docTreeJumpPage": "ไปที่หน้า",

@@ -1,4 +1,6 @@
 {
+	"embedRenderModeRaw": "Surowe wiersze SQL",
+	"embedRenderModeRecent": "Ostatnio przeglądane",
 	"pdfPreview": "Podglądaj łącza PDF w dokumencie",
 	"pdfPreviewTip": "Po włączeniu łącza zasobów PDF są wyświetlane bezpośrednio w dokumencie; po wyłączeniu kliknięcie otwiera kartę zasobu jak zwykle",
 	"docTreeJumpPage": "Przejdź do strony",

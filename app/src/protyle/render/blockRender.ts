@@ -12,7 +12,7 @@ import {finishCustomEmbedRender, finishEmptyEmbedRender, IEmbedRenderLoadingStat
 import {getHostCapabilities} from "../../util/hostCapabilities";
 import {isDirectHeadingEmbed} from "./embedHeading";
 import {isFoldedRenderContent} from "./foldedContent";
-import {genEmbedTableHTML, isTableEmbed} from "./embedTable";
+import {genEmbedTableHTML, genRawTableHTML, getEmbedRenderMode, isTableEmbed} from "./embedTable";
 
 /**
  * 渲染嵌入块
@@ -86,7 +86,7 @@ ${content}
                         includeIDs,
                         headingMode: ["0", "1", "2"].includes(item.getAttribute("custom-heading-mode")) ? parseInt(item.getAttribute("custom-heading-mode")) : window.siyuan.config.editor.headingEmbedMode,
                         breadcrumb,
-                        renderMode: isTableEmbed(item) ? "table" : "",
+                        renderMode: getEmbedRenderMode(item),
                         notebook: isEncryptedBox(protyle.notebookId) ? protyle.notebookId : ""
                     }, (response) => {
                         renderEmbed(response.data.blocks || [], protyle, item, top, undefined, onEmbedRender);
@@ -102,7 +102,7 @@ ${content}
                 headingMode: ["0", "1", "2"].includes(item.getAttribute("custom-heading-mode")) ? parseInt(item.getAttribute("custom-heading-mode")) : window.siyuan.config.editor.headingEmbedMode,
                 excludeIDs: [item.getAttribute("data-node-id"), protyle.block.rootID],
                 breadcrumb,
-                renderMode: isTableEmbed(item) ? "table" : "",
+                renderMode: getEmbedRenderMode(item),
                 notebook: isEncryptedBox(protyle.notebookId) ? protyle.notebookId : ""
             }, (response) => {
                 renderEmbed(response.data.blocks, protyle, item, top, undefined, onEmbedRender);
@@ -114,14 +114,31 @@ ${content}
 const renderEmbed = (blocks: {
     block: IBlock,
     blockPaths: IBreadcrumb[],
-    allowChildOperation: boolean
+    allowChildOperation: boolean,
+    rawRows?: {columns: string[], rows: string[][]}
 }[], protyle: IProtyle, item: HTMLElement, top?: number, errorTip?: string, onEmbedRender?: () => void) => {
     const rotateElement = item.querySelector(".fn__rotate");
     if (rotateElement) {
         rotateElement.classList.remove("fn__rotate");
     }
     const tableMode = isTableEmbed(item);
+    const rawTable = tableMode ? undefined : blocks.find((blocksItem) => blocksItem.rawRows)?.rawRows;
     let html = "";
+    if (!tableMode && rawTable) {
+        // raw/recent 渲染模式：内核返回原始行数据，直接渲染通用表格
+        item.firstElementChild.insertAdjacentHTML("afterend", normalizeHTMLAssetIFrameBlockDOM(genRawTableHTML(rawTable.columns, rawTable.rows)));
+        processRender(item);
+        highlightRender(item);
+        avRender(item, protyle);
+        if (protyle.disabled) {
+            disabledWYSIWYG(item);
+        }
+        if (top) {
+            protyle.contentElement.scrollTop = top;
+        }
+        onEmbedRender?.();
+        return;
+    }
     if (!tableMode) {
         blocks.forEach((blocksItem, index) => {
             let breadcrumbHTML = "";

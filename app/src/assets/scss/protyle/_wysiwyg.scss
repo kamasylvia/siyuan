@@ -1027,6 +1027,15 @@ body[data-format-painter] .protyle-wysiwyg[data-readonly="false"] {
     border-collapse: collapse;
   }
 
+  th {
+    text-align: left;
+    font-weight: 400;
+    color: var(--b3-theme-on-surface-light);
+    font-size: 12px;
+    padding: 4px 8px 4px 0;
+    white-space: nowrap;
+  }
+
   td {
     border-top: 1px dashed var(--b3-border-color);
     padding: 4px 8px 4px 0;

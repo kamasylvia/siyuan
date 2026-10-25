@@ -1,4 +1,6 @@
 {
+	"embedRenderModeRaw": "שורות SQL גולמיות",
+	"embedRenderModeRecent": "נצפו לאחרונה",
 	"pdfPreview": "תצוגה מקדימה של קישורי PDF במסמך",
 	"pdfPreviewTip": "כאשר מופעל, קישורי PDF מוצגים במסמך ישירות; כאשר כבוי, לחיצה פותחת בלשית הנכס כרגיל",
 	"docTreeJumpPage": "מעבר לעמוד",

@@ -1,4 +1,6 @@
 {
+	"embedRenderModeRaw": "Lignes SQL brutes",
+	"embedRenderModeRecent": "Vus récemment",
 	"pdfPreview": "Prévisualiser les liens PDF dans le document",
 	"pdfPreviewTip": "Une fois activé, les liens vers des ressources PDF sont prévisualisés directement dans le document ; une fois désactivé, un clic ouvre l'onglet de ressource comme d'habitude",
 	"docTreeJumpPage": "Aller à la page",

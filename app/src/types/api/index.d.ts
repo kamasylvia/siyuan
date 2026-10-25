@@ -984,9 +984,11 @@ export type DuplicateAttributeViewBlockRequestInput = { "avID": string; };
 
 export type EditorReadOnlyRequestInput = { "readonly": boolean; };
 
-export type EmbedBlock = { "allowChildOperation": boolean; "block": SearchBlock | null; "blockPaths": Array<BlockPath | null> | null; };
+export type EmbedBlock = { "allowChildOperation": boolean; "block": SearchBlock | null; "blockPaths": Array<BlockPath | null> | null; "rawRows"?: EmbedRawTable; };
 
 export type EmbedBlocksData = { "blocks": Array<EmbedBlock | null> | null; };
+
+export type EmbedRawTable = { "columns": Array<string> | null; "rows": Array<Array<string> | null> | null; };
 
 export type EmbedStat = { "complete": boolean; "cycleCount": number; "depthLimitCount": number; "failedQueryCount": number; "failedResultCount": number; "jsEmbedCount": number; "queryEmbedCount": number; "resultCount": number; "truncatedQueryCount": number; };
 
@@ -1224,7 +1226,7 @@ export type GetCloudRepoSnapshotsRequestInput = { "endTime"?: number; "page": nu
 
 export type GetCurrentAttrViewImagesRequestInput = { "blockID"?: string | null; "groupID"?: string | null; "id": string; "query"?: string | null; "viewID"?: string | null; };
 
-export type GetEmbedBlockRequestInput = { "breadcrumb"?: boolean | null; "embedBlockID": string; "headingMode"?: number | null; "includeIDs": Array<string>; "notebook"?: string | null; "renderMode"?: string | null; };
+export type GetEmbedBlockRequestInput = { "breadcrumb"?: boolean | null; "embedBlockID": string; "headingMode"?: number | null; "includeIDs": Array<string>; "limit"?: number | null; "notebook"?: string | null; "renderMode"?: string | null; };
 
 export type GetInstalledIconRequestInput = { "keyword"?: string | null; };
 
@@ -1832,7 +1834,7 @@ export type SearchBlockRequestInput = { "groupBy"?: number | null; "method"?: nu
 
 export type SearchBlocksData = { "blocks": Array<SearchBlock | null> | null; "matchedBlockCount": number; "matchedRootCount": number; "pageCount": number; };
 
-export type SearchEmbedBlockRequestInput = { "breadcrumb"?: boolean | null; "embedBlockID": string; "excludeIDs": Array<string | null>; "headingMode"?: number | null; "notebook"?: string | null; "renderMode"?: string | null; "stmt": string; };
+export type SearchEmbedBlockRequestInput = { "breadcrumb"?: boolean | null; "embedBlockID": string; "excludeIDs": Array<string | null>; "headingMode"?: number | null; "limit"?: number | null; "notebook"?: string | null; "renderMode"?: string | null; "stmt": string; };
 
 export type SearchHeadingFilterInput = { "h1"?: boolean | null; "h2"?: boolean | null; "h3"?: boolean | null; "h4"?: boolean | null; "h5"?: boolean | null; "h6"?: boolean | null; };
 
