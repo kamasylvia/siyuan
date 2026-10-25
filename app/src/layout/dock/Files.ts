@@ -2035,10 +2035,16 @@ data-type="navigation-root" data-path="/" data-count="${item.subFileCount || 0}"
     }
 
     private async onLsSelect(data: IFileTreeList, filePath: string, setStorage: boolean, isSetCurrent: boolean) {
+        if (typeof data.page === "number") {
+            // 以内核返回的页码为准，恢复展开状态时保持页码状态同步
+            this.docTreePages.set(data.box + "\t" + data.path, data.page);
+        }
         let fileHTML = "";
         data.files.forEach((item: IFile) => {
             fileHTML += this.genFileHTML(item);
         });
+        // 恢复展开状态与选中导航与展开刷新一致，渲染分页控件
+        fileHTML += this.genPagerHTML(data);
         if (fileHTML === "") {
             return;
         }
