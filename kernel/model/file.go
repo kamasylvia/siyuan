@@ -523,11 +523,7 @@ func ListDocTree(boxID, listPath string, sortMode int, flashcard, showHidden boo
 	start := time.Now()
 	files, totals, err = box.Ls(listPath)
 	if err != nil {
-		if "/assets/" != listPath {
-			return
-		}
-		// assets 为文档树伪目录，笔记本内不存在实体目录时仍继续，由下方注入资产条目
-		files, totals, err = nil, 0, nil
+		return
 	}
 	elapsed := time.Since(start).Milliseconds()
 	if 100 < elapsed {
@@ -630,17 +626,6 @@ func ListDocTree(boxID, listPath string, sortMode int, flashcard, showHidden boo
 		logging.LogWarnf("query root block ref count elapsed [%dms]", elapsed)
 	}
 
-	// 文档树混入资产文件：根列表追加 assets 目录，展开 assets 时返回其中的文件，PDF/图片等可点击预览
-	if !flashcard && !IsEncryptedBox(boxID) {
-		if "/assets/" == listPath {
-			docs = append(docs, box.assetTreeFiles()...)
-		} else if "/" == listPath {
-			if assetDir := box.assetTreeDir(); nil != assetDir {
-				docs = append(docs, assetDir)
-			}
-		}
-	}
-
 	start = time.Now()
 	box.fillSort(&docs)
 	sortDocTreeFiles(docs, sortMode)
@@ -668,66 +653,6 @@ func ListDocTree(boxID, listPath string, sortMode int, flashcard, showHidden boo
 	elapsed = time.Since(start).Milliseconds()
 	if 200 < elapsed {
 		logging.LogInfof("sort docs elapsed [%dms]", elapsed)
-	}
-	return
-}
-
-// assetTreeDir 返回文档树根列表中展示的 assets 目录条目，目录不存在或为空时返回 nil
-func (box *Box) assetTreeDir() *File {
-	files := box.assetTreeFiles()
-	if 1 > len(files) {
-		return nil
-	}
-	return &File{
-		Path:         "/assets/",
-		Name:         "assets",
-		SubFileCount: len(files),
-		IsAsset:      true,
-	}
-}
-
-// assetTreeFiles 递归返回资产文件（含子目录），路径保留子目录层级。
-// 同时合并笔记本自身 assets 与 workspace 全局 assets（相对路径去重，笔记本优先），
-// 后者是跨笔记本场景（如同步插件）的资产实际存放位置；条目数量仍受 maxListCount 与分页约束。
-func (box *Box) assetTreeFiles() (ret []*File) {
-	ret = []*File{}
-	seen := map[string]bool{}
-	boxAssets := filepath.Join(util.DataDir, box.ID, "assets")
-	globalAssets := filepath.Join(util.DataDir, "assets")
-	for _, assetsDir := range []string{boxAssets, globalAssets} {
-		filepath.WalkDir(assetsDir, func(path string, d fs.DirEntry, err error) error {
-			if nil != err || d.IsDir() {
-				return nil
-			}
-			info, infoErr := d.Info()
-			if nil != infoErr {
-				return nil
-			}
-			rel, relErr := filepath.Rel(assetsDir, path)
-			if nil != relErr {
-				return nil
-			}
-			rel = filepath.ToSlash(rel)
-			if seen[rel] {
-				return nil
-			}
-			seen[rel] = true
-			depth := 1 + strings.Count(rel, "/")
-			mTime := info.ModTime()
-			ret = append(ret, &File{
-				Path:    "/assets/" + rel,
-				Name:    d.Name(),
-				Size:    uint64(info.Size()),
-				HSize:   humanize.BytesCustomCeil(uint64(info.Size()), 2),
-				Mtime:   mTime.Unix(),
-				CTime:   mTime.Unix(),
-				HMtime:  mTime.Format("2006-01-02 15:04:05") + ", " + util.HumanizeTime(mTime, Conf.Lang),
-				HCtime:  mTime.Format("2006-01-02 15:04:05") + ", " + util.HumanizeTime(mTime, Conf.Lang),
-				IsAsset: true,
-				Sort:    depth,
-			})
-			return nil
-		})
 	}
 	return
 }
