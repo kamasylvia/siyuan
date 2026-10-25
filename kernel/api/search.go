@@ -490,7 +490,11 @@ func embedBlockContracts(values []*model.EmbedBlock) []*apicontract.EmbedBlock {
 	result := make([]*apicontract.EmbedBlock, len(values))
 	for i, value := range values {
 		if value != nil {
-			result[i] = &apicontract.EmbedBlock{Block: searchBlockContracts([]*model.Block{value.Block})[0], BlockPaths: blockPathContracts(value.BlockPaths), AllowChildOperation: value.AllowChildOperation}
+			contractBlock := &apicontract.EmbedBlock{Block: searchBlockContracts([]*model.Block{value.Block})[0], BlockPaths: blockPathContracts(value.BlockPaths), AllowChildOperation: value.AllowChildOperation}
+			if nil != value.RawRows {
+				contractBlock.RawRows = &apicontract.EmbedRawTable{Columns: value.RawRows.Columns, Rows: value.RawRows.Rows}
+			}
+			result[i] = contractBlock
 		}
 	}
 	return result
