@@ -4901,7 +4901,9 @@ export class WYSIWYG {
             }
             if (richCell && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && !protyle.disabled &&
                 richCell.closest(".protyle-wysiwyg") === this.element &&
-                !event.target.closest("a, [data-type~='block-ref'], [data-type~='a'], img")) {
+                !event.target.closest("a, [data-type~='block-ref'], [data-type~='a'], img") &&
+                // 嵌入块表格模式的行点击用于跳转文档，不进入数据表格单元格编辑
+                !event.target.closest(".embed-table")) {
                 event.preventDefault();
                 void import("../render/tableCellRichEditor").then(module => module.openTableCellRichEditor(protyle, richCell,
                     undefined, {x: event.clientX, y: event.clientY, target: event.target}));
