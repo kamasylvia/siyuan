@@ -18,6 +18,7 @@ package model
 
 import (
 	"path"
+	"strings"
 
 	"github.com/siyuan-note/logging"
 	"github.com/siyuan-note/siyuan/kernel/sql"
@@ -62,9 +63,15 @@ func RecentDocsEmbedBlock(embedBlockID string, limit int) (ret []*EmbedBlock) {
 	}
 	boxNames := Conf.BoxNames([]string{embedBt.BoxID})
 	boxName := boxNames[embedBt.BoxID]
+	rootID := embedBt.RootID
+	subtreeMark := "/" + rootID + "/"
 	for _, doc := range recentDocs {
 		docBt := treenode.GetBlockTree(doc.RootID)
-		if nil == docBt || docBt.BoxID != embedBt.BoxID {
+		if nil == docBt || docBt.BoxID != embedBt.BoxID || doc.RootID == rootID {
+			continue
+		}
+		// 仅展示该父文档子树下的文档（路径包含父文档 ID 目录段）
+		if !strings.Contains(docBt.Path, subtreeMark) {
 			continue
 		}
 		title := doc.Title
@@ -80,7 +87,7 @@ func RecentDocsEmbedBlock(embedBlockID string, limit int) (ret []*EmbedBlock) {
 				Type:    "query_embed",
 			},
 		})
-		if len(ret) >= limit+1 {
+		if len(ret) >= limit {
 			break
 		}
 	}
