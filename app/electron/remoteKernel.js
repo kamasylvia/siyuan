@@ -21,8 +21,9 @@ const normalizeRemoteKernelOrigin = (value) => {
     if (url.pathname !== "/" || url.search || url.hash || value.includes("?") || value.includes("#")) {
         throw new Error("--remote only accepts an origin without a path, query, or fragment");
     }
-    if (url.protocol !== "https:") {
-        throw new Error("--remote requires HTTPS");
+    // fork 内网部署：允许 http 远程内核（官方仅允许 https）
+    if (url.protocol !== "https:" && url.protocol !== "http:") {
+        throw new Error("--remote requires HTTP(S)");
     }
     return url.origin;
 };

@@ -168,7 +168,8 @@ func validateConfig(config apicontract.MCPOAuthConfig) error {
 		return nil
 	}
 	u, err := url.Parse(config.PublicURL)
-	if err != nil || u.Scheme != "https" || u.Hostname() == "" || u.User != nil || u.Path != "" || u.RawQuery != "" || u.Fragment != "" || u.Opaque != "" || u.ForceQuery || strings.ContainsAny(config.PublicURL, "?#*") {
+	// fork 内网部署：公开地址允许 http（官方仅允许 https）
+	if err != nil || (u.Scheme != "https" && u.Scheme != "http") || u.Hostname() == "" || u.User != nil || u.Path != "" || u.RawQuery != "" || u.Fragment != "" || u.Opaque != "" || u.ForceQuery || strings.ContainsAny(config.PublicURL, "?#*") {
 		return ErrInvalid
 	}
 	return nil
@@ -230,7 +231,7 @@ func (s *Service) AddClient(req apicontract.MCPOAuthClientRequest) (ret apicontr
 	req.Name = strings.TrimSpace(req.Name)
 	u, parseErr := url.Parse(req.RedirectURI)
 	if parseErr != nil || u.User != nil || strings.ContainsAny(req.RedirectURI, "#*") || u.Hostname() == "" || len(req.RedirectURI) > 2048 ||
-		(u.Scheme != "https" && !(u.Scheme == "http" && (u.Hostname() == "127.0.0.1" || u.Hostname() == "::1"))) || req.Name == "" || len(req.Name) > 128 {
+		(u.Scheme != "https" && u.Scheme != "http") || req.Name == "" || len(req.Name) > 128 {
 		return ret, ErrInvalid
 	}
 	s.mu.Lock()

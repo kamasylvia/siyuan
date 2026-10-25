@@ -35,10 +35,10 @@ test("normalizeRemoteKernelOrigin accepts HTTPS origins", () => {
     assert.equal(normalizeRemoteKernelOrigin("https://example.com:8443/"), "https://example.com:8443");
 });
 
-test("normalizeRemoteKernelOrigin rejects insecure or non-origin URLs", () => {
+test("normalizeRemoteKernelOrigin rejects invalid URLs but allows plain HTTP origins", () => {
     [
         "",
-        "http://example.com",
+        "ftp://example.com",
         "https://user:password@example.com",
         "https://example.com/path",
         "https://example.com/?query=value",
@@ -46,6 +46,7 @@ test("normalizeRemoteKernelOrigin rejects insecure or non-origin URLs", () => {
         "https://example.com/#fragment",
         "https://example.com#",
     ].forEach((value) => assert.throws(() => normalizeRemoteKernelOrigin(value)));
+    assert.equal(normalizeRemoteKernelOrigin("http://example.com:6806"), "http://example.com:6806");
 });
 
 test("remote extension trust requires the exact startup flag and a valid remote origin", () => {
@@ -61,7 +62,7 @@ test("remote extension trust requires the exact startup flag and a valid remote 
     assert.equal(target.trustRemoteExtensions, true);
     assert.equal(Buffer.from(target.extensionScriptNonce, "base64").length, 32);
     assert.notEqual(createRemoteKernelTarget(target.origin, args).extensionScriptNonce, target.extensionScriptNonce);
-    assert.throws(() => createRemoteKernelTarget("http://example.com", args));
+    assert.throws(() => createRemoteKernelTarget("ftp://example.com", args));
     assert.throws(() => createRemoteKernelTarget(undefined, args));
     assert.deepEqual(getKernelConnection(target), {
         kernelMode: "remote", ownsKernel: false, kernelOrigin: target.origin,
