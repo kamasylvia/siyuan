@@ -1,4 +1,6 @@
 {
+	"embedTableIndex": "ลำดับ",
+	"embedTableDir": "ไดเรกทอรีไฟล์",
 	"embedRenderModeRaw": "แถว SQL ดิบ",
 	"embedRenderModeRecent": "ดูล่าสุด",
 	"pdfPreview": "ดูตัวอย่างลิงก์ PDF ในเอกสาร",

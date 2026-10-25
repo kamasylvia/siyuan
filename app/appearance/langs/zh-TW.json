@@ -1,4 +1,6 @@
 {
+	"embedTableIndex": "序號",
+	"embedTableDir": "文件目錄",
 	"embedRenderModeRaw": "原始 SQL 行",
 	"embedRenderModeRecent": "最近瀏覽",
 	"pdfPreview": "在文件中直接預覽 PDF",

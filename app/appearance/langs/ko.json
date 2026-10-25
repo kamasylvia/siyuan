@@ -1,4 +1,6 @@
 {
+	"embedTableIndex": "번호",
+	"embedTableDir": "파일 위치",
 	"embedRenderModeRaw": "원시 SQL 행",
 	"embedRenderModeRecent": "최근 조회",
 	"pdfPreview": "문서에서 PDF 바로 미리보기",

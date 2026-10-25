@@ -1,4 +1,6 @@
 {
+	"embedTableIndex": "Lp.",
+	"embedTableDir": "Katalog pliku",
 	"embedRenderModeRaw": "Surowe wiersze SQL",
 	"embedRenderModeRecent": "Ostatnio przeglądane",
 	"pdfPreview": "Podglądaj łącza PDF w dokumencie",

@@ -1,4 +1,6 @@
 {
+	"embedTableIndex": "No.",
+	"embedTableDir": "File directory",
 	"embedRenderModeRaw": "Raw SQL rows",
 	"embedRenderModeRecent": "Recently viewed",
 	"pdfPreview": "Preview PDF asset links in the document",

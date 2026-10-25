@@ -1,4 +1,6 @@
 {
+	"embedTableIndex": "מס'",
+	"embedTableDir": "תיקיית הקובץ",
 	"embedRenderModeRaw": "שורות SQL גולמיות",
 	"embedRenderModeRecent": "נצפו לאחרונה",
 	"pdfPreview": "תצוגה מקדימה של קישורי PDF במסמך",

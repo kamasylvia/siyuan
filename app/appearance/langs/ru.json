@@ -1,4 +1,6 @@
 {
+	"embedTableIndex": "№",
+	"embedTableDir": "Каталог файла",
 	"embedRenderModeRaw": "Необработанные строки SQL",
 	"embedRenderModeRecent": "Недавно просмотренные",
 	"pdfPreview": "Просматривать ссылки PDF в документе",

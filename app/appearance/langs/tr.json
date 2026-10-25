@@ -1,4 +1,6 @@
 {
+	"embedTableIndex": "No.",
+	"embedTableDir": "Dosya dizini",
 	"embedRenderModeRaw": "Ham SQL satırları",
 	"embedRenderModeRecent": "Son görüntülenenler",
 	"pdfPreview": "PDF bağlantılarını belgede önizle",

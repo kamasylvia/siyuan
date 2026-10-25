@@ -12,7 +12,7 @@ import {finishCustomEmbedRender, finishEmptyEmbedRender, IEmbedRenderLoadingStat
 import {getHostCapabilities} from "../../util/hostCapabilities";
 import {isDirectHeadingEmbed} from "./embedHeading";
 import {isFoldedRenderContent} from "./foldedContent";
-import {genEmbedTableHTML, genRawTableHTML, getEmbedRenderMode, isTableEmbed} from "./embedTable";
+import {genEmbedTableHTML, genRawTableHTML, getEmbedRenderMode} from "./embedTable";
 
 /**
  * 渲染嵌入块
@@ -121,8 +121,9 @@ const renderEmbed = (blocks: {
     if (rotateElement) {
         rotateElement.classList.remove("fn__rotate");
     }
-    const tableMode = isTableEmbed(item);
-    const rawTable = tableMode ? undefined : blocks.find((blocksItem) => blocksItem.rawRows)?.rawRows;
+    const renderMode = getEmbedRenderMode(item);
+    const tableMode = "table" === renderMode || "recent" === renderMode;
+    const rawTable = !tableMode && "raw" === renderMode ? blocks.find((blocksItem) => blocksItem.rawRows)?.rawRows : undefined;
     let html = "";
     if (!tableMode && rawTable) {
         // raw/recent 渲染模式：内核返回原始行数据，直接渲染通用表格

@@ -1,4 +1,6 @@
 {
+	"embedTableIndex": "Бр.",
+	"embedTableDir": "Директоријум датотеке",
 	"embedRenderModeRaw": "Сирови SQL редови",
 	"embedRenderModeRecent": "Недавно гледано",
 	"pdfPreview": "Прегледај PDF везе у документу",

@@ -18,7 +18,6 @@ package model
 
 import (
 	"path"
-	"time"
 
 	"github.com/siyuan-note/logging"
 	"github.com/siyuan-note/siyuan/kernel/sql"
@@ -46,8 +45,8 @@ func SearchEmbedBlockRawInBox(embedBlockID, stmt, boxID string, limit int) (ret 
 	return
 }
 
-// RecentDocsEmbedBlock 返回最近浏览表格：按浏览时间倒序，范围限定为嵌入块所属笔记本。
-// 最近浏览数据存于 storage 而非 SQLite，无法经 SQL 查询，故由内核组装行数据。
+// RecentDocsEmbedBlock 返回最近浏览的文档块列表：按浏览时间倒序，范围限定为嵌入块所属笔记本。
+// 最近浏览数据存于 storage 而非 SQLite，无法经 SQL 查询，故由内核组装；块 ID 供前端行点击跳转。
 func RecentDocsEmbedBlock(embedBlockID string, limit int) (ret []*EmbedBlock) {
 	ret = []*EmbedBlock{}
 	if 1 > limit {
@@ -61,8 +60,8 @@ func RecentDocsEmbedBlock(embedBlockID string, limit int) (ret []*EmbedBlock) {
 	if err != nil {
 		return
 	}
-	columns := []string{"文档", "最近浏览"}
-	rows := [][]string{}
+	boxNames := Conf.BoxNames([]string{embedBt.BoxID})
+	boxName := boxNames[embedBt.BoxID]
 	for _, doc := range recentDocs {
 		docBt := treenode.GetBlockTree(doc.RootID)
 		if nil == docBt || docBt.BoxID != embedBt.BoxID {
@@ -72,15 +71,19 @@ func RecentDocsEmbedBlock(embedBlockID string, limit int) (ret []*EmbedBlock) {
 		if "" == title {
 			title = path.Base(docBt.HPath)
 		}
-		rows = append(rows, []string{title, time.Unix(doc.ViewedAt, 0).Format("2006-01-02 15:04")})
-		if len(rows) >= limit {
+		ret = append(ret, &EmbedBlock{
+			Block: &Block{
+				ID:      doc.RootID,
+				Box:     embedBt.BoxID,
+				HPath:   boxName + docBt.HPath,
+				Content: title,
+				Type:    "query_embed",
+			},
+		})
+		if len(ret) >= limit+1 {
 			break
 		}
 	}
-	ret = append(ret, &EmbedBlock{
-		Block:   newEmbedRawBlock(embedBlockID),
-		RawRows: &EmbedRawTable{Columns: columns, Rows: rows},
-	})
 	return
 }
 

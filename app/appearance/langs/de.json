@@ -1,4 +1,6 @@
 {
+	"embedTableIndex": "Nr.",
+	"embedTableDir": "Dateiverzeichnis",
 	"embedRenderModeRaw": "Rohe SQL-Zeilen",
 	"embedRenderModeRecent": "Zuletzt angesehen",
 	"pdfPreview": "PDF-Asset-Links im Dokument anzeigen",

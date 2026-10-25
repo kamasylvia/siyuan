@@ -33,16 +33,21 @@ export const genEmbedTableHTML = (blocks: {
     allowChildOperation: boolean,
     rawRows?: {columns: string[], rows: string[][]}
 }[]) => {
+    const lang = window.siyuan.languages;
+    const head = `<thead><tr><th>${escapeHtml(lang.embedTableIndex)}</th><th>${escapeHtml(lang.fileName)}</th><th>${escapeHtml(lang.embedTableDir)}</th></tr></thead>`;
     let rows = "";
-    blocks.forEach((blocksItem) => {
+    blocks.forEach((blocksItem, index) => {
         const id = blocksItem.block.id || "";
-        // 内核表格模式下 content 为纯文本名称
-        const title = blocksItem.block.content || "";
+        // 内核表格模式下 content 为纯文本名称；文件名/文件目录按 hPath 末段拆分
         const hPath = decodeKernelEntities(blocksItem.block.hPath || "");
+        const sepIndex = hPath.lastIndexOf("/");
+        const fileName = sepIndex >= 0 ? hPath.slice(sepIndex + 1) : (blocksItem.block.content || hPath);
+        const dir = sepIndex > 0 ? hPath.slice(0, sepIndex) : (sepIndex === 0 ? "/" : "");
         rows += `<tr class="embed-table__row" data-id="${escapeAttr(id)}">
-<td class="embed-table__title"><span class="popover__block" data-id="${escapeAttr(id)}">${escapeHtml(title)}</span></td>
-<td class="embed-table__path">${escapeHtml(hPath)}</td>
+<td class="embed-table__index">${index + 1}</td>
+<td class="embed-table__title"><span class="popover__block" data-id="${escapeAttr(id)}">${escapeHtml(fileName)}</span></td>
+<td class="embed-table__path">${escapeHtml(dir)}</td>
 </tr>`;
     });
-    return `<div class="embed-table" contenteditable="false"><table><tbody>${rows}</tbody></table></div>`;
+    return `<div class="embed-table" contenteditable="false"><table>${head}<tbody>${rows}</tbody></table></div>`;
 };

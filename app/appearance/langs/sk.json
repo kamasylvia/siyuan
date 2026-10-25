@@ -1,4 +1,6 @@
 {
+	"embedTableIndex": "Č.",
+	"embedTableDir": "Adresár súboru",
 	"embedRenderModeRaw": "Surové riadky SQL",
 	"embedRenderModeRecent": "Nedávno zobrazené",
 	"pdfPreview": "Zobraziť PDF odkazy v dokumente",

@@ -1049,6 +1049,13 @@ body[data-format-painter] .protyle-wysiwyg[data-readonly="false"] {
     }
   }
 
+  &__index {
+    color: var(--b3-theme-on-surface-light);
+    font-size: 12px;
+    width: 32px;
+    white-space: nowrap;
+  }
+
   &__title {
     max-width: 50%;
     overflow: hidden;

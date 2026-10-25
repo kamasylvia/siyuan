@@ -1,4 +1,6 @@
 {
+	"embedTableIndex": "番号",
+	"embedTableDir": "ファイル場所",
 	"embedRenderModeRaw": "SQL 生データ",
 	"embedRenderModeRecent": "最近閲覧",
 	"pdfPreview": "ドキュメント内で PDF を直接プレビュー",

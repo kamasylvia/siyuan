@@ -1,4 +1,6 @@
 {
+	"embedTableIndex": "Nr.",
+	"embedTableDir": "Bestandsmap",
 	"embedRenderModeRaw": "Ruwe SQL-rijen",
 	"embedRenderModeRecent": "Onlangs bekeken",
 	"pdfPreview": "PDF-koppelingen in het document bekijken",

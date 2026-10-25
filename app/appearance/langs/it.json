@@ -1,4 +1,6 @@
 {
+	"embedTableIndex": "N.",
+	"embedTableDir": "Cartella del file",
 	"embedRenderModeRaw": "Righe SQL grezze",
 	"embedRenderModeRecent": "Visti di recente",
 	"pdfPreview": "Anteprima dei link PDF nel documento",

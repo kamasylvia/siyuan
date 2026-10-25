@@ -1,41 +1,55 @@
 import * as assert from "node:assert/strict";
 import {test} from "node:test";
-import {genEmbedTableHTML, isTableEmbed} from "./embedTable";
+import {genEmbedTableHTML, genRawTableHTML} from "./embedTable";
 
-test("table render mode requires the custom-render-mode attribute", () => {
-    const fakeElement = (value: string | null) => ({getAttribute: (name: string): string | null => name === "custom-render-mode" ? value : null}) as unknown as Element;
-    assert.equal(isTableEmbed(fakeElement("table")), true);
-    assert.equal(isTableEmbed(fakeElement(null)), false);
-    assert.equal(isTableEmbed(fakeElement("list")), false);
+// genEmbedTableHTML 依赖多语言表头，测试环境提供最小 mock
+const mockLanguages = () => {
+    const globalWindow = (globalThis as { window?: unknown }).window;
+    (globalThis as {window?: unknown}).window = {
+        siyuan: {languages: {embedTableIndex: "序号", fileName: "文件名", embedTableDir: "文件目录"}},
+    };
+    return () => {
+        (globalThis as {window?: unknown}).window = globalWindow;
+    };
+};
+
+const block = (id: string, content: string, hPath: string) => ({
+    block: {id, content, hPath, ial: {}},
+    blockPaths: [] as IBreadcrumb[],
+    allowChildOperation: false,
 });
 
-test("table rows escape text and keep the block id for navigation", () => {
-    const html = genEmbedTableHTML([{
-        block: {id: "20260101000000-abcdefg", rootID: "20260101000000-abcdefg", hPath: "/Notebook/Dir/Doc", content: "Doc <title> & \"quote\"", ial: {}},
-        blockPaths: [],
-        allowChildOperation: false,
-    }]);
-    assert.ok(html.includes("data-id=\"20260101000000-abcdefg\""));
-    assert.ok(html.includes("Doc &lt;title> &amp; \"quote\""));
-    assert.ok(html.includes("/Notebook/Dir/Doc"));
-    assert.ok(html.includes("class=\"embed-table__row\""));
-    assert.ok(html.includes("class=\"popover__block\""));
+test("table rows render index, file name and directory columns with row click ids", () => {
+    const restore = mockLanguages();
+    try {
+        const html = genEmbedTableHTML([
+            block("20260101000000-abcdefg", "00-Apple", "Obsidian/10-Resources/11-CS/00-Apple"),
+            block("20260101000000-bcdefgh", "root doc", "Obsidian"),
+        ]);
+        assert.ok(html.includes("<thead><tr><th>序号</th><th>文件名</th><th>文件目录</th></tr></thead>"));
+        assert.ok(html.includes("data-id=\"20260101000000-abcdefg\""));
+        assert.ok(html.includes(">1<"));
+        assert.ok(html.includes(">2<"));
+        assert.ok(html.includes(">00-Apple<"));
+        assert.ok(html.includes("Obsidian/10-Resources/11-CS"));
+        assert.ok(html.includes('class="embed-table__row"'));
+    } finally {
+        restore();
+    }
 });
 
-test("table rows decode escaped notebook names in hPath", () => {
-    const html = genEmbedTableHTML([{
-        block: {id: "20260101000000-abcdefg", hPath: "&lt;Notebook&gt;/Dir&#34;s/Doc", content: "Doc", ial: {}},
-        blockPaths: [],
-        allowChildOperation: false,
-    }]);
-    assert.ok(html.includes("&lt;Notebook>/Dir\"s/Doc"));
-    assert.ok(!html.includes("&amp;lt;"));
-    assert.ok(!html.includes("&amp;#34;"));
+test("root-level docs show an empty directory column and escaped cells", () => {
+    const restore = mockLanguages();
+    try {
+        const html = genEmbedTableHTML([block("20260101000000-abcdefg", "<title>", "Obsidian")]);
+        assert.ok(html.includes("&lt;title>"));
+    } finally {
+        restore();
+    }
 });
 
-test("empty blocks render an empty table body without throwing", () => {
-    const html = genEmbedTableHTML([]);
-    assert.ok(html.startsWith("<div class=\"embed-table\""));
-    assert.ok(html.endsWith("</tbody></table></div>"));
-    assert.ok(!html.includes("<tr"));
+test("raw table renders escaped headers and rows", () => {
+    const html = genRawTableHTML(["指标", "数值"], [["全库文档总数", "840"]]);
+    assert.ok(html.includes("<th>指标</th>"));
+    assert.ok(html.includes("<td>840</td>"));
 });

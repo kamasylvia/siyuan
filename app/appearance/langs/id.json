@@ -1,4 +1,6 @@
 {
+	"embedTableIndex": "No.",
+	"embedTableDir": "Direktori file",
 	"embedRenderModeRaw": "Baris SQL mentah",
 	"embedRenderModeRecent": "Baru saja dilihat",
 	"pdfPreview": "Pratinjau tautan PDF dalam dokumen",

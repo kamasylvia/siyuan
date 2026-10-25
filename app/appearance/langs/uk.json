@@ -1,4 +1,6 @@
 {
+	"embedTableIndex": "№",
+	"embedTableDir": "Каталог файла",
 	"embedRenderModeRaw": "Сирі рядки SQL",
 	"embedRenderModeRecent": "Нещодавно переглянуті",
 	"pdfPreview": "Переглядати посилання PDF у документі",

@@ -1,4 +1,6 @@
 {
+	"embedTableIndex": "N.º",
+	"embedTableDir": "Carpeta del archivo",
 	"embedRenderModeRaw": "Filas SQL sin procesar",
 	"embedRenderModeRecent": "Vistos recientemente",
 	"pdfPreview": "Previsualizar enlaces de PDF en el documento",

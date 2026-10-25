@@ -1,4 +1,6 @@
 {
+	"embedTableIndex": "N°",
+	"embedTableDir": "Dossier du fichier",
 	"embedRenderModeRaw": "Lignes SQL brutes",
 	"embedRenderModeRecent": "Vus récemment",
 	"pdfPreview": "Prévisualiser les liens PDF dans le document",

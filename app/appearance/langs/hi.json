@@ -1,4 +1,6 @@
 {
+	"embedTableIndex": "क्रम",
+	"embedTableDir": "फ़ाइल निर्देशिका",
 	"embedRenderModeRaw": "कच्ची SQL पंक्तियाँ",
 	"embedRenderModeRecent": "हाल देखे गए",
 	"pdfPreview": "दस्तावेज़ में PDF लिंक प्रीव्यू करें",

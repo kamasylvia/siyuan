@@ -1,4 +1,6 @@
 {
+	"embedTableIndex": "الرقم",
+	"embedTableDir": "مجلد الملف",
 	"embedRenderModeRaw": "صفوف SQL الخام",
 	"embedRenderModeRecent": "شوهدت مؤخرًا",
 	"pdfPreview": "معاينة روابط PDF داخل المستند",
