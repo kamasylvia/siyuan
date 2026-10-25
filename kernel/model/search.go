@@ -344,11 +344,17 @@ func searchEmbedBlockInBox(embedBlockID, stmt string, excludeIDs []string, headi
 	renderMode string, boxID string, updateIndex bool) (ret []*EmbedBlock) {
 	confSearchSnapshot := Conf.LoadSearch()
 
+	// 表格渲染模式用于目录页等需要完整子树列表的场景，不受全局搜索条数限制（目录页分页/滚动由前端承载）
+	queryLimit := confSearchSnapshot.Limit
+	if "table" == renderMode && 2048 > queryLimit {
+		queryLimit = 2048
+	}
+
 	var sqlBlocks []*sql.Block
 	if "" != boxID {
-		sqlBlocks = sql.SelectBlocksRawStmtNoParseInBox(stmt, confSearchSnapshot.Limit, boxID)
+		sqlBlocks = sql.SelectBlocksRawStmtNoParseInBox(stmt, queryLimit, boxID)
 	} else {
-		sqlBlocks = sql.SelectBlocksRawStmtNoParse(stmt, confSearchSnapshot.Limit)
+		sqlBlocks = sql.SelectBlocksRawStmtNoParse(stmt, queryLimit)
 	}
 	ret = buildEmbedBlock(embedBlockID, excludeIDs, headingMode, breadcrumb, renderMode, treenode.GetEmbedBlockRefID(stmt), sqlBlocks, updateIndex, boxID)
 	return
