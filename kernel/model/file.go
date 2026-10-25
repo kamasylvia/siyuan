@@ -523,7 +523,11 @@ func ListDocTree(boxID, listPath string, sortMode int, flashcard, showHidden boo
 	start := time.Now()
 	files, totals, err = box.Ls(listPath)
 	if err != nil {
-		return
+		if "/assets/" != listPath {
+			return
+		}
+		// assets 为文档树伪目录，笔记本内不存在实体目录时仍继续，由下方注入资产条目
+		files, totals, err = nil, 0, nil
 	}
 	elapsed := time.Since(start).Milliseconds()
 	if 100 < elapsed {
