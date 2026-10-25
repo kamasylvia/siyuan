@@ -269,6 +269,15 @@ var searchEmbedBlock = contractHandler(apicontract.SearchEmbedBlock, func(c *gin
 		}
 	}
 
+	if "recent" == renderMode {
+		// recent 渲染模式：最近浏览，数据存于 storage 无法经 SQL 查询，由内核组装；语句不参与只读校验
+		limit := 10
+		if nil != request.Limit && *request.Limit > 0 {
+			limit = int(*request.Limit)
+		}
+		blocks := model.RecentDocsEmbedBlock(embedBlockID, limit)
+		return apicontract.Success(apicontract.EmbedBlocksData{Blocks: embedBlockContracts(blocks)})
+	}
 	if err := sql.CheckSingleStatement(stmt); nil != err {
 		return apicontract.Failure[apicontract.EmbedBlocksData](-1, err.Error())
 	}
@@ -284,15 +293,6 @@ var searchEmbedBlock = contractHandler(apicontract.SearchEmbedBlock, func(c *gin
 			limit = int(*request.Limit)
 		}
 		blocks = model.SearchEmbedBlockRawInBox(embedBlockID, stmt, boxID, limit)
-		return apicontract.Success(apicontract.EmbedBlocksData{Blocks: embedBlockContracts(blocks)})
-	}
-	if "recent" == renderMode {
-		// recent 渲染模式：最近浏览，数据存于 storage 无法经 SQL 查询，由内核组装
-		limit := 10
-		if nil != request.Limit && *request.Limit > 0 {
-			limit = int(*request.Limit)
-		}
-		blocks = model.RecentDocsEmbedBlock(embedBlockID, limit)
 		return apicontract.Success(apicontract.EmbedBlocksData{Blocks: embedBlockContracts(blocks)})
 	}
 	if isReadOnlyRole {
