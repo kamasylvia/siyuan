@@ -1054,6 +1054,16 @@ body[data-format-painter] .protyle-wysiwyg[data-readonly="false"] {
   }
 }
 
+// 文档内 PDF 预览：官方查看器填满固定高度容器（保证单页可见）
+.protyle-wysiwyg .protyle-pdf-preview {
+  height: 860px;
+  margin: 4px 0;
+
+  .pdf__outer {
+    height: 100%;
+  }
+}
+
 .protyle-wysiwyg[data-readonly="false"] .img .protyle-image-caption {
   margin-top: 12px;
 }

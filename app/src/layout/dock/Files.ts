@@ -2313,10 +2313,11 @@ style="--file-toggle-width:${paddingLeft + 18}px;--file-action-offset:${paddingL
         });
     }
 
-    // 资产条目：assets 目录与其中文件，单击文件直接打开预览（PDF/图片等）
+    // 资产条目：assets 目录与递归列出的文件，单击文件直接打开预览（PDF/图片等）
     private genAssetHTML(item: IFile) {
         const isDir = item.path.endsWith("/");
-        const depth = isDir ? 1 : 2;
+        // /assets/ 深度为 1，/assets/public/x.pdf 为 2，以此类推
+        const depth = item.path.replace(/\/+$/, "").split("/").length - 1;
         const paddingLeft = depth * 18;
         return `<li data-type="navigation-asset" data-name="${escapeHtmlTextAndAttr(item.name)}" data-path="${item.path}"
 class="b3-list-item b3-list-item--hide-action" style="--file-toggle-width:${paddingLeft + 18}px;--file-action-offset:${paddingLeft + 20}px">

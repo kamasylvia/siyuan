@@ -682,26 +682,29 @@ func (box *Box) assetTreeDir() *File {
 	}
 }
 
-// assetTreeFiles 返回笔记本 assets 目录下的文件列表，用于文档树展示；子目录忽略
+// assetTreeFiles 递归返回笔记本 assets 目录下的全部文件（含子目录），路径保留子目录层级
 func (box *Box) assetTreeFiles() (ret []*File) {
 	assetsDir := filepath.Join(util.DataDir, box.ID, "assets")
-	entries, err := os.ReadDir(assetsDir)
-	if nil != err {
-		return
-	}
 	ret = []*File{}
-	for _, entry := range entries {
-		if entry.IsDir() {
-			continue
+	// 文件按子目录层级平铺；条目数量仍受 maxListCount 与分页约束
+	filepath.WalkDir(assetsDir, func(path string, d fs.DirEntry, err error) error {
+		if nil != err || d.IsDir() {
+			return nil
 		}
-		info, infoErr := entry.Info()
+		info, infoErr := d.Info()
 		if nil != infoErr {
-			continue
+			return nil
 		}
+		rel, relErr := filepath.Rel(assetsDir, path)
+		if nil != relErr {
+			return nil
+		}
+		rel = filepath.ToSlash(rel)
+		depth := 1 + strings.Count(rel, "/")
 		mTime := info.ModTime()
 		ret = append(ret, &File{
-			Path:    "/assets/" + entry.Name(),
-			Name:    entry.Name(),
+			Path:    "/assets/" + rel,
+			Name:    d.Name(),
 			Size:    uint64(info.Size()),
 			HSize:   humanize.BytesCustomCeil(uint64(info.Size()), 2),
 			Mtime:   mTime.Unix(),
@@ -709,8 +712,10 @@ func (box *Box) assetTreeFiles() (ret []*File) {
 			HMtime:  mTime.Format("2006-01-02 15:04:05") + ", " + util.HumanizeTime(mTime, Conf.Lang),
 			HCtime:  mTime.Format("2006-01-02 15:04:05") + ", " + util.HumanizeTime(mTime, Conf.Lang),
 			IsAsset: true,
+			Sort:    depth,
 		})
-	}
+		return nil
+	})
 	return
 }
 
