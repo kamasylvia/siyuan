@@ -28,6 +28,7 @@ import {stickyRow} from "../render/av/row";
 import {getContenteditableElement} from "../wysiwyg/getBlock";
 import {activeBlur} from "../../mobile/util/keyboardToolbar";
 import {isEncryptedBox} from "../../util/pathName";
+import {pdfPreviewRender} from "../render/pdfPreview";
 import {
     invalidateHeadingNumberRefresh,
     queueHeadingNumberRefresh,
@@ -400,6 +401,7 @@ const setHTML = (options: {
     if (options.action.includes(Constants.CB_GET_BACKLINK)) {
         foldPassiveType(options.expand, protyle.wysiwyg.element);
     }
+    pdfPreviewRender(protyle.wysiwyg.element);
     processRender(protyle.wysiwyg.element);
     highlightRender(protyle.wysiwyg.element);
     options.beforeAVRender?.();
