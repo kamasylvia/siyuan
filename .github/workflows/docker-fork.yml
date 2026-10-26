@@ -46,7 +46,8 @@ jobs:
         with:
           persist-credentials: false
 
-      # 镜像标签必须与代码版本一致，防止 fork 未同步到该官方版本时打出错标镜像
+      # 镜像版本前三段必须与 package.json 一致，防止 fork 未同步到该官方版本时打出错标镜像；
+      # 第四段允许纯数字的 fork 构建号（如 3.8.8.2），fork 自己的小版本只进第四位
       - name: Validate requested version matches source
         env:
           REQUESTED: ${{ github.event_name == 'push' && github.ref_name || inputs.version }}
@@ -54,8 +55,18 @@ jobs:
           if [ -n "$REQUESTED" ]; then
             version="${REQUESTED#v}"
             package_version=$(jq -er .version app/package.json)
-            if [ "$version" != "$package_version" ]; then
+            base="$(echo "$version" | cut -d. -f1-3)"
+            fork_build="$(echo "$version" | cut -d. -f4)"
+            if [ "$base" != "$package_version" ]; then
               echo "Requested version ($version) does not match package.json ($package_version); sync the fork to that official version first"
+              exit 1
+            fi
+            if [ -n "$fork_build" ] && [ "$(echo "$version" | cut -d. -f5-)" != "" ]; then
+              echo "Requested version ($version) carries too many segments; only one fork build number is allowed"
+              exit 1
+            fi
+            if [ -n "$fork_build" ] && ! printf '%s' "$fork_build" | grep -Eq '^[0-9]+$'; then
+              echo "Fork build number ($fork_build) must be numeric"
               exit 1
             fi
           fi
