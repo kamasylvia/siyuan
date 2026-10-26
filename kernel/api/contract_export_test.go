@@ -149,6 +149,23 @@ func TestAPIContractExportArtifacts(t *testing.T) {
 	if err != nil || string(content) != "  content\n" {
 		t.Fatalf("temp content changed: %q %v", content, err)
 	}
+	// 临时导出地址须按请求自身的 Host 与转发头重构，远程内核返回 127.0.0.1 会让客户端预览窗白屏
+	remoteRequest := httptest.NewRequest("POST", "/api/export/exportTempContent", strings.NewReader(`{"content":"remote"}`))
+	remoteRequest.Host = "qnap.example.org:9443"
+	remoteRequest.Header.Set("X-Forwarded-Proto", "https")
+	remoteRecorder := httptest.NewRecorder()
+	engine := gin.New()
+	engine.POST("/api/export/exportTempContent", exportTempContent)
+	engine.ServeHTTP(remoteRecorder, remoteRequest)
+	var remoteTemp apicontract.ExportURLData
+	if err := json.Unmarshal(remoteRecorder.Body.Bytes(), &struct {
+		Data *apicontract.ExportURLData `json:"data"`
+	}{Data: &remoteTemp}); err != nil || remoteTemp.URL == "" {
+		t.Fatalf("remote temp export failed: %s %v", remoteRecorder.Body.String(), err)
+	}
+	if got := remoteTemp.URL; !strings.HasPrefix(got, "https://qnap.example.org:9443/export/temp/") {
+		t.Fatalf("remote temp export URL not derived from request host: %q", got)
+	}
 	if err = os.MkdirAll(filepath.Join(util.TempDir, "export", "folder"), 0755); err != nil {
 		t.Fatal(err)
 	}
