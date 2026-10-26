@@ -521,9 +521,11 @@ var exportTempContent = contractHandler(apicontract.ExportTempContent, func(c *g
 		urlPath = path.Join(urlPath, "temp", baseName)
 	}
 	// 用请求自身的 scheme 与 Host 重构访问地址：远程内核场景下内核视角的 127.0.0.1:6806
-	// 对客户端不可达，预览窗会白屏；本机场景 Host 即 127.0.0.1:6806，行为不变
+	// 对客户端不可达，预览窗会白屏；本机场景 Host 即 127.0.0.1:6806，行为不变。
+	// 客户端协议须用 IsTLSRequest 判定——固定端口反代以 HTTPS 回源，直接看 request.TLS
+	// 会把明文客户端误判为 TLS，返回客户端无法打开的 https 地址
 	scheme := "http"
-	if c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https" {
+	if util.IsTLSRequest(c.Request) || c.GetHeader("X-Forwarded-Proto") == "https" {
 		scheme = "https"
 	}
 	host := c.GetHeader("X-Forwarded-Host")

@@ -166,6 +166,23 @@ func TestAPIContractExportArtifacts(t *testing.T) {
 	if got := remoteTemp.URL; !strings.HasPrefix(got, "https://qnap.example.org:9443/export/temp/") {
 		t.Fatalf("remote temp export URL not derived from request host: %q", got)
 	}
+	// 固定端口反代以 HTTPS 回源内核，靠 ClientTLSHeader 区分客户端协议：
+	// 明文客户端即便从本机回源也必须拿到 http 地址，否则预览窗按 https 打开会白屏
+	proxiedRequest := httptest.NewRequest("POST", "/api/export/exportTempContent", strings.NewReader(`{"content":"proxied"}`))
+	proxiedRequest.Host = "qnap.example.org:6806"
+	proxiedRequest.RemoteAddr = "127.0.0.1:55555"
+	proxiedRequest.Header.Set(util.ClientTLSHeader, util.ClientTLSHeaderPlaintextValue)
+	proxiedRecorder := httptest.NewRecorder()
+	engine.ServeHTTP(proxiedRecorder, proxiedRequest)
+	var proxiedTemp apicontract.ExportURLData
+	if err := json.Unmarshal(proxiedRecorder.Body.Bytes(), &struct {
+		Data *apicontract.ExportURLData `json:"data"`
+	}{Data: &proxiedTemp}); err != nil || proxiedTemp.URL == "" {
+		t.Fatalf("proxied temp export failed: %s %v", proxiedRecorder.Body.String(), err)
+	}
+	if got := proxiedTemp.URL; !strings.HasPrefix(got, "http://qnap.example.org:6806/export/temp/") {
+		t.Fatalf("proxied plaintext client must get an http URL, got %q", got)
+	}
 	if err = os.MkdirAll(filepath.Join(util.TempDir, "export", "folder"), 0755); err != nil {
 		t.Fatal(err)
 	}
