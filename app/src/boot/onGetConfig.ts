@@ -286,16 +286,19 @@ ${response.data.replace("%pages", "<span class=totalPages></span>").replace("%pa
             }
             pdfFilePath = responseUnique.data.path;
             fs.writeFileSync(pdfFilePath, pdfData);
-            const processed = await fetchSyncPost("/api/export/processPDF", {
-                id: ipcData.rootId,
-                exportAssets: true,
-                merge: ipcData.mergeSubdocs,
-                mergeDocHeadingMode: ipcData.mergeDocHeadingMode,
-                mergeContentHeadingMode: ipcData.mergeContentHeadingMode,
-                path: pdfFilePath,
-                removeAssets: ipcData.removeAssets,
-                watermark: ipcData.watermark
-            });
+            // PDF 的书签、内嵌资源与水印由内核在其本地文件系统上后处理；
+            // 远程内核访问不到客户端的保存路径，跳过后处理直接交付 printToPDF 产物
+            const processed = getHostCapabilities().importExport ?
+                await fetchSyncPost("/api/export/processPDF", {
+                    id: ipcData.rootId,
+                    exportAssets: true,
+                    merge: ipcData.mergeSubdocs,
+                    mergeDocHeadingMode: ipcData.mergeDocHeadingMode,
+                    mergeContentHeadingMode: ipcData.mergeContentHeadingMode,
+                    path: pdfFilePath,
+                    removeAssets: ipcData.removeAssets,
+                    watermark: ipcData.watermark
+                }) : {code: 0};
             if (processed.code !== 0) {
                 showMessage(processed.msg, 0, "error", msgId);
                 return;

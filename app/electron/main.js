@@ -3537,12 +3537,13 @@ app.whenReady().then(() => {
             writeLog("ignored local native clipboard processing in remote kernel mode");
             return "";
         }
-        if (remoteSender && data.cmd === "showOpenDialog") {
+        // 受信任远程连接的 PDF 预览窗允许选择本地保存路径与打印，其余远程窗口维持禁用
+        const remoteSenderTrusted = getWindowKernelTarget(event.sender.id)?.trustRemoteExtensions === true;
+        // PDF 导出预览窗的保存目录选择同样走 showOpenDialog，受信连接放行
+        if (remoteSender && !remoteSenderTrusted && data.cmd === "showOpenDialog") {
             writeLog("ignored local open dialog in remote kernel mode");
             return {canceled: true, filePaths: []};
         }
-        // 受信任远程连接的 PDF 预览窗允许选择本地保存路径与打印，其余远程窗口维持禁用
-        const remoteSenderTrusted = getWindowKernelTarget(event.sender.id)?.trustRemoteExtensions === true;
         if (remoteSender && !remoteSenderTrusted && data.cmd === "showSaveDialog") {
             writeLog("ignored local save dialog in remote kernel mode");
             return {canceled: true, filePath: ""};
