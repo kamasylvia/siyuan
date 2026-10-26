@@ -298,7 +298,7 @@ ${response.data.replace("%pages", "<span class=totalPages></span>").replace("%pa
                     path: pdfFilePath,
                     removeAssets: ipcData.removeAssets,
                     watermark: ipcData.watermark
-                }) : {code: 0};
+                }) : {code: 0, msg: ""};
             if (processed.code !== 0) {
                 showMessage(processed.msg, 0, "error", msgId);
                 return;
