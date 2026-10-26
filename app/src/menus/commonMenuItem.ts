@@ -630,7 +630,7 @@ export const exportMd = (id: string) => {
         icon: "iconUpload",
         submenu: [{
             id: "exportTemplate",
-            ignore: !getHostCapabilities().importExport,
+            ignore: !getHostCapabilities().templateManagement,
             label: window.siyuan.languages.template,
             iconClass: "ft__error",
             icon: "iconMarkdown",

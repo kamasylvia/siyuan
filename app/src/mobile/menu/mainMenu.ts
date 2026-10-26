@@ -121,7 +121,7 @@ export const MOBILE_MAIN_MENU_GROUPS: IMobileMainMenuGroup[] = [{
             id: "menuTemplateManager",
             icon: "iconMarkdown",
             label: lang("templateManager"),
-            hidden: () => isReadonly() || !getHostCapabilities().importExport,
+            hidden: () => isReadonly() || !getHostCapabilities().templateManagement,
             click() {
                 const contextID = getCurrentEditor()?.protyle.block.rootID || "";
                 closePanel();

@@ -15,6 +15,7 @@ describe("trusted remote extension capabilities", () => {
         const capabilities = resolveHostCapabilities(true, undefined, connection.kernelOrigin);
         assert.equal(capabilities.documentImportExport, true);
         assert.equal(capabilities.importExport, false);
+        assert.equal(capabilities.templateManagement, true);
         assert.equal(capabilities.localFileSystem, false);
         assert.equal(capabilities.ownsKernel, false);
     });

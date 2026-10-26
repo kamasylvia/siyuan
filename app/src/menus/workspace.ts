@@ -446,7 +446,7 @@ export const workspaceMenu = async (app: App, rect: DOMRect, openOnly = false, t
                             }
                         }).element);
                     }
-                    if (getHostCapabilities().importExport) {
+                    if (getHostCapabilities().templateManagement) {
                         window.siyuan.menus.menu.append(new MenuItem({
                             id: "templateManager",
                             label: window.siyuan.languages.templateManager,

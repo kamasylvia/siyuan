@@ -11,6 +11,7 @@ export type THostCapabilities = {
     ownsKernel: boolean;
     localFileSystem: boolean;
     importExport: boolean;
+    templateManagement: boolean;
     documentImportExport: boolean;
     plugins: boolean;
     workspaces: boolean;
@@ -59,6 +60,8 @@ export const resolveHostCapabilities = (remoteKernel: boolean, connection: TKern
         ownsKernel,
         localFileSystem: !remoteKernel,
         importExport: !remoteKernel,
+        // 模板保存与管理仅经内核 API 写入 data/templates，不涉及本地文件系统，远程模式保持可用
+        templateManagement: true,
         documentImportExport: true,
         plugins: !remoteKernel || trustedExtensions,
         workspaces: !remoteKernel,
