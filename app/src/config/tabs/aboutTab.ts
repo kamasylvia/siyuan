@@ -1,5 +1,6 @@
 import type {SettingTabBuilder} from "../setting/builder";
 import {Constants} from "../../constants";
+import {forkBuild} from "../../../package.json";
 import {fetchPost} from "../../util/fetch";
 import {getCloudURL} from "../util/about";
 import {openLink} from "../../editor/openLink";
@@ -88,7 +89,7 @@ const genAboutVersionHtml = (): string => {
 </div>`;
 };
 
-const genAboutVersionName = () => `<div class="config-name">${window.siyuan.languages.currentVer} v${Constants.SIYUAN_VERSION}</div>`;
+const genAboutVersionName = () => `<div class="config-name">${window.siyuan.languages.currentVer} v${Constants.SIYUAN_VERSION}<span class="fn__space"></span><span class="b3-label__text">Fork ${forkBuild}</span></div>`;
 
 const genAllChangelogsLink = () => `<a href="https://github.com/siyuan-note/siyuan/releases" target="_blank">${window.siyuan.languages.allChangelogs}</a>`;
 

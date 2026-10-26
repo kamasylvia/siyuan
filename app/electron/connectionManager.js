@@ -9,8 +9,8 @@ const {readConnections, writeConnections, remotePartition} = require("./connecti
 
 const getRemoteSession = (target) => session.fromPartition(remotePartition(target.origin));
 
-const createConnectionManager = ({confDir, languageDir, restart, currentTarget, version, log, showWindow = true,
-    isTrustedDialogSender = () => false}) => {
+const createConnectionManager = ({confDir, languageDir, restart, currentTarget, version, forkBuild = "", log,
+    showWindow = true, isTrustedDialogSender = () => false}) => {
     const file = path.join(confDir, "connections.json");
     const page = pathToFileURL(path.join(__dirname, "connections.html")).href;
     let window;
@@ -251,7 +251,8 @@ const createConnectionManager = ({confDir, languageDir, restart, currentTarget, 
                     authenticatedOrigin = undefined;
                     const versionData = await (await request(origin, "/api/system/version", activeController.signal)).json();
                     if (getRemoteKernelVersionStatus(versionData, version) !== "compatible") {
-                        throw new Error(languages().remoteKernelVersionMismatch + " (" + version + ")");
+                        throw new Error(languages().remoteKernelVersionMismatch + " (" + version +
+                            (forkBuild ? ", fork " + forkBuild : "") + ")");
                     }
                     const authenticated = await probeRemoteKernelAuthentication(net, getRemoteSession({origin}),
                         origin + "/stage/build/app/");

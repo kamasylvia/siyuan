@@ -16,6 +16,7 @@ describe("trusted remote extension capabilities", () => {
         assert.equal(capabilities.documentImportExport, true);
         assert.equal(capabilities.importExport, false);
         assert.equal(capabilities.templateManagement, true);
+        assert.equal(capabilities.pdfExport, true);
         assert.equal(capabilities.localFileSystem, false);
         assert.equal(capabilities.ownsKernel, false);
     });

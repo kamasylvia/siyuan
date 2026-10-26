@@ -84,7 +84,9 @@ export const saveExport = (option: IExportOptions) => {
         });
         return;
     }
-    if (!getHostCapabilities().importExport) {
+    // PDF 导出由 pdfExport 能力位单独放行，其余类型仍随 importExport 收窄
+    if (!getHostCapabilities().importExport &&
+        !(getHostCapabilities().pdfExport && option.type === "pdf")) {
         return;
     }
     /// #if !BROWSER

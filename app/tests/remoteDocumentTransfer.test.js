@@ -12,7 +12,7 @@ const createEnvironment = ({browser = false, mobile = false, remote = true} = {}
     const saved = [];
     const messages = [];
     const hidden = [];
-    const capabilities = {remoteKernel: remote, documentImportExport: true, importExport: !remote, templateManagement: true, localFileSystem: !remote};
+    const capabilities = {remoteKernel: remote, documentImportExport: true, importExport: !remote, templateManagement: true, pdfExport: true, localFileSystem: !remote};
     const window = {navigator: {userAgent: "Desktop"}, location: {origin: "https://notes.example.com"}, siyuan: {
         languages: new Proxy({}, {get: (_, key) => String(key)}), notebooks: [], storage: {},
         menus: {menu: {append: menu => menus.push(menu)}},
@@ -62,7 +62,8 @@ test("remote document menus expose archive transfers, images and HTML without lo
     const env = createEnvironment();
     const menu = env.load("menus/commonMenuItem").exportMd("doc");
     assert.deepEqual(Array.from(menu.submenu.filter(item => !item.ignore), item => item.id), [
-        "exportTemplate", "exportSiYuanZip", "exportMarkdown", "exportImage", "exportHTML_SiYuan", "exportHTML_Markdown",
+        "exportTemplate", "exportSiYuanZip", "exportMarkdown", "exportImage", "exportPDF", "exportHTML_SiYuan",
+        "exportHTML_Markdown",
     ]);
     env.load("menus/navigation").genImportMenu("notebook", "/doc.sy");
     const items = env.menus[0].submenu.filter(item => !item.ignore);

@@ -236,7 +236,7 @@ export const initWindow = async (app: App) => {
         }
     });
     ipcRenderer.on(Constants.SIYUAN_EXPORT_PDF, async (e, ipcData) => {
-        if (!getHostCapabilities().importExport) {
+        if (!getHostCapabilities().pdfExport) {
             return;
         }
         const savePath = ipcData.filePaths[0];
