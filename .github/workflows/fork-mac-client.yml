@@ -18,7 +18,8 @@ concurrency:
 
 jobs:
   build:
-    runs-on: macos-14
+    # macos-14 是默认池最拥挤,容量不足时排队 15 分钟即弃;macos-15 池相对空闲
+    runs-on: macos-15
     timeout-minutes: 120
     steps:
       - name: Checkout
