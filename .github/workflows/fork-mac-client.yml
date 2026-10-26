@@ -54,7 +54,13 @@ jobs:
 
       - name: Build frontend
         working-directory: app
+        env:
+          # forkBuild 从 tag 注入，避免 package.json 静态值随版本漂移；手动 dispatch 时回落到当前值
+          FORK_BUILD: ${{ github.ref_name }}
         run: |
+          if [ -n "$FORK_BUILD" ] && [ "${FORK_BUILD#v}" != "$FORK_BUILD" ]; then
+            node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json'));p.forkBuild='$FORK_BUILD';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
+          fi
           pnpm install --silent
           pnpm run build
 
