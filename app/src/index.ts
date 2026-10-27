@@ -85,8 +85,8 @@ export class App {
         }
         registerServiceWorker(`${Constants.SERVICE_WORKER_PATH}?v=${Constants.SIYUAN_VERSION}`);
         addBaseURL();
-        if (isRemoteKernel()) {
-            // 远程空间的离线兜底:状态机、横幅与只读锁仅在远程模式初始化
+        if (isRemoteKernel() || isBrowser()) {
+            // 远程空间与浏览器访问(内核均不在本进程)启用离线兜底:状态机、横幅与只读锁
             initOfflineState();
             initOfflineSupport();
         }

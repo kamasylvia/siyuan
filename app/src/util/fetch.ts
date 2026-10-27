@@ -13,6 +13,7 @@ import {showMessage} from "../dialog/message";
 import {getDocCache, putDocCache} from "./offlineDocCache";
 import {isOffline} from "./offlineState";
 import {isRemoteKernel} from "./hostCapabilities";
+import {isBrowser} from "./functions";
 
 const reportTransactionFailure = (url: string, error: Error) => {
     if (url !== "/api/transactions" || error?.name === "AbortError") {
@@ -104,8 +105,8 @@ export const fetchPost = ((
             failCallback(response);
             return;
         }
-        // 远程空间在线打开的文档写入离线缓存,断网兜底用
-        if (url === "/api/filetree/getDoc" && data?.id && isRemoteKernel() &&
+        // 在线打开的文档写入离线缓存(远程模式或浏览器访问,内核均不在本进程),断网兜底用
+        if (url === "/api/filetree/getDoc" && data?.id && (isRemoteKernel() || isBrowser()) &&
             response && typeof response === "object" && response.code === 0) {
             void putDocCache(data.id, response);
         }
