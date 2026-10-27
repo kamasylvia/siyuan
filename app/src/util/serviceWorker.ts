@@ -26,4 +26,16 @@ export const registerServiceWorker = (
         console.debug(`Registration failed with ${e}`);
     });
     /// #endif
+    /// #if !BROWSER && !MOBILE
+    // 桌面客户端的远程工作空间同样注册 SW 以启用附件离线缓存;
+    // http 远程源不是安全上下文,注册会被拒绝,静默降级(文档缓存走 IndexedDB 不受影响)
+    import("./hostCapabilities").then(({isRemoteKernel}) => {
+        if (!isRemoteKernel() || !("serviceWorker" in window.navigator)) {
+            return;
+        }
+        window.navigator.serviceWorker.register(scriptURL, options).catch(e => {
+            console.debug(`Remote service worker registration skipped: ${e}`);
+        });
+    });
+    /// #endif
 };

@@ -1,4 +1,7 @@
 {
+	"offlineReadonlyTip": "Автономний режим лише для читання - автоматично розблоковується після відновлення мережі",
+	"offlineTransactionBlocked": "Редагування недоступне в автономному режимі лише для читання",
+	"offlineDocNotCached": "Цей документ не кешований і не може бути відкритий автономно",
 	"embedTableIndex": "№",
 	"embedTableDir": "Каталог файла",
 	"embedRenderModeRaw": "Сирі рядки SQL",

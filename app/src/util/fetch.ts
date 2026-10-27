@@ -10,6 +10,9 @@ import type {FetchGet, FetchPost, FetchSyncPost} from "../types/api";
 import {trackSettingRequest} from "../config/setting/pending";
 import {trackEditorSaveRequest} from "../protyle/util/editorSave";
 import {showMessage} from "../dialog/message";
+import {getDocCache, putDocCache} from "./offlineDocCache";
+import {isOffline} from "./offlineState";
+import {isRemoteKernel} from "./hostCapabilities";
 
 const reportTransactionFailure = (url: string, error: Error) => {
     if (url !== "/api/transactions" || error?.name === "AbortError") {
@@ -29,6 +32,11 @@ export const fetchPost = ((
     signal?: AbortSignal,
     timeout = url === "/api/system/exit" || url === "/api/system/setWorkspaceDir" ||
         (url === "/api/system/setUILayout" && data?.errorExit) ? 30000 : 0) => {
+    // 离线只读期间阻止全部写事务,避免编辑内容只落在本地 DOM
+    if (isOffline() && url === "/api/transactions") {
+        showMessage(window.siyuan.languages.offlineTransactionBlocked, 0, "error");
+        return;
+    }
     const init: RequestInit = {
         method: "POST",
     };
@@ -96,6 +104,11 @@ export const fetchPost = ((
             failCallback(response);
             return;
         }
+        // 远程空间在线打开的文档写入离线缓存,断网兜底用
+        if (url === "/api/filetree/getDoc" && data?.id && isRemoteKernel() &&
+            response && typeof response === "object" && response.code === 0) {
+            void putDocCache(data.id, response);
+        }
         if (typeof response === "string") {
             if (cb) {
                 cb(response);
@@ -116,6 +129,22 @@ export const fetchPost = ((
         }
     }).catch((e) => {
         if (e?.name === "AbortError") {
+            return;
+        }
+        // 断网时 getDoc 从离线缓存兜底,未缓存则提示
+        if (url === "/api/filetree/getDoc" && data?.id && isOffline()) {
+            void getDocCache(data.id).then(cached => {
+                if (cached && cb) {
+                    cb(cached);
+                    return;
+                }
+                showMessage(window.siyuan.languages.offlineDocNotCached);
+                failCallback?.({
+                    data: null,
+                    msg: e.message,
+                    code: 400,
+                });
+            });
             return;
         }
         if (failCallback) {

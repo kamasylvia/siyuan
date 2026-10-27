@@ -27,6 +27,9 @@ import {
 import {registerServiceWorker} from "./util/serviceWorker";
 import {activateQueuedAVLocate, queueAVLocateRequest} from "./protyle/render/av/locate";
 import {openFileById} from "./editor/util";
+import {isRemoteKernel} from "./util/hostCapabilities";
+import {initOfflineState} from "./util/offlineState";
+import {initOfflineSupport} from "./util/offlineSupport";
 import {activateOnboarding, ensureOnboarding} from "./onboarding";
 import {
     bootSync,
@@ -82,6 +85,11 @@ export class App {
         }
         registerServiceWorker(`${Constants.SERVICE_WORKER_PATH}?v=${Constants.SIYUAN_VERSION}`);
         addBaseURL();
+        if (isRemoteKernel()) {
+            // 远程空间的离线兜底:状态机、横幅与只读锁仅在远程模式初始化
+            initOfflineState();
+            initOfflineSupport();
+        }
 
         this.appId = Constants.SIYUAN_APPID;
 

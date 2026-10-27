@@ -1,4 +1,7 @@
 {
+	"offlineReadonlyTip": "Offline tylko do odczytu - odblokowuje się automatycznie po przywróceniu sieci",
+	"offlineTransactionBlocked": "Edycja jest niedostępna w trybie offline tylko do odczytu",
+	"offlineDocNotCached": "Ten dokument nie jest zapisany w pamięci podręcznej i nie można go otworzyć offline",
 	"embedTableIndex": "Lp.",
 	"embedTableDir": "Katalog pliku",
 	"embedRenderModeRaw": "Surowe wiersze SQL",

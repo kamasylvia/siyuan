@@ -1,4 +1,7 @@
 {
+	"offlineReadonlyTip": "오프라인 읽기 전용 - 네트워크가 복구되면 자동으로 잠금 해제됩니다",
+	"offlineTransactionBlocked": "오프라인 읽기 전용 모드에서는 편집할 수 없습니다",
+	"offlineDocNotCached": "이 문서는 캐시되지 않아 오프라인에서 열 수 없습니다",
 	"embedTableIndex": "번호",
 	"embedTableDir": "파일 위치",
 	"embedRenderModeRaw": "원시 SQL 행",

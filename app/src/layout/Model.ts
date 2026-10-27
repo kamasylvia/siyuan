@@ -1,4 +1,5 @@
 import {Constants} from "../constants";
+import {setWsConnected} from "../util/offlineState";
 /// #if !MOBILE
 import type {Tab} from "./Tab";
 /// #endif
@@ -75,6 +76,7 @@ export class Model {
             if (options.type === "main") {
                 const {markKernelConnectionAlive}: typeof import("../util/kernelConnection") = require("../util/kernelConnection");
                 markKernelConnectionAlive();
+                setWsConnected(true);
             }
             if (options.type === "main" && window.siyuan.isReady) {
                 const {reloadSettingsResetOnReconnect}: typeof import("../config/setting/reset") = require("../config/setting/reset");
@@ -118,6 +120,9 @@ export class Model {
         };
         ws.onclose = (ev) => {
             if (this.socketDisposed || this.ws !== ws) return;
+            if (options.type === "main") {
+                setWsConnected(false);
+            }
             if (0 <= ev.reason.indexOf("unauthenticated")) {
                 return;
             }

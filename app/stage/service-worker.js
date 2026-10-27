@@ -66,6 +66,27 @@ self.addEventListener("fetch", event => {
         return;
     }
 
+    // 附件（图片/PDF 等）走网络优先并落入离线缓存，断网时回退缓存，保证远程空间离线只读时附件可见。
+    if (url.origin === location.origin && url.pathname.startsWith("/assets/")) {
+        event.respondWith((async () => {
+            try {
+                const fetchResponse = await fetch(event.request);
+                if (fetchResponse.ok) {
+                    const assetCache = await caches.open("siyuan-offline-assets");
+                    await assetCache.put(event.request, fetchResponse.clone());
+                }
+                return fetchResponse;
+            } catch (error) {
+                const cachedResponse = await caches.match(event.request, {cacheName: "siyuan-offline-assets"});
+                if (cachedResponse) {
+                    return cachedResponse;
+                }
+                throw error;
+            }
+        })());
+        return;
+    }
+
     // Don't care about other requests.
     if (!url.pathname.startsWith("/stage/") &&
         !url.pathname.startsWith("/appearance/boot/") &&

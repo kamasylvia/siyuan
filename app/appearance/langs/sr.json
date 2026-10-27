@@ -1,4 +1,7 @@
 {
+	"offlineReadonlyTip": "Офлајн само за читање - аутоматски се откључава када се мрежа поврати",
+	"offlineTransactionBlocked": "Уређивање није доступно у офлајн режиму само за читање",
+	"offlineDocNotCached": "Овај документ није кеширан и не може се отворити офлајн",
 	"embedTableIndex": "Бр.",
 	"embedTableDir": "Директоријум датотеке",
 	"embedRenderModeRaw": "Сирови SQL редови",

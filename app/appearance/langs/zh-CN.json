@@ -1,4 +1,7 @@
 {
+	"offlineReadonlyTip": "离线只读 - 网络恢复后自动解锁",
+	"offlineTransactionBlocked": "离线只读中,编辑暂不可用",
+	"offlineDocNotCached": "该文档未缓存,离线时无法打开",
 	"embedTableIndex": "序号",
 	"embedTableDir": "文件目录",
 	"embedRenderModeRaw": "原始 SQL 行",

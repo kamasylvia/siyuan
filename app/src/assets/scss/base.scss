@@ -18,6 +18,7 @@
 @use "component/list" as *;
 @use "business/graph" as *;
 @use "business/layout" as *;
+@use "business/offline" as *;
 @use "business/window-workspace" as *;
 @use "business/block" as *;
 @use "util/reset" as *;

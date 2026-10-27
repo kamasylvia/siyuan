@@ -1,4 +1,7 @@
 {
+	"offlineReadonlyTip": "Offline iba na čítanie - automaticky sa odomkne po obnovení siete",
+	"offlineTransactionBlocked": "Úpravy nie sú dostupné v režime offline iba na čítanie",
+	"offlineDocNotCached": "Tento dokument nie je v medzipamäti a offline ho nemožno otvoriť",
 	"embedTableIndex": "Č.",
 	"embedTableDir": "Adresár súboru",
 	"embedRenderModeRaw": "Surové riadky SQL",

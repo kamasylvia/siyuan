@@ -1,4 +1,7 @@
 {
+	"offlineReadonlyTip": "Offline alleen-lezen - wordt automatisch ontgrendeld wanneer het netwerk herstelt",
+	"offlineTransactionBlocked": "Bewerken is niet beschikbaar in offline alleen-lezenmodus",
+	"offlineDocNotCached": "Dit document staat niet in de cache en kan offline niet worden geopend",
 	"embedTableIndex": "Nr.",
 	"embedTableDir": "Bestandsmap",
 	"embedRenderModeRaw": "Ruwe SQL-rijen",

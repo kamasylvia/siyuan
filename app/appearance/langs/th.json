@@ -1,4 +1,7 @@
 {
+	"offlineReadonlyTip": "ออฟไลน์แบบอ่านอย่างเดียว - ปลดล็อกอัตโนมัติเมื่อเครือข่ายกลับมา",
+	"offlineTransactionBlocked": "ไม่สามารถแก้ไขได้ในโหมดออฟไลน์แบบอ่านอย่างเดียว",
+	"offlineDocNotCached": "เอกสารนี้ไม่ได้อยู่ในแคชและไม่สามารถเปิดแบบออฟไลน์ได้",
 	"embedTableIndex": "ลำดับ",
 	"embedTableDir": "ไดเรกทอรีไฟล์",
 	"embedRenderModeRaw": "แถว SQL ดิบ",

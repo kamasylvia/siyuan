@@ -1,4 +1,7 @@
 {
+	"offlineReadonlyTip": "Offline read-only - unlocks automatically when the network recovers",
+	"offlineTransactionBlocked": "Editing is unavailable in offline read-only mode",
+	"offlineDocNotCached": "This document is not cached and cannot be opened offline",
 	"embedTableIndex": "No.",
 	"embedTableDir": "File directory",
 	"embedRenderModeRaw": "Raw SQL rows",

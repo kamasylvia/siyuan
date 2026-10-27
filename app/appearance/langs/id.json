@@ -1,4 +1,7 @@
 {
+	"offlineReadonlyTip": "Offline baca-saja - terbuka otomatis saat jaringan pulih",
+	"offlineTransactionBlocked": "Penyuntingan tidak tersedia dalam mode offline baca-saja",
+	"offlineDocNotCached": "Dokumen ini tidak di-cache dan tidak dapat dibuka secara offline",
 	"embedTableIndex": "No.",
 	"embedTableDir": "Direktori file",
 	"embedRenderModeRaw": "Baris SQL mentah",

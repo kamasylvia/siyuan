@@ -1,4 +1,7 @@
 {
+	"offlineReadonlyTip": "מצב קריאה בלבד ללא חיבור - נפתח אוטומטית כשהרשת חוזרת",
+	"offlineTransactionBlocked": "עריכה אינה זמינה במצב קריאה בלבד ללא חיבור",
+	"offlineDocNotCached": "מסמך זה אינו מאוחסן במטמון ולא ניתן לפתוח אותו ללא חיבור",
 	"embedTableIndex": "מס'",
 	"embedTableDir": "תיקיית הקובץ",
 	"embedRenderModeRaw": "שורות SQL גולמיות",

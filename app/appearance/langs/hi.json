@@ -1,4 +1,7 @@
 {
+	"offlineReadonlyTip": "ऑफ़लाइन केवल-पढ़ने - नेटवर्क वापस आने पर स्वतः अनलॉक",
+	"offlineTransactionBlocked": "ऑफ़लाइन केवल-पढ़ने मोड में संपादन अनुपलब्ध है",
+	"offlineDocNotCached": "यह दस्तावेज़ कैश नहीं है और ऑफ़लाइन नहीं खोला जा सकता",
 	"embedTableIndex": "क्रम",
 	"embedTableDir": "फ़ाइल निर्देशिका",
 	"embedRenderModeRaw": "कच्ची SQL पंक्तियाँ",

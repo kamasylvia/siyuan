@@ -1,4 +1,7 @@
 {
+	"offlineReadonlyTip": "Çevrimdışı salt okunur - ağ geri geldiğinde otomatik olarak kilidi açılır",
+	"offlineTransactionBlocked": "Çevrimdışı salt okunur modunda düzenleme kullanılamaz",
+	"offlineDocNotCached": "Bu belge önbelleğe alınmadığından çevrimdışı açılamaz",
 	"embedTableIndex": "No.",
 	"embedTableDir": "Dosya dizini",
 	"embedRenderModeRaw": "Ham SQL satırları",

@@ -1,4 +1,7 @@
 {
+	"offlineReadonlyTip": "オフライン読み取り専用 - ネットワーク回復後に自動的に解除されます",
+	"offlineTransactionBlocked": "オフライン読み取り専用のため編集できません",
+	"offlineDocNotCached": "このドキュメントはキャッシュされておらずオフラインで開けません",
 	"embedTableIndex": "番号",
 	"embedTableDir": "ファイル場所",
 	"embedRenderModeRaw": "SQL 生データ",
