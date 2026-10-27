@@ -12,7 +12,6 @@ export type THostCapabilities = {
     localFileSystem: boolean;
     importExport: boolean;
     templateManagement: boolean;
-    pdfExport: boolean;
     documentImportExport: boolean;
     plugins: boolean;
     workspaces: boolean;
@@ -63,9 +62,6 @@ export const resolveHostCapabilities = (remoteKernel: boolean, connection: TKern
         importExport: !remoteKernel,
         // 模板保存与管理仅经内核 API 写入 data/templates，不涉及本地文件系统，远程模式保持可用
         templateManagement: true,
-        // PDF 导出由客户端打印内核提供的预览页并保存到本地文件，内核不写客户端路径；
-        // 预览窗打开远程页面属于远程代码执行，由主进程按连接信任开关把关
-        pdfExport: true,
         documentImportExport: true,
         plugins: !remoteKernel || trustedExtensions,
         workspaces: !remoteKernel,

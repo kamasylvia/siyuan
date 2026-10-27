@@ -180,11 +180,6 @@ const isRemoteExtensionPath = (pathname) => !pathname.split("/").some(part => pa
     (pathname.startsWith("/plugins/") || (/^\/appearance\/(themes|icons)\//.test(pathname) &&
         !/^\/appearance\/(themes\/(daylight|midnight)|icons\/litheness)(\/|$)/.test(pathname)));
 
-// 导出预览临时页（PDF/Word 导出）由内核生成，属于受信远程连接可加载的内核内容；
-// 加密笔记本的托管导出走 /export/<token>，因此放行整个 /export/ 前缀，路径穿越由 normalizeRequestPathname 归一后判定
-const isKernelExportPreviewPath = (pathname) => !pathname.split("/").some(part => part === "." || part === "..") &&
-    (pathname === "/export" || pathname.startsWith("/export/"));
-
 const getRemoteKernelRequestPolicy = ({method, pathname, destination, localResourceAvailable, isTargetOrigin = true,
     trustRemoteExtensions = false}) => {
     const requestedPathname = pathname;
@@ -197,13 +192,6 @@ const getRemoteKernelRequestPolicy = ({method, pathname, destination, localResou
     const remoteExtension = trustRemoteExtensions && isTargetOrigin && safeMethod &&
         normalizedPathnames.every(isRemoteExtensionPath);
     if (documentDestinations.has(destination)) {
-        // 导出预览窗的主框架文档：受信远程连接直接加载内核上的临时导出页，
-        // 否则策略按远程活动内容拒绝，预览窗加载 net::ERR_BLOCKED_BY_CLIENT 后白屏。
-        // 与扩展路径同样要求所有归一形态（含逐层解码）都落在 /export/ 下，编码穿越会被拒
-        if (trustRemoteExtensions && isTargetOrigin && safeMethod &&
-            normalizedPathnames.every(isKernelExportPreviewPath)) {
-            return "remote";
-        }
         return isTargetOrigin && safeMethod && localResourceAvailable && localDocumentPaths.has(requestedPathname)
             ? "local"
             : "deny-active-content";

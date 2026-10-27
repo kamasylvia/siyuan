@@ -764,7 +764,7 @@ ${databaseOptions}`,
             /// #if !BROWSER
             {
                 id: "exportPDF",
-                ignore: !getHostCapabilities().pdfExport,
+                ignore: !getHostCapabilities().importExport,
                 label: "PDF",
                 icon: "iconPDF",
                 click: () => {

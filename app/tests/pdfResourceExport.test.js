@@ -24,7 +24,7 @@ for (const removeAssets of [false, true]) {
                 register({on: (_name, callback) => handler = callback,
                     invoke: async () => Buffer.from("PDF"), send: (...args) => events.push(["ipc", ...args])},
                 {SIYUAN_EXPORT_PDF: "pdf", SIYUAN_GET: "get", SIYUAN_CMD: "cmd", LOCAL_EXPORTPDF: "pdf"},
-                () => ({importExport: true, pdfExport: true}), () => {},
+                () => ({importExport: true}), () => {},
                 (message, _duration, type) => { events.push(["message", message, type]); return "export-msg"; },
                 () => {}, async (url, request) => {
                     events.push(["request", url, request]);

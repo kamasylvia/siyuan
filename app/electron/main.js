@@ -3537,18 +3537,15 @@ app.whenReady().then(() => {
             writeLog("ignored local native clipboard processing in remote kernel mode");
             return "";
         }
-        // 受信任远程连接的 PDF 预览窗允许选择本地保存路径与打印，其余远程窗口维持禁用
-        const remoteSenderTrusted = getWindowKernelTarget(event.sender.id)?.trustRemoteExtensions === true;
-        // PDF 导出预览窗的保存目录选择同样走 showOpenDialog，受信连接放行
-        if (remoteSender && !remoteSenderTrusted && data.cmd === "showOpenDialog") {
+        if (remoteSender && data.cmd === "showOpenDialog") {
             writeLog("ignored local open dialog in remote kernel mode");
             return {canceled: true, filePaths: []};
         }
-        if (remoteSender && !remoteSenderTrusted && data.cmd === "showSaveDialog") {
+        if (remoteSender && data.cmd === "showSaveDialog") {
             writeLog("ignored local save dialog in remote kernel mode");
             return {canceled: true, filePath: ""};
         }
-        if (remoteSender && !remoteSenderTrusted && data.cmd === "printToPDF") {
+        if (remoteSender && data.cmd === "printToPDF") {
             writeLog("ignored local PDF export in remote kernel mode");
             return;
         }
@@ -4051,14 +4048,16 @@ app.whenReady().then(() => {
         });
     });
     ipcMain.on("siyuan-export-pdf", (event, data) => {
-        // 远程模式下该消息仅来自受信任连接的 PDF 预览窗，打印与保存都在客户端本地完成
+        if (getWindowKernelTarget(event.sender.id)?.mode === "remote") {
+            writeLog("ignored local PDF export in remote kernel mode");
+            return;
+        }
         data.webContentsId = event.sender.id;
         getWindowByContentId(data.parentWindowId).send("siyuan-export-pdf", data);
     });
     ipcMain.on("siyuan-export-newwindow", (event, data) => {
         const kernelTarget = getWindowKernelTarget(event.sender.id);
-        // 预览窗加载内核生成页面且带 node 集成，远程内核仅在其扩展被用户信任时放行
-        if (kernelTarget?.mode === "remote" && kernelTarget.trustRemoteExtensions !== true) {
+        if (kernelTarget?.mode === "remote") {
             writeLog("ignored local PDF export window for remote kernel");
             return;
         }
@@ -4074,27 +4073,19 @@ app.whenReady().then(() => {
             frame: "darwin" === process.platform,
             icon: path.join(appDir, "stage", "icon-large.png"),
             titleBarStyle: "hidden",
-            webPreferences: Object.assign({
+            webPreferences: {
                 contextIsolation: false,
                 nodeIntegration: true,
                 webviewTag: true,
                 webSecurity: false,
                 autoplayPolicy: "user-gesture-required" // 桌面端禁止自动播放多媒体 https://github.com/siyuan-note/siyuan/issues/7587
-            }, kernelTarget?.mode === "remote" ? {
-                // 远程内核的预览窗携带远程分区会话完成鉴权，并按远程模式收紧 web 安全与子框架
-                webviewTag: false,
-                webSecurity: true,
-                nodeIntegrationInSubFrames: false,
-                nodeIntegrationInWorker: false,
-                session: getRemoteSession(kernelTarget)
-            } : {}),
+            },
         });
         printWin.center();
         rememberWindowKernelTarget(printWin, kernelTarget || createLocalKernelTarget());
         printWin.webContents.userAgent = "SiYuan/" + appVer + " https://b3log.org/siyuan Electron " + printWin.webContents.userAgent;
         printWin.loadURL(data);
-        windowNavigate(printWin, "export", (kernelTarget || createLocalKernelTarget()).origin,
-            kernelTarget?.mode === "remote");
+        windowNavigate(printWin, "export", (kernelTarget || createLocalKernelTarget()).origin);
     });
     ipcMain.on("siyuan-quit", (event, port) => {
         const kernelTarget = getWindowKernelTarget(event.sender.id);

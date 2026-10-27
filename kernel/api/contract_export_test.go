@@ -149,40 +149,6 @@ func TestAPIContractExportArtifacts(t *testing.T) {
 	if err != nil || string(content) != "  content\n" {
 		t.Fatalf("temp content changed: %q %v", content, err)
 	}
-	// 临时导出地址须按请求自身的 Host 与转发头重构，远程内核返回 127.0.0.1 会让客户端预览窗白屏
-	remoteRequest := httptest.NewRequest("POST", "/api/export/exportTempContent", strings.NewReader(`{"content":"remote"}`))
-	remoteRequest.Host = "qnap.example.org:9443"
-	remoteRequest.Header.Set("X-Forwarded-Proto", "https")
-	remoteRecorder := httptest.NewRecorder()
-	engine := gin.New()
-	engine.POST("/api/export/exportTempContent", exportTempContent)
-	engine.ServeHTTP(remoteRecorder, remoteRequest)
-	var remoteTemp apicontract.ExportURLData
-	if err := json.Unmarshal(remoteRecorder.Body.Bytes(), &struct {
-		Data *apicontract.ExportURLData `json:"data"`
-	}{Data: &remoteTemp}); err != nil || remoteTemp.URL == "" {
-		t.Fatalf("remote temp export failed: %s %v", remoteRecorder.Body.String(), err)
-	}
-	if got := remoteTemp.URL; !strings.HasPrefix(got, "https://qnap.example.org:9443/export/temp/") {
-		t.Fatalf("remote temp export URL not derived from request host: %q", got)
-	}
-	// 固定端口反代以 HTTPS 回源内核，靠 ClientTLSHeader 区分客户端协议：
-	// 明文客户端即便从本机回源也必须拿到 http 地址，否则预览窗按 https 打开会白屏
-	proxiedRequest := httptest.NewRequest("POST", "/api/export/exportTempContent", strings.NewReader(`{"content":"proxied"}`))
-	proxiedRequest.Host = "qnap.example.org:6806"
-	proxiedRequest.RemoteAddr = "127.0.0.1:55555"
-	proxiedRequest.Header.Set(util.ClientTLSHeader, util.ClientTLSHeaderPlaintextValue)
-	proxiedRecorder := httptest.NewRecorder()
-	engine.ServeHTTP(proxiedRecorder, proxiedRequest)
-	var proxiedTemp apicontract.ExportURLData
-	if err := json.Unmarshal(proxiedRecorder.Body.Bytes(), &struct {
-		Data *apicontract.ExportURLData `json:"data"`
-	}{Data: &proxiedTemp}); err != nil || proxiedTemp.URL == "" {
-		t.Fatalf("proxied temp export failed: %s %v", proxiedRecorder.Body.String(), err)
-	}
-	if got := proxiedTemp.URL; !strings.HasPrefix(got, "http://qnap.example.org:6806/export/temp/") {
-		t.Fatalf("proxied plaintext client must get an http URL, got %q", got)
-	}
 	if err = os.MkdirAll(filepath.Join(util.TempDir, "export", "folder"), 0755); err != nil {
 		t.Fatal(err)
 	}

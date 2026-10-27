@@ -113,27 +113,6 @@ test("trusted extensions load from the selected origin without replacing the pac
         method: "POST"}), "deny-api");
 });
 
-test("trusted connections load kernel-generated export preview documents", () => {
-    const request = {
-        method: "GET", destination: "document", localResourceAvailable: false, trustRemoteExtensions: true,
-    };
-    // 普通与加密笔记本两种临时导出路径都必须放行，否则导出预览窗加载 ERR_BLOCKED_BY_CLIENT 后白屏
-    for (const pathname of ["/export/temp/abc123", "/export/managed-token"]) {
-        for (const destination of ["document", "frame", "iframe"]) {
-            assert.equal(getRemoteKernelRequestPolicy({...request, pathname, destination}), "remote");
-        }
-    }
-    // 未信任、跨源、非安全方法、路径穿越一律维持拒绝
-    for (const override of [{trustRemoteExtensions: false}, {isTargetOrigin: false}, {method: "POST"},
-        {pathname: "/export/../api/file/getFile"}, {pathname: "/export/%2e%2e/stage/build/app/index.html"}]) {
-        assert.equal(getRemoteKernelRequestPolicy({...request, pathname: "/export/temp/abc123", ...override}),
-            "deny-active-content", JSON.stringify(override));
-    }
-    // 本地打包前端白名单行为不变
-    assert.equal(getRemoteKernelRequestPolicy({...request, pathname: "/stage/build/app/",
-        localResourceAvailable: true}), "local");
-});
-
 test("trusted extension redirects retain origin and resource restrictions", () => {
     const origin = "https://example.com";
     for (const [location, expected] of [["/plugins/example/chunk.js", "remote"],
