@@ -61,6 +61,9 @@ export const setWsConnected = (connected: boolean) => updateSignal({wsConnected:
 
 export const isOffline = () => offline;
 
+// 离线兜底是否已启用(远程/浏览器访问);预取等辅助流程以此为开关
+export const isOfflineEnabled = () => enabled;
+
 export const onOfflineChange = (callback: (offline: boolean) => void) => {
     listeners.add(callback);
     return () => listeners.delete(callback);

@@ -726,6 +726,8 @@ export const JSONToLayout = (app: App, isStart: boolean) => {
     }
     // 需放在 tab.parent.switchTab 后，否则当前 tab 永远为最后一个
     afterLayoutReady(app);
+    // 在线预取恢复页签的文档进离线缓存(仅远程/浏览器访问的离线兜底启用时生效)
+    (require("../util/offlineSupport") as typeof import("../util/offlineSupport")).prefetchLazyDocCache();
     saveLayout();
     // https://github.com/siyuan-note/siyuan/issues/17779
     if (window.siyuan.layout.rightDock.layout.children[0].element.classList.contains("fn__none") &&
