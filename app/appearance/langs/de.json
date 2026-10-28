@@ -1,4 +1,5 @@
 {
+	"offlineCachedCount": "{n} Dokumente offline verfügbar",
 	"offlineReadonlyTip": "Offline schreibgeschützt - wird bei Netzwerkwiederherstellung automatisch entsperrt",
 	"offlineTransactionBlocked": "Bearbeiten ist im Offline-Schreibschutzmodus nicht verfügbar",
 	"offlineDocNotCached": "Dieses Dokument ist nicht zwischengespeichert und kann offline nicht geöffnet werden",

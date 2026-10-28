@@ -1,4 +1,5 @@
 {
+	"offlineCachedCount": "離線可瀏覽 {n} 篇文件",
 	"offlineReadonlyTip": "離線唯讀 - 網路恢復後自動解鎖",
 	"offlineTransactionBlocked": "離線唯讀中,編輯暫不可用",
 	"offlineDocNotCached": "該文檔未快取,離線時無法開啟",

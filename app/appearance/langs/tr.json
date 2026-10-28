@@ -1,4 +1,5 @@
 {
+	"offlineCachedCount": "{n} belge çevrimdışı kullanılabilir",
 	"offlineReadonlyTip": "Çevrimdışı salt okunur - ağ geri geldiğinde otomatik olarak kilidi açılır",
 	"offlineTransactionBlocked": "Çevrimdışı salt okunur modunda düzenleme kullanılamaz",
 	"offlineDocNotCached": "Bu belge önbelleğe alınmadığından çevrimdışı açılamaz",

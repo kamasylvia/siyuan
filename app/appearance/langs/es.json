@@ -1,4 +1,5 @@
 {
+	"offlineCachedCount": "{n} documentos disponibles sin conexión",
 	"offlineReadonlyTip": "Solo lectura sin conexión - se desbloquea automáticamente al recuperar la red",
 	"offlineTransactionBlocked": "La edición no está disponible en modo de solo lectura sin conexión",
 	"offlineDocNotCached": "Este documento no está en caché y no se puede abrir sin conexión",

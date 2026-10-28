@@ -1,4 +1,5 @@
 {
+	"offlineCachedCount": "オフラインで閲覧できるドキュメント {n} 件",
 	"offlineReadonlyTip": "オフライン読み取り専用 - ネットワーク回復後に自動的に解除されます",
 	"offlineTransactionBlocked": "オフライン読み取り専用のため編集できません",
 	"offlineDocNotCached": "このドキュメントはキャッシュされておらずオフラインで開けません",

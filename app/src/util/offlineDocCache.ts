@@ -102,8 +102,7 @@ export const getDocCache = async (docId: string): Promise<IWebSocketData | null>
 };
 
 // 预取前判缓存是否已存在(含别名回退),避免每次启动重复拉取
-export const hasDocCache = async (docId: string): Promise<boolean> => {
-    try {
+export const hasDocCache = async (docId: string): Promise<boolean> => {    try {
         const db = await openDb();
         const docsTx = db.transaction(STORE_DOCS, "readonly");
         if (await requestToPromise(docsTx.objectStore(STORE_DOCS).getKey(docId))) {
@@ -128,4 +127,15 @@ export const clearDocCache = async () => {
     tx.objectStore(STORE_DOCS).clear();
     const meta = tx.objectStore(STORE_META);
     meta.clear();
+};
+
+// 离线横幅展示的缓存文档数;失败返回 -1 由调用方省略计数
+export const countDocCache = async (): Promise<number> => {
+    try {
+        const db = await openDb();
+        return (await readEntries(db)).length;
+    } catch (error) {
+        console.warn("offline doc cache count failed [" + error + "]");
+        return -1;
+    }
 };

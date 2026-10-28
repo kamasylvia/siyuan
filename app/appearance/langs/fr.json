@@ -1,4 +1,5 @@
 {
+	"offlineCachedCount": "{n} documents disponibles hors ligne",
 	"offlineReadonlyTip": "Hors ligne en lecture seule - déverrouillage automatique au retour du réseau",
 	"offlineTransactionBlocked": "L'édition est indisponible en mode hors ligne lecture seule",
 	"offlineDocNotCached": "Ce document n'est pas en cache et ne peut pas être ouvert hors ligne",

@@ -2,7 +2,7 @@
 // 依赖编辑器侧模块,统一在回调内动态 require,避免静态循环依赖。
 
 import {fetchPost} from "./fetch";
-import {hasDocCache} from "./offlineDocCache";
+import {countDocCache, hasDocCache} from "./offlineDocCache";
 import {isOffline, isOfflineEnabled, onOfflineChange} from "./offlineState";
 
 type ProtyleEditor = import("../protyle").Protyle;
@@ -61,6 +61,15 @@ export const initOfflineSupport = () => {
     onOfflineChange(offline => {
         banner.textContent = window.siyuan.languages.offlineReadonlyTip;
         banner.classList.toggle("fn__none", !offline);
+        // 附缓存计数,断网时可直接判断哪些页签可离线打开
+        if (offline) {
+            void countDocCache().then(count => {
+                if (count >= 0 && !banner.classList.contains("fn__none")) {
+                    banner.textContent = window.siyuan.languages.offlineReadonlyTip +
+                        " · " + (window.siyuan.languages.offlineCachedCount || "cached: {n}").replace("{n}", String(count));
+                }
+            });
+        }
         const {getAllEditor} = require("../layout/getAll") as typeof import("../layout/getAll");
         if (offline) {
             getAllEditor().forEach(editor => {

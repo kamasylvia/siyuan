@@ -1,4 +1,5 @@
 {
+	"offlineCachedCount": "{n} documenti disponibili offline",
 	"offlineReadonlyTip": "Offline in sola lettura - si sblocca automaticamente al ripristino della rete",
 	"offlineTransactionBlocked": "La modifica non è disponibile in modalità offline in sola lettura",
 	"offlineDocNotCached": "Questo documento non è in cache e non può essere aperto offline",
