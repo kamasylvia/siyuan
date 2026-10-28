@@ -3,9 +3,9 @@
 
 import {DOC_CACHE_LIMIT_COUNT, DocCacheEntry, evictAliases, evictOverLimit} from "./offlineCore";
 
-// 离线缓存篇数上限读取用户设置(设置 - 关于 - 离线缓存),未初始化时回落默认值
+// 离线缓存篇数上限复用「最近的文档最大数量」设置(同一群最近浏览的文档),未初始化时回落默认值
 const cacheLimitCount = () =>
-    (typeof window !== "undefined" && window.siyuan?.config?.editor?.offlineDocCacheMaxCount) || DOC_CACHE_LIMIT_COUNT;
+    (typeof window !== "undefined" && window.siyuan?.config?.fileTree?.recentDocsMaxListCount) || DOC_CACHE_LIMIT_COUNT;
 
 const DB_NAME = "siyuan-offline-cache";
 const STORE_DOCS = "docs";

@@ -722,10 +722,6 @@ declare namespace Config {
          */
         pdfPreview: boolean;
         /**
-         * 远程空间离线缓存文档数上限，超出按最久未访问淘汰；有效范围 10–1000
-         */
-        offlineDocCacheMaxCount: number;
-        /**
          * Whether to display automatic heading numbers
          */
         headingNumber: boolean;

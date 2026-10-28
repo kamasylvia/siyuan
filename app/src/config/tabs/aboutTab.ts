@@ -47,30 +47,10 @@ const registerAboutVersionGroup = (tab: SettingTabBuilder) => {
     <button class="b3-button b3-button--outline fn__flex-center" id="offlineCacheManage">
         ${window.siyuan.languages.offlineCacheManage}
     </button>
-</div>
-<div class="fn__flex b3-label config-item">
-    <div class="fn__flex-1">
-        <div class="config-name">${window.siyuan.languages.offlineDocCacheMaxCount}</div>
-        <div class="b3-label__text">${window.siyuan.languages.offlineDocCacheMaxCountTip}</div>
-    </div>
-    <div class="fn__space"></div>
-    <input class="b3-text-field fn__flex-center" id="offlineCacheMaxCount" type="number" min="10" max="1000" value="${window.siyuan.config.editor.offlineDocCacheMaxCount}">
 </div>`,
             afterMount: (root) => {
                 root.querySelector("#offlineCacheManage").addEventListener("click", () => {
                     void import("../../util/offlineCacheManager").then(module => module.openOfflineCacheManager());
-                });
-                const countInput = root.querySelector("#offlineCacheMaxCount") as HTMLInputElement;
-                countInput.addEventListener("change", () => {
-                    const parsed = parseInt(countInput.value, 10);
-                    if (Number.isNaN(parsed)) {
-                        countInput.value = String(window.siyuan.config.editor.offlineDocCacheMaxCount);
-                        return;
-                    }
-                    const clamped = Math.max(10, Math.min(1000, parsed));
-                    countInput.value = String(clamped);
-                    window.siyuan.config.editor.offlineDocCacheMaxCount = clamped;
-                    void import("./editorRuntime").then(module => module.editorConfigApi.patch("editor.offlineDocCacheMaxCount", clamped));
                 });
             },
         });

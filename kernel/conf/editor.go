@@ -111,7 +111,6 @@ type Editor struct {
 	HeadingNumberFormat             string         `json:"headingNumberFormat"`             // 标题编号格式
 	HeadingEmbedMode                int            `json:"headingEmbedMode"`                // 标题嵌入块模式，0：显示标题与下方的块，1：仅显示标题，2：仅显示标题下方的块
 	PDFPreview                      bool           `json:"pdfPreview"`                      // 是否在文档中直接预览 PDF 资产链接，关闭时保持点击后在资产页签中打开
-	OfflineDocCacheMaxCount         *int           `json:"offlineDocCacheMaxCount"`         // 远程空间离线缓存文档数上限，超出按最久未访问淘汰
 	PasteURLAutoConvert             bool           `json:"pasteURLAutoConvert"`             // 粘贴网址时自动转为链接
 	DragHTMLFileToIframe            bool           `json:"dragHTMLFileToIframe"`            // 是否将拖拽的 HTML 文件嵌入为 IFrame 块
 	Markdown                        *util.Markdown `json:"markdown"`                        // Markdown 配置
@@ -161,10 +160,6 @@ const (
 	MinDynamicLoadBlocks       = 48
 	MaxCursorSurroundingLines  = 20
 	DefaultHeadingNumberFormat = "decimal-hierarchical"
-
-	MinOfflineDocCacheMaxCount     = 10
-	MaxOfflineDocCacheMaxCount     = 1000
-	DefaultOfflineDocCacheMaxCount = 50
 )
 
 func NormalizeBacklinkExpandCount(count int) int {
@@ -256,7 +251,6 @@ func NewEditor() *Editor {
 		HeadingNumberFormat:             DefaultHeadingNumberFormat,
 		HeadingEmbedMode:                0,
 		PDFPreview:                      false,
-		OfflineDocCacheMaxCount:         new(DefaultOfflineDocCacheMaxCount),
 		PasteURLAutoConvert:             false,
 		DragHTMLFileToIframe:            false,
 		Markdown:                        util.NewMarkdown(),

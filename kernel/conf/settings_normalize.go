@@ -135,11 +135,6 @@ func NormalizeEditor(editor *Editor) *Editor {
 	}
 	editor.CursorSurroundingLines = NormalizeCursorSurroundingLines(editor.CursorSurroundingLines)
 	editor.DynamicLoadBlocks = max(MinDynamicLoadBlocks, editor.DynamicLoadBlocks)
-	if editor.OfflineDocCacheMaxCount == nil {
-		editor.OfflineDocCacheMaxCount = new(DefaultOfflineDocCacheMaxCount)
-	} else {
-		editor.OfflineDocCacheMaxCount = new(max(MinOfflineDocCacheMaxCount, min(MaxOfflineDocCacheMaxCount, *editor.OfflineDocCacheMaxCount)))
-	}
 	if len(editor.SpellcheckLanguages) == 0 {
 		editor.SpellcheckLanguages = []string{"en-US"}
 	}
