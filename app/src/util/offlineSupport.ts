@@ -2,7 +2,7 @@
 // 依赖编辑器侧模块,统一在回调内动态 require,避免静态循环依赖。
 
 import {fetchPost} from "./fetch";
-import {countDocCache, hasDocCache, listDocCache} from "./offlineDocCache";
+import {countDocCache, getCachedDocIds, hasDocCache, listDocCache} from "./offlineDocCache";
 import {isOffline, isOfflineEnabled, onOfflineChange} from "./offlineState";
 
 type ProtyleEditor = import("../protyle").Protyle;
@@ -79,6 +79,41 @@ export const backfillOfflineTitles = (): Promise<void> => {
     });
 };
 
+// 离线时按缓存状态标记文件树:未缓存文档灰显(点击仍会得到「未缓存」提示),恢复在线时清除标记
+let treeObserver: MutationObserver;
+const markTreeCacheState = () => {
+    const items = [...document.querySelectorAll(".b3-list-item[data-node-id]")];
+    if (!items.length) {
+        return;
+    }
+    void getCachedDocIds().then(cached => {
+        items.forEach(item => {
+            const nodeId = item.getAttribute("data-node-id");
+            if (!nodeId) {
+                return;
+            }
+            item.classList.toggle("offline-uncached", !cached.has(nodeId));
+        });
+    });
+};
+
+const watchTreeCacheState = () => {
+    if (treeObserver) {
+        return;
+    }
+    treeObserver = new MutationObserver(() => {
+        if (isOffline()) {
+            markTreeCacheState();
+        } else {
+            document.querySelectorAll(".b3-list-item.offline-uncached").forEach(item => {
+                item.classList.remove("offline-uncached");
+            });
+        }
+    });
+    const tree = document.querySelector("#fileTree, .file-tree") || document.body;
+    treeObserver.observe(tree, {childList: true, subtree: true});
+};
+
 export const initOfflineSupport = () => {
     const banner = document.createElement("div");
     banner.id = "offlineBanner";
@@ -90,6 +125,7 @@ export const initOfflineSupport = () => {
         openOfflineCacheManager();
     });
     // 锁定前的只读状态,恢复时按原样还原
+    watchTreeCacheState();
     const lockedBefore = new Map<ProtyleEditor, boolean>();
     onOfflineChange(offline => {
         banner.textContent = window.siyuan.languages.offlineReadonlyTip;
@@ -102,6 +138,7 @@ export const initOfflineSupport = () => {
                         " · " + (window.siyuan.languages.offlineCachedCount || "cached: {n}").replace("{n}", String(count));
                 }
             });
+            void markTreeCacheState();
         }
         const {getAllEditor} = require("../layout/getAll") as typeof import("../layout/getAll");
         if (offline) {

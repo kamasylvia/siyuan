@@ -141,18 +141,46 @@ export const clearDocCache = async () => {
     meta.clear();
 };
 
+// 文件树灰显用:已缓存文档 ID 与别名目标 ID 的合集
+export const getCachedDocIds = async (): Promise<Set<string>> => {
+    try {
+        const db = await openDb();
+        const tx = db.transaction([STORE_DOCS, STORE_META], "readonly");
+        const keys = await requestToPromise(tx.objectStore(STORE_DOCS).getAllKeys());
+        const result = new Set<string>(keys.map(key => String(key)));
+        const aliases = (await requestToPromise(tx.objectStore(STORE_META).get(DOC_ALIAS_KEY))) || {};
+        Object.keys(aliases).forEach(alias => result.add(aliases[alias]));
+        return result;
+    } catch (error) {
+        console.warn("offline doc cache id list failed [" + error + "]");
+        return new Set();
+    }
+};
+
 // 缓存管理清单:按最后访问时间倒序;缺标题的条目(旧版写入或元数据回填未跑)直接从缓存快照派生,离线也能显示标题
 export const listDocCache = async (): Promise<DocCacheEntry[]> => {
     try {
         const db = await openDb();
-        const entries = (await readEntries(db)).sort((a, b) => b.at - a.at);
+        const allEntries = (await readEntries(db)).sort((a, b) => b.at - a.at);
+        const docsTx = db.transaction(STORE_DOCS, "readonly");
+        const keys = await requestToPromise(docsTx.objectStore(STORE_DOCS).getAllKeys());
+        const keySet = new Set(keys.map(key => String(key)));
+        // 联表校验:无快照的孤儿条目(异常路径写入)不列出并顺手清理,防止管理窗出现无法离线打开的幽灵项
+        const entries = allEntries.filter(entry => keySet.has(entry.docId));
+        const orphans = allEntries.filter(entry => !keySet.has(entry.docId)).map(entry => entry.docId);
+        if (orphans.length) {
+            const repairTx = db.transaction([STORE_DOCS, STORE_META], "readwrite");
+            const meta = repairTx.objectStore(STORE_META);
+            repairTx.objectStore(STORE_DOCS);
+            meta.put(allEntries.filter(entry => keySet.has(entry.docId)), DOC_META_KEY);
+        }
         const missing = entries.filter(entry => !entry.title);
         if (!missing.length) {
             return entries;
         }
         const derived: Record<string, string> = {};
-        const docsTx = db.transaction(STORE_DOCS, "readonly");
-        const store = docsTx.objectStore(STORE_DOCS);
+        const deriveTx = db.transaction(STORE_DOCS, "readonly");
+        const store = deriveTx.objectStore(STORE_DOCS);
         await Promise.all(missing.map(entry => new Promise<void>(resolve => {
             const request = store.get(entry.docId);
             request.onsuccess = () => {
