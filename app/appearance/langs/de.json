@@ -1,4 +1,11 @@
 {
+	"offlineCacheTitle": "Offline-Cache",
+	"offlineCacheHint": "Diese Dokumente öffnen sich im Offline-LeseModus; der Cache aktualisiert sich beim Durchsehen und verwirft am längsten nicht genutzte Einträge über dem Größenlimit",
+	"offlineCacheEmpty": "Keine Dokumente für die Offline-Nutzung zwischengespeichert",
+	"offlineCacheClear": "Leeren",
+	"offlineCacheClearConfirm": "Alle zwischengespeicherten Offline-Dokumente leeren?",
+	"offlineCacheDeleteConfirm": "Den Offline-Cache von „{title}“ löschen?",
+	"offlineCacheManage": "Verwalten",
 	"offlineTreeNotCached": "Dieser Ordner kann offline nicht aufgeklappt werden; browsen Sie ihn einmal online",
 	"offlineCachedCount": "{n} Dokumente offline verfügbar",
 	"offlineReadonlyTip": "Offline schreibgeschützt - wird bei Netzwerkwiederherstellung automatisch entsperrt",

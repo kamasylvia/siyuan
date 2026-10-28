@@ -1,4 +1,11 @@
 {
+	"offlineCacheTitle": "Cache offline",
+	"offlineCacheHint": "Dokumen ini dapat dibuka dalam mode baca offline; cache diperbarui saat menjelajah dan menghapus entri paling lama tidak diakses saat melebihi batas",
+	"offlineCacheEmpty": "Tidak ada dokumen yang di-cache untuk penggunaan offline",
+	"offlineCacheClear": "Kosongkan",
+	"offlineCacheClearConfirm": "Kosongkan semua dokumen cache offline?",
+	"offlineCacheDeleteConfirm": "Hapus cache offline dari \"{title}\"?",
+	"offlineCacheManage": "Kelola",
 	"offlineTreeNotCached": "Folder ini tidak bisa dibuka offline; jelajahi sekali saat online",
 	"offlineCachedCount": "{n} dokumen tersedia offline",
 	"offlineReadonlyTip": "Offline baca-saja - terbuka otomatis saat jaringan pulih",

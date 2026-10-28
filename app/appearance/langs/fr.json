@@ -1,4 +1,11 @@
 {
+	"offlineCacheTitle": "Cache hors ligne",
+	"offlineCacheHint": "Ces documents s'ouvrent en mode lecture hors ligne ; le cache se met à jour à la navigation et évacue les entrées les moins récemment utilisées au-delà de sa limite",
+	"offlineCacheEmpty": "Aucun document en cache pour l'utilisation hors ligne",
+	"offlineCacheClear": "Vider",
+	"offlineCacheClearConfirm": "Vider tout le cache des documents hors ligne ?",
+	"offlineCacheDeleteConfirm": "Supprimer le cache hors ligne de « {title} » ?",
+	"offlineCacheManage": "Gérer",
 	"offlineTreeNotCached": "Ce dossier ne peut pas être développé hors ligne ; parcourez-le une fois en ligne",
 	"offlineCachedCount": "{n} documents disponibles hors ligne",
 	"offlineReadonlyTip": "Hors ligne en lecture seule - déverrouillage automatique au retour du réseau",

@@ -1,4 +1,4 @@
-// 远程空间离线兜底:底部固定横幅,离线时出现、恢复时隐藏;红色高亮且不遮挡顶栏操作
+// 远程空间离线兜底:底部固定横幅,离线时出现、恢复时隐藏;红色高亮且不遮挡顶栏操作,点击打开缓存管理面板
 .offline-banner {
     position: fixed;
     bottom: 0;
@@ -11,5 +11,21 @@
     background-color: var(--b3-card-error-background);
     color: var(--b3-card-error-color);
     border-top: 1px solid var(--b3-theme-error);
-    pointer-events: none;
+    cursor: pointer;
+    user-select: none;
+}
+
+.offline-cache__list {
+    height: 50vh;
+    overflow: auto;
+
+    .b3-list-item {
+        padding: 6px 12px;
+    }
+
+    .b3-list-item__meta {
+        margin-inline-start: 8px;
+        font-size: 12px;
+        color: var(--b3-theme-on-surface);
+    }
 }

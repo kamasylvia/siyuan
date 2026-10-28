@@ -1,4 +1,11 @@
 {
+	"offlineCacheTitle": "Offline cache",
+	"offlineCacheHint": "These documents open in offline read-only mode; the cache updates as you browse and evicts least-recently-used entries beyond its size limit",
+	"offlineCacheEmpty": "No documents are cached for offline use",
+	"offlineCacheClear": "Clear",
+	"offlineCacheClearConfirm": "Clear all cached offline documents?",
+	"offlineCacheDeleteConfirm": "Delete the offline cache of \"{title}\"?",
+	"offlineCacheManage": "Manage",
 	"offlineTreeNotCached": "This folder cannot expand offline; browse it once while online",
 	"offlineCachedCount": "{n} documents available offline",
 	"offlineReadonlyTip": "Offline read-only - unlocks automatically when the network recovers",

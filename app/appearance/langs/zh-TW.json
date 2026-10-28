@@ -1,4 +1,11 @@
 {
+	"offlineCacheTitle": "離線快取",
+	"offlineCacheHint": "離線唯讀模式下可開啟以下文件;快取隨瀏覽自動更新,超出容量按最久未存取淘汰",
+	"offlineCacheEmpty": "暫無離線快取文件",
+	"offlineCacheClear": "清空",
+	"offlineCacheClearConfirm": "確定清空全部離線快取文件嗎?",
+	"offlineCacheDeleteConfirm": "刪除「{title}」的離線快取?",
+	"offlineCacheManage": "管理",
 	"offlineTreeNotCached": "該目錄離線時無法展開,連線瀏覽過即可",
 	"offlineCachedCount": "離線可瀏覽 {n} 篇文件",
 	"offlineReadonlyTip": "離線唯讀 - 網路恢復後自動解鎖",

@@ -274,7 +274,7 @@ it("offline tree expansion serves the cached listing and notices on misses", asy
     assert.equal(fetched, 0);
     assert.equal(served?.data?.files[0].id, "doc-1");
 
-    let failures = 0;
+    const failures = 0;
     const missed = await env.fetchSyncPost("/api/filetree/listDocsByPath", {notebook: "box-1", path: "/never-seen"});
     assert.equal(missed.code, 400);
     assert.equal(fetched, 0);

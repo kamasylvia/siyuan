@@ -1,4 +1,11 @@
 {
+	"offlineCacheTitle": "Offline vyrovnávacia pamäť",
+	"offlineCacheHint": "Tieto dokumenty sa otvárajú v režime offline čítania; vyrovnávacia pamäť sa aktualizuje pri prehliadaní a pri prekročení limitu odstraňuje najdlhšie nepoužité záznamy",
+	"offlineCacheEmpty": "Žiadne dokumenty nie sú uložené v offinovej pamäti",
+	"offlineCacheClear": "Vymazať",
+	"offlineCacheClearConfirm": "Vymazať všetky dokumenty v offline pamäti?",
+	"offlineCacheDeleteConfirm": "Odstrániť offline vyrovnávaciu pamäť dokumentu „{title}”?",
+	"offlineCacheManage": "Spravovať",
 	"offlineTreeNotCached": "Tento priečinok nemožno offline rozbaliť; prehliadnite ho raz online",
 	"offlineCachedCount": "{n} dokumentov je k dispozícii offline",
 	"offlineReadonlyTip": "Offline iba na čítanie - automaticky sa odomkne po obnovení siete",

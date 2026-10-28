@@ -1,4 +1,11 @@
 {
+	"offlineCacheTitle": "ذاكرة دون اتصال",
+	"offlineCacheHint": "يمكن فتح هذه المستندات في وضع القراءة دون اتصال; تُحدَّث الذاكرة مع التصفح وتُزال المدخلات الأقدم استخدامًا عند تجاوز الحد",
+	"offlineCacheEmpty": "لا توجد مستندات مخزنة للاستخدام دون اتصال",
+	"offlineCacheClear": "إفراغ",
+	"offlineCacheClearConfirm": "إفراغ كل المستندات المخزنة دون اتصال؟",
+	"offlineCacheDeleteConfirm": "حذف الذاكرة المؤقتة دون اتصال لـ «{title}»؟",
+	"offlineCacheManage": "إدارة",
 	"offlineTreeNotCached": "لا يمكن توسيع هذا المجلد دون اتصال; تصفحه مرة واحدة أثناء الاتصال",
 	"offlineCachedCount": "{n} من المستندات متاحة دون اتصال",
 	"offlineReadonlyTip": "قراءة فقط دون اتصال - يُفتح تلقائيًا عند استعادة الشبكة",

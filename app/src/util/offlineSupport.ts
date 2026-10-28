@@ -56,6 +56,11 @@ export const initOfflineSupport = () => {
     banner.id = "offlineBanner";
     banner.className = "offline-banner fn__none";
     document.body.prepend(banner);
+    // 离线时点击横幅打开缓存管理面板,兼作离线文档门户
+    banner.addEventListener("click", () => {
+        const {openOfflineCacheManager} = require("./offlineCacheManager") as typeof import("./offlineCacheManager");
+        openOfflineCacheManager();
+    });
     // 锁定前的只读状态,恢复时按原样还原
     const lockedBefore = new Map<ProtyleEditor, boolean>();
     onOfflineChange(offline => {

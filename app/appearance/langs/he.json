@@ -1,4 +1,11 @@
 {
+	"offlineCacheTitle": "מטמון לא מקוון",
+	"offlineCacheHint": "מסמכים אלה נפתחים במצב קריאה לא מקוון; המטמון מתעדכן בעת העיון ומפנה רשומות שלא היו בשימוש לאחרונה מעבר למגבלה",
+	"offlineCacheEmpty": "אין מסמכים במטמון לשימוש לא מקוון",
+	"offlineCacheClear": "ניקוי",
+	"offlineCacheClearConfirm": "לנקות את כל המסמכים במטמון הלא מקוון?",
+	"offlineCacheDeleteConfirm": "למחוק את המטמון הלא מקוון של „{title}”?",
+	"offlineCacheManage": "ניהול",
 	"offlineTreeNotCached": "לא ניתן להרחיב תיקייה זו במצב לא מקוון; עיין בה פעם אחת בזמן שאתה מחובר",
 	"offlineCachedCount": "{n} מסמכים זמינים במצב לא מקוון",
 	"offlineReadonlyTip": "מצב קריאה בלבד ללא חיבור - נפתח אוטומטית כשהרשת חוזרת",

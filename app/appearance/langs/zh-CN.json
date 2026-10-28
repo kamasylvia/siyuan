@@ -1,4 +1,11 @@
 {
+	"offlineCacheTitle": "离线缓存",
+	"offlineCacheHint": "离线只读模式下可打开以下文档;缓存随浏览自动更新,超出容量按最久未访问淘汰",
+	"offlineCacheEmpty": "暂无离线缓存文档",
+	"offlineCacheClear": "清空",
+	"offlineCacheClearConfirm": "确定清空全部离线缓存文档吗?",
+	"offlineCacheDeleteConfirm": "删除「{title}」的离线缓存?",
+	"offlineCacheManage": "管理",
 	"offlineTreeNotCached": "该目录离线时不可展开,联网浏览过即可",
 	"offlineCachedCount": "离线可浏览 {n} 篇文档",
 	"offlineReadonlyTip": "离线只读 - 网络恢复后自动解锁",

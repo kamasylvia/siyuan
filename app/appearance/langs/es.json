@@ -1,4 +1,11 @@
 {
+	"offlineCacheTitle": "Caché sin conexión",
+	"offlineCacheHint": "Estos documentos se abren en modo de lectura sin conexión; la caché se actualiza al navegar y expulsa las entradas menos usadas al superar su límite",
+	"offlineCacheEmpty": "No hay documentos en caché para uso sin conexión",
+	"offlineCacheClear": "Vaciar",
+	"offlineCacheClearConfirm": "¿Vaciar toda la caché de documentos sin conexión?",
+	"offlineCacheDeleteConfirm": "¿Eliminar la caché sin conexión de «{title}»?",
+	"offlineCacheManage": "Gestionar",
 	"offlineTreeNotCached": "Esta carpeta no se puede expandir sin conexión; navegue por ella una vez con conexión",
 	"offlineCachedCount": "{n} documentos disponibles sin conexión",
 	"offlineReadonlyTip": "Solo lectura sin conexión - se desbloquea automáticamente al recuperar la red",

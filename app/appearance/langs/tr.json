@@ -1,4 +1,11 @@
 {
+	"offlineCacheTitle": "Çevrimdışı önbellek",
+	"offlineCacheHint": "Bu belgeler çevrimdışı okuma modunda açılır; önbellek gezindikçe güncellenir ve sınır aşılırsa en uzun süredir kullanılmayan girdileri atar",
+	"offlineCacheEmpty": "Çevrimdışı kullanım için önbelleğe alınmış belge yok",
+	"offlineCacheClear": "Temizle",
+	"offlineCacheClearConfirm": "Önbelleğe alınan tüm çevrimdışı belgeler temizlensin mi?",
+	"offlineCacheDeleteConfirm": "\"{title}\" belgesinin çevrimdışı önbelleği silinsin mi?",
+	"offlineCacheManage": "Yönet",
 	"offlineTreeNotCached": "Bu klasör çevrimdışı açılamaz; çevrimiçiyken bir kez göz atın",
 	"offlineCachedCount": "{n} belge çevrimdışı kullanılabilir",
 	"offlineReadonlyTip": "Çevrimdışı salt okunur - ağ geri geldiğinde otomatik olarak kilidi açılır",

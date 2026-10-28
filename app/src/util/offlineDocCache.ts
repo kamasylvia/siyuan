@@ -61,6 +61,7 @@ export const putDocCache = async (docId: string, response: IWebSocketData) => {
             updated: response.data?.ial?.updated || "",
             bytes: json.length,
             at: Date.now(),
+            title: typeof response.data?.ial?.title === "string" ? response.data.ial.title : "",
             ...(rootId && rootId !== docId ? {rootId} : {}),
         };
         const db = await openDb();
@@ -134,6 +135,34 @@ export const clearDocCache = async () => {
     tx.objectStore(STORE_TREES).clear();
     const meta = tx.objectStore(STORE_META);
     meta.clear();
+};
+
+// 缓存管理清单:按最后访问时间倒序
+export const listDocCache = async (): Promise<DocCacheEntry[]> => {
+    try {
+        const db = await openDb();
+        return (await readEntries(db)).sort((a, b) => b.at - a.at);
+    } catch (error) {
+        console.warn("offline doc cache list failed [" + error + "]");
+        return [];
+    }
+};
+
+// 删除单条缓存并清理指向它的别名
+export const deleteDocCache = async (docId: string) => {
+    try {
+        const db = await openDb();
+        const entries = await readEntries(db);
+        const kept = entries.filter(item => item.docId !== docId);
+        const aliases = evictAliases(await readAliases(db), new Set([docId]));
+        const tx = db.transaction([STORE_DOCS, STORE_META], "readwrite");
+        tx.objectStore(STORE_DOCS).delete(docId);
+        const meta = tx.objectStore(STORE_META);
+        meta.put(kept, DOC_META_KEY);
+        meta.put(aliases, DOC_ALIAS_KEY);
+    } catch (error) {
+        console.warn("offline doc cache delete failed [" + error + "]");
+    }
 };
 
 // 离线横幅展示的缓存文档数;失败返回 -1 由调用方省略计数

@@ -6,6 +6,7 @@ import {getCloudURL} from "../util/about";
 import {openLink} from "../../editor/openLink";
 import {sendAppSetting} from "./appRuntime";
 import {getHostCapabilities} from "../../util/hostCapabilities";
+import {isOfflineEnabled} from "../../util/offlineState";
 import {openChangelog} from "../../boot/openChangelog";
 import {writeClipboardData} from "../../protyle/util/compatibility";
 import {showMessage} from "../../dialog/message";
@@ -33,6 +34,27 @@ const registerAboutVersionGroup = (tab: SettingTabBuilder) => {
         html: genAboutVersionHtml,
         afterMount: mountAboutVersionSlot,
     });
+    if (isOfflineEnabled()) {
+        group.slot({
+            key: "offlineCache",
+            keywords: [window.siyuan.languages.offlineCacheTitle],
+            html: () => `<div class="fn__flex b3-label config-item">
+    <div class="fn__flex-1">
+        <div class="config-name">${window.siyuan.languages.offlineCacheTitle}</div>
+        <div class="b3-label__text">${window.siyuan.languages.offlineCacheHint}</div>
+    </div>
+    <div class="fn__space"></div>
+    <button class="b3-button b3-button--outline fn__flex-center" id="offlineCacheManage">
+        ${window.siyuan.languages.offlineCacheManage}
+    </button>
+</div>`,
+            afterMount: (root) => {
+                root.querySelector("#offlineCacheManage").addEventListener("click", () => {
+                    void import("../../util/offlineCacheManager").then(module => module.openOfflineCacheManager());
+                });
+            },
+        });
+    }
     if (!window.siyuan.config.system.isMicrosoftStore && getHostCapabilities().ownsKernel) {
         group.select("system.updateChannel", {
             title: window.siyuan.languages.updateChannel,

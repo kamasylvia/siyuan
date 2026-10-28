@@ -1,4 +1,11 @@
 {
+	"offlineCacheTitle": "Offline cache",
+	"offlineCacheHint": "Deze documenten openen in offline-leesmodus; de cache wordt bij het browsen bijgewerkt en verwijdert langst ongebruikte items boven de limiet",
+	"offlineCacheEmpty": "Geen documenten in de cache voor offline gebruik",
+	"offlineCacheClear": "Wissen",
+	"offlineCacheClearConfirm": "Alle gecachete offline documenten wissen?",
+	"offlineCacheDeleteConfirm": "De offline cache van \"{title}\" verwijderen?",
+	"offlineCacheManage": "Beheren",
 	"offlineTreeNotCached": "Deze map kan niet offline worden uitgeklapt; blader er online eenmaal door",
 	"offlineCachedCount": "{n} documenten offline beschikbaar",
 	"offlineReadonlyTip": "Offline alleen-lezen - wordt automatisch ontgrendeld wanneer het netwerk herstelt",

@@ -1,4 +1,11 @@
 {
+	"offlineCacheTitle": "オフラインキャッシュ",
+	"offlineCacheHint": "以下のドキュメントはオフライン閲覧モードで開けます。キャッシュは閲覧に合わせて更新され、上限を超えると最も古く使われていないものから削除されます",
+	"offlineCacheEmpty": "オフライン用にキャッシュされたドキュメントはありません",
+	"offlineCacheClear": "クリア",
+	"offlineCacheClearConfirm": "オフラインキャッシュのドキュメントをすべて消去しますか?",
+	"offlineCacheDeleteConfirm": "「{title}」のオフラインキャッシュを削除しますか?",
+	"offlineCacheManage": "管理",
 	"offlineTreeNotCached": "このフォルダはオフラインでは展開できません。オンライン時に一度開いてください",
 	"offlineCachedCount": "オフラインで閲覧できるドキュメント {n} 件",
 	"offlineReadonlyTip": "オフライン読み取り専用 - ネットワーク回復後に自動的に解除されます",

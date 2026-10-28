@@ -1,4 +1,11 @@
 {
+	"offlineCacheTitle": "Cache offline",
+	"offlineCacheHint": "Estes documentos abrem no modo de leitura offline; o cache é atualizado conforme você navega e descarta as entradas menos usadas recentemente além do limite",
+	"offlineCacheEmpty": "Nenhum documento em cache para uso offline",
+	"offlineCacheClear": "Limpar",
+	"offlineCacheClearConfirm": "Limpar todos os documentos em cache offline?",
+	"offlineCacheDeleteConfirm": "Excluir o cache offline de \"{title}\"?",
+	"offlineCacheManage": "Gerenciar",
 	"offlineTreeNotCached": "Esta pasta não pode ser expandida offline; navegue por ela uma vez online",
 	"offlineCachedCount": "{n} documentos disponíveis offline",
 	"offlineReadonlyTip": "Somente leitura offline - desbloqueia automaticamente quando a rede é restaurada",
