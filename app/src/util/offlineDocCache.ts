@@ -62,10 +62,10 @@ export const putDocCache = async (docId: string, response: IWebSocketData) => {
         const rootId = typeof response.data?.rootID === "string" ? response.data.rootID : "";
         const entry: DocCacheEntry = {
             docId,
-            updated: response.data?.ial?.updated || "",
+            updated: response.data?.docInfo?.ial?.updated || response.data?.ial?.updated || "",
             bytes: json.length,
             at: Date.now(),
-            title: typeof response.data?.ial?.title === "string" ? response.data.ial.title : "",
+            title: typeof response.data?.docInfo?.ial?.title === "string" ? response.data.docInfo.ial.title : "",
             ...(rootId && rootId !== docId ? {rootId} : {}),
         };
         const db = await openDb();
@@ -158,7 +158,8 @@ export const listDocCache = async (): Promise<DocCacheEntry[]> => {
             request.onsuccess = () => {
                 try {
                     const parsed = JSON.parse((request.result as CachedDoc)?.json || "{}") as IWebSocketData;
-                    const title = parsed?.data?.ial?.title;
+                    const docInfo = parsed?.data?.docInfo;
+                    const title = docInfo?.ial?.title ?? parsed?.data?.ial?.title;
                     if (typeof title === "string" && title) {
                         derived[entry.docId] = title;
                     }
