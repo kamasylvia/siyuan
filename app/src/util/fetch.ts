@@ -15,6 +15,20 @@ import {isOffline} from "./offlineState";
 import {isRemoteKernel} from "./hostCapabilities";
 import {isBrowser} from "./functions";
 
+// 本次会话已预取的目录(notebook\u0000dir),避免重复请求
+const prefetchedTreeDirs = new Set<string>();
+
+const prefetchTreeCache = (notebook: string, dir: string) => {
+    const key = notebook + "\u0000" + dir;
+    if (prefetchedTreeDirs.has(key) || isOffline()) {
+        return;
+    }
+    prefetchedTreeDirs.add(key);
+    fetchPost("/api/filetree/listDocsByPath", {notebook, path: dir}, () => {
+        // 响应经下方 listDocsByPath 分支写入目录缓存
+    });
+};
+
 const reportTransactionFailure = (url: string, error: Error) => {
     if (url !== "/api/transactions" || error?.name === "AbortError") {
         return;
@@ -173,6 +187,17 @@ export const fetchPost = ((
         if ((isRemoteKernel() || isBrowser()) && response && typeof response === "object" && response.code === 0 && !isOffline()) {
             if (url === "/api/filetree/getDoc" && data?.id) {
                 void putDocCache(data.id, response);
+                // 向上遍历父链预取目录缓存,离线时整条父链都可展开定位
+                if (typeof data.box === "string" && typeof data.path === "string" &&
+                    data.path.startsWith("/" + data.box + "/")) {
+                    const segments = data.path.slice(1).split("/");
+                    // 目录段 = 去掉文件名后逐级向上,直到笔记本根目录
+                    const dirs: string[] = [];
+                    for (let i = segments.length - 1; i >= 2; i--) {
+                        dirs.push("/" + segments.slice(0, i).join("/"));
+                    }
+                    dirs.forEach(dir => prefetchTreeCache(data.box, dir));
+                }
             } else if (url === "/api/filetree/listDocsByPath" && typeof data?.notebook === "string") {
                 void putTreeCache(data.notebook, data.path || "/", response);
             } else if (url === "/api/filetree/removeDoc" && data?.path) {

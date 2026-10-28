@@ -40,6 +40,38 @@ self.addEventListener("activate", event => {
     })());
 });
 
+// 离线资产缓存(文档 /assets 与外链图片共用)写入后执行容量守护:
+// 条目数超过 500 时按写入顺序裁掉最旧的;存储占用超过配额 60% 时裁掉一半,防止无界增长。
+const OFFLINE_ASSET_CACHE = "siyuan-offline-assets";
+const OFFLINE_ASSET_MAX_ENTRIES = 500;
+
+const trimOfflineAssetCache = async () => {
+    const assetCache = await caches.open(OFFLINE_ASSET_CACHE);
+    const keys = await assetCache.keys();
+    if (keys.length > OFFLINE_ASSET_MAX_ENTRIES) {
+        for (const request of keys.slice(0, keys.length - OFFLINE_ASSET_MAX_ENTRIES)) {
+            await assetCache.delete(request);
+        }
+    }
+    try {
+        const storageStats = await navigator.storage.estimate();
+        if (storageStats.usage / storageStats.quota > 0.6) {
+            const remaining = (await assetCache.keys()).slice(0, Math.ceil(keys.length / 2));
+            for (const request of remaining) {
+                await assetCache.delete(request);
+            }
+        }
+    } catch (error) {
+        // estimate 不可用时跳过配额守护,仅保留条目数上限
+    }
+};
+
+const putOfflineAsset = async (request, response) => {
+    const assetCache = await caches.open(OFFLINE_ASSET_CACHE);
+    await assetCache.put(request, response.clone());
+    await trimOfflineAssetCache();
+};
+
 self.addEventListener("fetch", event => {
     const url = new URL(event.request.url);
 
@@ -63,8 +95,7 @@ self.addEventListener("fetch", event => {
             try {
                 const fetchResponse = await fetch(event.request);
                 if (fetchResponse.ok || fetchResponse.type === "opaque") {
-                    const assetCache = await caches.open("siyuan-offline-assets");
-                    await assetCache.put(event.request, fetchResponse.clone());
+                    await putOfflineAsset(event.request, fetchResponse);
                 }
                 return fetchResponse;
             } catch (error) {
@@ -93,8 +124,7 @@ self.addEventListener("fetch", event => {
             try {
                 const fetchResponse = await fetch(event.request);
                 if (fetchResponse.ok) {
-                    const assetCache = await caches.open("siyuan-offline-assets");
-                    await assetCache.put(event.request, fetchResponse.clone());
+                    await putOfflineAsset(event.request, fetchResponse);
                 }
                 return fetchResponse;
             } catch (error) {
