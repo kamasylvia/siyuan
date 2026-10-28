@@ -38,6 +38,22 @@ export const fetchPost = ((
         showMessage(window.siyuan.languages.offlineTransactionBlocked, 0, "error");
         return;
     }
+    // 离线只读期间 getDoc 直接读缓存,避免请求挂起导致无限 loading;未缓存的立即提示
+    if (isOffline() && url === "/api/filetree/getDoc" && data?.id) {
+        void getDocCache(data.id).then(cached => {
+            if (cached && cb) {
+                cb(cached);
+                return;
+            }
+            showMessage(window.siyuan.languages.offlineDocNotCached);
+            failCallback?.({
+                data: null,
+                msg: "offline",
+                code: 400,
+            });
+        });
+        return;
+    }
     const init: RequestInit = {
         method: "POST",
     };

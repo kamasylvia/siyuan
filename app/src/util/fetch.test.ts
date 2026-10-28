@@ -9,7 +9,8 @@ import {flushSettingSaves, settingSaveFailures, trackSettingRequest} from "../co
 import {trackEditorSaveRequest} from "../protyle/util/editorSave";
 
 const loadFetchPost = (fetchImplementation: typeof fetch = () => new Promise(() => {}),
-                       processResponse: (response: IWebSocketData) => boolean = () => true) => {
+                       processResponse: (response: IWebSocketData) => boolean = () => true,
+                       options: {offline?: boolean, cachedDoc?: IWebSocketData, cachedId?: string} = {}) => {
     const sends: unknown[][] = [];
     const timeouts: number[] = [];
     const notifications: unknown[][] = [];
@@ -33,8 +34,12 @@ const loadFetchPost = (fetchImplementation: typeof fetch = () => new Promise(() 
                 case "../dialog/message": return {showMessage: (...args: unknown[]) => notifications.push(args)};
                 case "../config/setting/pending": return {trackSettingRequest};
                 case "../protyle/util/editorSave": return {trackEditorSaveRequest};
-                case "./offlineDocCache": return {getDocCache: async (): Promise<null> => null, putDocCache: async (): Promise<void> => {}};
-                case "./offlineState": return {isOffline: () => false};
+                case "./offlineDocCache": return {
+                    getDocCache: async (id: string) =>
+                        (options.offline && options.cachedDoc && id === options.cachedId ? options.cachedDoc : null),
+                    putDocCache: async (): Promise<void> => {},
+                };
+                case "./offlineState": return {isOffline: () => Boolean(options.offline)};
                 case "./hostCapabilities": return {isRemoteKernel: () => false};
                 case "./functions": return {isBrowser: () => false};
                 case "./fetchTimeout": return {
@@ -51,7 +56,7 @@ const loadFetchPost = (fetchImplementation: typeof fetch = () => new Promise(() 
         location: {port: "6806"},
         navigator: {onLine: true},
         console: {warn: () => {}},
-        window: {siyuan: {languages: {transactionSaveUnconfirmed: "Save unconfirmed"}}},
+        window: {siyuan: {languages: {transactionSaveUnconfirmed: "Save unconfirmed", offlineDocNotCached: "offlineDocNotCached"}}},
     });
     return {fetchPost: exports.fetchPost, fetchSyncPost: exports.fetchSyncPost, sends, timeouts, notifications,
         kernelChecks: () => kernelChecks};
@@ -196,4 +201,34 @@ it("truncated transaction responses are visible while cancellation and callback 
     await callback.fetchPost("/api/transactions", {}, () => { throw new TypeError("Failed to fetch"); });
     assert.equal(callback.notifications.length, 0);
     assert.equal(callback.kernelChecks(), 0);
+});
+
+it("offline getDoc serves the cached snapshot without touching the network", async () => {
+    const cached = {code: 0, msg: "", data: {rootID: "root-1", content: "<div>cached</div>"}} as IWebSocketData;
+    let fetched = 0;
+    const env = loadFetchPost(async () => {
+        fetched++;
+        throw new Error("network down");
+    }, () => true, {offline: true, cachedDoc: cached, cachedId: "root-1"});
+    let served: IWebSocketData | undefined;
+    await env.fetchPost("/api/filetree/getDoc", {id: "root-1"}, (response: IWebSocketData) => {
+        served = response;
+    });
+    assert.equal(fetched, 0);
+    assert.equal(served?.data?.content, "<div>cached</div>");
+    assert.equal(env.notifications.length, 0);
+});
+
+it("offline getDoc without a cached snapshot fails fast with a notice", async () => {
+    let fetched = 0;
+    const env = loadFetchPost(async () => {
+        fetched++;
+        throw new Error("network down");
+    }, () => true, {offline: true});
+    let failures = 0;
+    await env.fetchPost("/api/filetree/getDoc", {id: "missing"}, () => { throw new TypeError("unexpected success"); },
+        undefined, () => { failures++; });
+    assert.equal(fetched, 0);
+    assert.equal(failures, 1);
+    assert.ok(env.notifications.some(([message]) => message === "offlineDocNotCached"));
 });
