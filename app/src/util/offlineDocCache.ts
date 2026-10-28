@@ -1,12 +1,13 @@
 // 远程空间离线文档缓存:getDoc 响应存 IndexedDB(http 源也可用,不依赖 Service Worker 的安全上下文),
 // 断网时由 fetch 咽喉兜底读取;容量按 offlineCore 的 LRU 规则淘汰。
 
-import {DocCacheEntry, evictOverLimit} from "./offlineCore";
+import {DocCacheEntry, evictAliases, evictOverLimit} from "./offlineCore";
 
 const DB_NAME = "siyuan-offline-cache";
 const STORE_DOCS = "docs";
 const STORE_META = "meta";
 const DOC_META_KEY = "entries";
+const DOC_ALIAS_KEY = "aliases";
 
 interface CachedDoc {
     json: string;
@@ -38,36 +39,57 @@ const readEntries = async (db: IDBDatabase): Promise<DocCacheEntry[]> => {
     return (await requestToPromise(tx.objectStore(STORE_META).get(DOC_META_KEY))) || [];
 };
 
-// 写入文档快照并按 LRU 上限淘汰;失败仅告警,不影响在线流程
+const readAliases = async (db: IDBDatabase): Promise<Record<string, string>> => {
+    const tx = db.transaction(STORE_META, "readonly");
+    return (await requestToPromise(tx.objectStore(STORE_META).get(DOC_ALIAS_KEY))) || {};
+};
+
+// 写入文档快照并按 LRU 上限淘汰;根文档 ID 写入别名,块定位打开的文档离线时按根 ID 也能命中。
+// 失败仅告警,不影响在线流程
 export const putDocCache = async (docId: string, response: IWebSocketData) => {
     try {
         const json = JSON.stringify(response);
+        const rootId = typeof response.data?.rootID === "string" ? response.data.rootID : "";
         const entry: DocCacheEntry = {
             docId,
             updated: response.data?.ial?.updated || "",
             bytes: json.length,
             at: Date.now(),
+            ...(rootId && rootId !== docId ? {rootId} : {}),
         };
         const db = await openDb();
         const entries = (await readEntries(db)).filter(item => item.docId !== docId).concat(entry);
         const evicted = new Set(evictOverLimit(entries).map(item => item.docId));
         const kept = entries.filter(item => !evicted.has(item.docId));
+        const aliases = evictAliases(await readAliases(db), evicted);
+        if (rootId && rootId !== docId) {
+            aliases[rootId] = docId;
+        }
         const tx = db.transaction([STORE_DOCS, STORE_META], "readwrite");
         const docs = tx.objectStore(STORE_DOCS);
         docs.put({json, at: entry.at} as CachedDoc, docId);
         evicted.forEach(id => docs.delete(id));
-        tx.objectStore(STORE_META).put(kept, DOC_META_KEY);
+        const meta = tx.objectStore(STORE_META);
+        meta.put(kept, DOC_META_KEY);
+        meta.put(aliases, DOC_ALIAS_KEY);
     } catch (error) {
         console.warn("offline doc cache put failed [" + error + "]");
     }
 };
 
-// 断网兜底读取;无缓存或解析失败返回 null
+// 断网兜底读取;请求 id 未命中时按根文档 ID 别名回退,无缓存或解析失败返回 null
 export const getDocCache = async (docId: string): Promise<IWebSocketData | null> => {
     try {
         const db = await openDb();
-        const tx = db.transaction(STORE_DOCS, "readonly");
-        const cached = await requestToPromise<CachedDoc | undefined>(tx.objectStore(STORE_DOCS).get(docId));
+        const docsTx = db.transaction(STORE_DOCS, "readonly");
+        let cached = await requestToPromise<CachedDoc | undefined>(docsTx.objectStore(STORE_DOCS).get(docId));
+        if (!cached) {
+            const alias = (await readAliases(db))[docId];
+            if (alias && alias !== docId) {
+                const aliasTx = db.transaction(STORE_DOCS, "readonly");
+                cached = await requestToPromise<CachedDoc | undefined>(aliasTx.objectStore(STORE_DOCS).get(alias));
+            }
+        }
         if (!cached) {
             return null;
         }
@@ -84,5 +106,6 @@ export const clearDocCache = async () => {
     const db = await openDb();
     const tx = db.transaction([STORE_DOCS, STORE_META], "readwrite");
     tx.objectStore(STORE_DOCS).clear();
-    tx.objectStore(STORE_META).clear();
+    const meta = tx.objectStore(STORE_META);
+    meta.clear();
 };

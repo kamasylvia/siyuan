@@ -31,7 +31,19 @@ export interface DocCacheEntry {
     updated: string;
     bytes: number;
     at: number;
+    rootId?: string;
 }
+
+// 淘汰记录时同时给出应删除的别名(块 id → 根文档 id 映射),避免别名悬空指向已淘汰文档。
+export const evictAliases = (aliases: Record<string, string>, evicted: Set<string>): Record<string, string> => {
+    const kept: Record<string, string> = {};
+    for (const [alias, docId] of Object.entries(aliases)) {
+        if (!evicted.has(docId) && !evicted.has(alias)) {
+            kept[alias] = docId;
+        }
+    }
+    return kept;
+};
 
 // 追加/更新一条缓存记录后,超出容量上限时按最后访问时间升序给出应淘汰的记录。
 export const evictOverLimit = (entries: DocCacheEntry[], limitBytes: number = DOC_CACHE_LIMIT_BYTES): DocCacheEntry[] => {

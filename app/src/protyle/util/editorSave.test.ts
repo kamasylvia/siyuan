@@ -24,11 +24,16 @@ const loadFetch = (fetchImplementation: typeof fetch) => {
                 case "../dialog/message": return {showMessage: () => {}};
                 case "../config/setting/pending": return {trackSettingRequest: (_url: string, promise: Promise<unknown>) => promise};
                 case "../protyle/util/editorSave": return {trackEditorSaveRequest};
+                case "./offlineDocCache": return {getDocCache: async (): Promise<null> => null, putDocCache: async (): Promise<void> => {}};
+                case "./offlineState": return {isOffline: () => false};
+                case "./hostCapabilities": return {isRemoteKernel: () => false};
+                case "./functions": return {isBrowser: () => false};
                 case "./fetchTimeout": return {withFetchTimeout: (request: () => Promise<unknown>) => request()};
                 default: throw new Error(name);
             }
         },
         FormData,
+        navigator: {onLine: true},
         window: {siyuan: {languages: {transactionSaveUnconfirmed: "Save unconfirmed"}}},
         console: {warn: () => {}},
     });

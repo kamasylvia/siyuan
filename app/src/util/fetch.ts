@@ -132,14 +132,17 @@ export const fetchPost = ((
         if (e?.name === "AbortError") {
             return;
         }
-        // 断网时 getDoc 从离线缓存兜底,未缓存则提示
-        if (url === "/api/filetree/getDoc" && data?.id && isOffline()) {
+        // 网络不可达时 getDoc 从离线缓存兜底;isOffline() 有 5 秒宽限,用 navigator.onLine 即时补盲区,
+        // 在线状态下内核报错不吞进旧缓存
+        if (url === "/api/filetree/getDoc" && data?.id && (isOffline() || !navigator.onLine)) {
             void getDocCache(data.id).then(cached => {
                 if (cached && cb) {
                     cb(cached);
                     return;
                 }
-                showMessage(window.siyuan.languages.offlineDocNotCached);
+                if (isOffline()) {
+                    showMessage(window.siyuan.languages.offlineDocNotCached);
+                }
                 failCallback?.({
                     data: null,
                     msg: e.message,

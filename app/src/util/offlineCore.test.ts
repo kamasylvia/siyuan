@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {test} from "node:test";
-import {DocCacheEntry, evictOverLimit, nextOffline, OFFLINE_GRACE_MS, wantOffline} from "./offlineCore";
+import {DocCacheEntry, evictAliases, evictOverLimit, nextOffline, OFFLINE_GRACE_MS, wantOffline} from "./offlineCore";
 
 test("wantOffline covers both signals", () => {
     assert.equal(wantOffline({navOnline: true, wsConnected: true}), false);
@@ -40,4 +40,16 @@ test("evictOverLimit keeps recent entries and drops oldest first", () => {
     // 更新 at 后不再是最旧
     const refreshed = [{...entries[0], at: 9}, entries[1], entries[2]];
     assert.deepEqual(evictOverLimit(refreshed, 900), [entries[1]]);
+});
+
+test("evictAliases drops entries pointing at evicted documents and evicted aliases", () => {
+    const aliases = {"block-1": "doc-1", "block-2": "doc-2", "doc-1": "doc-1"};
+    // doc-1 被淘汰:指向它的别名全部清除;doc-2 仍在:别名保留
+    assert.deepEqual(evictAliases(aliases, new Set(["doc-1"])), {"block-2": "doc-2"});
+    // 别名自身作为键被淘汰时同样清除
+    assert.deepEqual(evictAliases(aliases, new Set(["block-2"])), {
+        "block-1": "doc-1", "doc-1": "doc-1",
+    });
+    // 空淘汰集原样保留
+    assert.deepEqual(evictAliases(aliases, new Set()), aliases);
 });

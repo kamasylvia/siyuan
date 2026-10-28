@@ -33,6 +33,10 @@ const loadFetchPost = (fetchImplementation: typeof fetch = () => new Promise(() 
                 case "../dialog/message": return {showMessage: (...args: unknown[]) => notifications.push(args)};
                 case "../config/setting/pending": return {trackSettingRequest};
                 case "../protyle/util/editorSave": return {trackEditorSaveRequest};
+                case "./offlineDocCache": return {getDocCache: async (): Promise<null> => null, putDocCache: async (): Promise<void> => {}};
+                case "./offlineState": return {isOffline: () => false};
+                case "./hostCapabilities": return {isRemoteKernel: () => false};
+                case "./functions": return {isBrowser: () => false};
                 case "./fetchTimeout": return {
                     withFetchTimeout: (request: (signal?: AbortSignal) => Promise<unknown>, signal: AbortSignal, timeout: number) => {
                         timeouts.push(timeout);
@@ -45,6 +49,7 @@ const loadFetchPost = (fetchImplementation: typeof fetch = () => new Promise(() 
         fetch: fetchImplementation,
         FormData,
         location: {port: "6806"},
+        navigator: {onLine: true},
         console: {warn: () => {}},
         window: {siyuan: {languages: {transactionSaveUnconfirmed: "Save unconfirmed"}}},
     });

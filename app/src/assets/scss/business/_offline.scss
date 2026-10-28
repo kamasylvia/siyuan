@@ -1,15 +1,15 @@
-// 远程空间离线兜底:顶部固定横幅,离线时出现、恢复时隐藏
+// 远程空间离线兜底:底部固定横幅,离线时出现、恢复时隐藏;红色高亮且不遮挡顶栏操作
 .offline-banner {
     position: fixed;
-    top: 0;
+    bottom: 0;
     left: 0;
     right: 0;
     z-index: 1000;
     padding: 4px 16px;
     text-align: center;
     font-size: 14px;
-    background-color: var(--b3-card-warning-background);
-    color: var(--b3-theme-on-background);
-    border-bottom: 1px solid var(--b3-theme-surface-lighter);
+    background-color: var(--b3-card-error-background);
+    color: var(--b3-card-error-color);
+    border-top: 1px solid var(--b3-theme-error);
     pointer-events: none;
 }

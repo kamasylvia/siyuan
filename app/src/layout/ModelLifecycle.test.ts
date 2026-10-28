@@ -82,6 +82,7 @@ test("main socket recovery is recorded and obsolete sockets cannot finish a faul
             if (name === "../constants") return {Constants: {SIYUAN_APPID: "test"}};
             if (name === "../util/kernelFault") return {kernelError: (obsolete: () => boolean) => diagnoses.push(obsolete)};
             if (name === "../util/kernelConnection") return {markKernelConnectionAlive: () => recovered++};
+            if (name === "../util/offlineState") return {setWsConnected: () => {}};
             throw new Error(name);
         },
     });
