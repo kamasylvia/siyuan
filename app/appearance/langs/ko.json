@@ -1451,7 +1451,7 @@
 	"clearTempFilesTip": "앱 실행 중 생성된 임시 파일을 정리하여 저장 공간을 확보합니다",
 	"uploadFileTooLarge": "⚠️ 업로드한 파일 [${x}]의 크기가 [${y}]로 너무 큽니다. 계속 업로드하시겠습니까?",
 	"recentDocsMaxListCount": "최근 문서 목록 최대 수",
-	"recentDocsMaxListCountTip": "최근 문서 대화상자에 최대 나열될 문서 수",
+	"recentDocsMaxListCountTip": "최근 문서 대화상자에 최대 나열될 문서 수, 이 수는 오프라인 캐시에 유지되는 문서 수 상한이기도 합니다",
 	"bazaarNeedVersion": "사용하려면 SiYuan을 v${x} 이상으로 업그레이드해야 합니다",
 	"downloadRollback": "다운로드 및 롤백",
 	"callout": "콜아웃 블록",

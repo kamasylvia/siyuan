@@ -1451,7 +1451,7 @@
 	"clearTempFilesTip": "Vymazať dočasné súbory vygenerované počas behu aplikácie na uvoľnenie úložného priestoru",
 	"uploadFileTooLarge": "⚠️ Nahrávaný súbor [${x}] je príliš veľký [${y}]. Naozaj chcete pokračovať v nahrávaní?",
 	"recentDocsMaxListCount": "Maximálny počet zobrazených nedávnych dokumentov",
-	"recentDocsMaxListCountTip": "Maximálny počet dokumentov uvedených v dialógovom okne Nedávne dokumenty",
+	"recentDocsMaxListCountTip": "Maximálny počet dokumentov uvedených v dialógovom okne Nedávne dokumenty, táto hodnota tiež obmedzuje dokumenty uložené v offline medzipamäti",
 	"bazaarNeedVersion": "Na použitie vyžaduje aktualizáciu SiYuan na verziu v${x} alebo novšiu",
 	"downloadRollback": "Stiahnuť a vrátiť späť",
 	"callout": "Blok zvýraznenia",

@@ -1451,7 +1451,7 @@
 	"clearTempFilesTip": "清理應用運行過程中產生的臨時檔案以釋放儲存空間",
 	"uploadFileTooLarge": "⚠️ 上傳的檔案 [${x}] 很大 [${y}]，請確認是否繼續上傳？",
 	"recentDocsMaxListCount": "最近的文件列出數量",
-	"recentDocsMaxListCountTip": "在最近的文件對話框中最多列出文件的數量",
+	"recentDocsMaxListCountTip": "在最近的文件對話框中最多列出文件的數量;該數量同樣是離線快取保留的文檔數上限",
 	"bazaarNeedVersion": "需升級到思源筆記 v${x} 或更高版本才能使用",
 	"downloadRollback": "下載並回滾",
 	"callout": "提示區塊",

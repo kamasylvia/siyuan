@@ -1451,7 +1451,7 @@
 	"clearTempFilesTip": "アプリの実行中に生成された一時ファイルを削除して、ストレージ領域を解放します",
 	"uploadFileTooLarge": "⚠️ アップロードしたファイル [${x}] は [${y}] で大きすぎます。アップロードを続行しますか？",
 	"recentDocsMaxListCount": "最近のドキュメントの最大表示数",
-	"recentDocsMaxListCountTip": "最近のドキュメントダイアログに最大で表示されるドキュメント数",
+	"recentDocsMaxListCountTip": "最近のドキュメントダイアログに最大で表示されるドキュメント数;この数はオフラインキャッシュに保持される文書数の上限でもあります",
 	"bazaarNeedVersion": "使用するには SiYuan を v${x} 以上にアップグレードする必要があります",
 	"downloadRollback": "ダウンロードしてロールバック",
 	"callout": "ヒントブロック",

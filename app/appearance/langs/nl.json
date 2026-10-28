@@ -1451,7 +1451,7 @@
 	"clearTempFilesTip": "Tijdelijke bestanden wissen om opslagruimte vrij te maken",
 	"uploadFileTooLarge": "⚠️ Het geüploade bestand [${x}] is te groot [${y}]. Weet u zeker dat u wilt doorgaan met uploaden?",
 	"recentDocsMaxListCount": "Maximaal aantal recente documenten",
-	"recentDocsMaxListCountTip": "Maximaal aantal documenten in Recente Documenten-dialoog",
+	"recentDocsMaxListCountTip": "Maximaal aantal documenten in Recente Documenten-dialoog, dit aantal begrenst ook de documenten in de offline cache",
 	"bazaarNeedVersion": "Vereist SiYuan v${x} of nieuwer",
 	"downloadRollback": "Downloaden en terugdraaien",
 	"callout": "Uitroepblok",

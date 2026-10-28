@@ -1451,7 +1451,7 @@
 	"clearTempFilesTip": "Wyczyść pliki tymczasowe tworzone podczas działania aplikacji, aby zwolnić miejsce na dysku",
 	"uploadFileTooLarge": "⚠️ Przesłany plik [${x}] jest za duży [${y}]. Czy na pewno chcesz kontynuować przesyłanie?",
 	"recentDocsMaxListCount": "Maksymalna liczba wyświetlanych ostatnich dokumentów",
-	"recentDocsMaxListCountTip": "Maksymalna liczba dokumentów wyświetlanych w oknie dialogowym Ostatnie dokumenty",
+	"recentDocsMaxListCountTip": "Maksymalna liczba dokumentów wyświetlanych w oknie dialogowym Ostatnie dokumenty, liczba ta ogranicza również dokumenty przechowywane w pamięci offline",
 	"bazaarNeedVersion": "Wymagane jest uaktualnienie SiYuan do wersji v${x} lub nowszej, aby używać",
 	"downloadRollback": "Pobierz i przywróć",
 	"callout": "Blok wskazówki",

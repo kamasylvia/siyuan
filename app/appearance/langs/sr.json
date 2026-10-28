@@ -1451,7 +1451,7 @@
 	"clearTempFilesTip": "Očisti privremene fajlove nastale tokom rada aplikacije radi oslobađanja prostora za skladištenje",
 	"uploadFileTooLarge": "⚠️ Fajl za slanje [${x}] je prevelik [${y}]. Nastaviti sa slanjem?",
 	"recentDocsMaxListCount": "Najveći broj nedavnih dokumenata na spisku",
-	"recentDocsMaxListCountTip": "Najveći broj dokumenata prikazanih u dijalogu Nedavni dokumenti",
+	"recentDocsMaxListCountTip": "Najveći broj dokumenata prikazanih u dijalogu Nedavni dokumenti, овај број такође ограничава документе у офлајн кешу",
 	"bazaarNeedVersion": "Za korišćenje je potrebno nadograditi SiYuan na v${x} ili noviju verziju",
 	"downloadRollback": "Preuzmi i vrati unazad",
 	"callout": "Blok napomene",

@@ -1451,7 +1451,7 @@
 	"clearTempFilesTip": "Clear temporary files generated while the app is running to free up storage space",
 	"uploadFileTooLarge": "⚠️ The uploaded file [${x}] is too large [${y}]. Are you sure you want to continue uploading?",
 	"recentDocsMaxListCount": "Maximum number of recent documents listed",
-	"recentDocsMaxListCountTip": "Maximum number of documents listed in the Recent Documents dialog",
+	"recentDocsMaxListCountTip": "Maximum number of documents listed in the Recent Documents dialog, this count is also the maximum number of documents kept in the offline cache",
 	"bazaarNeedVersion": "Requires upgrading SiYuan to v${x} or later to use",
 	"downloadRollback": "Download and rollback",
 	"callout": "Callout block",

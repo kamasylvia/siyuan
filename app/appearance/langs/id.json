@@ -1451,7 +1451,7 @@
 	"clearTempFilesTip": "Bersihkan file sementara yang dihasilkan saat aplikasi berjalan untuk mengosongkan ruang penyimpanan",
 	"uploadFileTooLarge": "⚠️ File yang diunggah [${x}] terlalu besar [${y}]. Apakah Anda yakin ingin melanjutkan pengunggahan?",
 	"recentDocsMaxListCount": "Jumlah maksimum dokumen terbaru yang terdaftar",
-	"recentDocsMaxListCountTip": "Jumlah maksimum dokumen yang terdaftar dalam dialog Dokumen Terbaru",
+	"recentDocsMaxListCountTip": "Jumlah maksimum dokumen yang terdaftar dalam dialog Dokumen Terbaru, jumlah ini juga menjadi batas dokumen yang disimpan dalam cache offline",
 	"bazaarNeedVersion": "Memerlukan peningkatan SiYuan ke v${x} atau lebih baru untuk digunakan",
 	"downloadRollback": "Unduh dan putar balik",
 	"callout": "Blok keterangan",

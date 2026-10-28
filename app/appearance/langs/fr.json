@@ -1451,7 +1451,7 @@
 	"clearTempFilesTip": "Effacez les fichiers temporaires générés lors de l'exécution de l'application pour libérer de l'espace de stockage",
 	"uploadFileTooLarge": "⚠️ Le fichier envoyé [${x}] est trop volumineux [${y}]. Voulez-vous continuer l'envoi ?",
 	"recentDocsMaxListCount": "Nombre maximal de documents récents listés",
-	"recentDocsMaxListCountTip": "Nombre maximal de documents répertoriés dans la boîte de dialogue Documents récents",
+	"recentDocsMaxListCountTip": "Nombre maximal de documents répertoriés dans la boîte de dialogue Documents récents, ce nombre limite également les documents conservés dans le cache hors ligne",
 	"bazaarNeedVersion": "Nécessite la mise à niveau de SiYuan vers la version v${x} ou ultérieure pour l'utiliser",
 	"downloadRollback": "Télécharger et restaurer",
 	"callout": "Bloc d’astuce",
