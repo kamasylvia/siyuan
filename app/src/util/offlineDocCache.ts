@@ -1,7 +1,11 @@
 // 远程空间离线文档缓存:getDoc 响应存 IndexedDB(http 源也可用,不依赖 Service Worker 的安全上下文),
 // 断网时由 fetch 咽喉兜底读取;容量按 offlineCore 的 LRU 规则淘汰。
 
-import {DocCacheEntry, evictAliases, evictOverLimit} from "./offlineCore";
+import {DOC_CACHE_LIMIT_COUNT, DocCacheEntry, evictAliases, evictOverLimit} from "./offlineCore";
+
+// 离线缓存篇数上限读取用户设置(设置 - 关于 - 离线缓存),未初始化时回落默认值
+const cacheLimitCount = () =>
+    (typeof window !== "undefined" && window.siyuan?.config?.editor?.offlineDocCacheMaxCount) || DOC_CACHE_LIMIT_COUNT;
 
 const DB_NAME = "siyuan-offline-cache";
 const STORE_DOCS = "docs";
@@ -66,7 +70,7 @@ export const putDocCache = async (docId: string, response: IWebSocketData) => {
         };
         const db = await openDb();
         const entries = (await readEntries(db)).filter(item => item.docId !== docId).concat(entry);
-        const evicted = new Set(evictOverLimit(entries).map(item => item.docId));
+        const evicted = new Set(evictOverLimit(entries, undefined, cacheLimitCount()).map(item => item.docId));
         const kept = entries.filter(item => !evicted.has(item.docId));
         const aliases = evictAliases(await readAliases(db), evicted);
         if (rootId && rootId !== docId) {
@@ -137,11 +141,40 @@ export const clearDocCache = async () => {
     meta.clear();
 };
 
-// 缓存管理清单:按最后访问时间倒序
+// 缓存管理清单:按最后访问时间倒序;缺标题的条目(旧版写入或元数据回填未跑)直接从缓存快照派生,离线也能显示标题
 export const listDocCache = async (): Promise<DocCacheEntry[]> => {
     try {
         const db = await openDb();
-        return (await readEntries(db)).sort((a, b) => b.at - a.at);
+        const entries = (await readEntries(db)).sort((a, b) => b.at - a.at);
+        const missing = entries.filter(entry => !entry.title);
+        if (!missing.length) {
+            return entries;
+        }
+        const derived: Record<string, string> = {};
+        const docsTx = db.transaction(STORE_DOCS, "readonly");
+        const store = docsTx.objectStore(STORE_DOCS);
+        await Promise.all(missing.map(entry => new Promise<void>(resolve => {
+            const request = store.get(entry.docId);
+            request.onsuccess = () => {
+                try {
+                    const parsed = JSON.parse((request.result as CachedDoc)?.json || "{}") as IWebSocketData;
+                    const title = parsed?.data?.ial?.title;
+                    if (typeof title === "string" && title) {
+                        derived[entry.docId] = title;
+                    }
+                } catch {
+                    // 快照解析失败保留原样
+                }
+                resolve();
+            };
+            request.onerror = () => resolve();
+        })));
+        if (!Object.keys(derived).length) {
+            return entries;
+        }
+        const patched = entries.map(entry => derived[entry.docId] ? {...entry, title: derived[entry.docId]} : entry);
+        void updateDocCacheTitles(derived);
+        return patched;
     } catch (error) {
         console.warn("offline doc cache list failed [" + error + "]");
         return [];

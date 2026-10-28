@@ -1,4 +1,6 @@
 {
+	"offlineDocCacheMaxCount": "Máx. de documentos em cache offline",
+	"offlineDocCacheMaxCountTip": "Número máximo de documentos mantidos no cache offline; ao exceder, os menos acessados recentemente são removidos",
 	"offlineCacheTitle": "Cache offline",
 	"offlineCacheHint": "Estes documentos abrem no modo de leitura offline; o cache é atualizado conforme você navega e descarta as entradas menos usadas recentemente além do limite",
 	"offlineCacheEmpty": "Nenhum documento em cache para uso offline",

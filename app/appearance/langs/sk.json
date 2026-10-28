@@ -1,4 +1,6 @@
 {
+	"offlineDocCacheMaxCount": "Max. počet dokumentov offline",
+	"offlineDocCacheMaxCountTip": "Maximálny počet dokumentov uložených v offline medzipamäti; po prekročení sa odstránia najdlhšie nezobrazené",
 	"offlineCacheTitle": "Offline vyrovnávacia pamäť",
 	"offlineCacheHint": "Tieto dokumenty sa otvárajú v režime offline čítania; vyrovnávacia pamäť sa aktualizuje pri prehliadaní a pri prekročení limitu odstraňuje najdlhšie nepoužité záznamy",
 	"offlineCacheEmpty": "Žiadne dokumenty nie sú uložené v offinovej pamäti",

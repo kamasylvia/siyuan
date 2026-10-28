@@ -1,4 +1,6 @@
 {
+	"offlineDocCacheMaxCount": "オフラインキャッシュ文書数上限",
+	"offlineDocCacheMaxCountTip": "オフラインキャッシュに保持する文書数の上限。超過分は最も長く未アクセスのものから削除されます",
 	"offlineCacheTitle": "オフラインキャッシュ",
 	"offlineCacheHint": "以下のドキュメントはオフライン閲覧モードで開けます。キャッシュは閲覧に合わせて更新され、上限を超えると最も古く使われていないものから削除されます",
 	"offlineCacheEmpty": "オフライン用にキャッシュされたドキュメントはありません",

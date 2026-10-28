@@ -1,4 +1,6 @@
 {
+	"offlineDocCacheMaxCount": "오프라인 캐시 문서 수 상한",
+	"offlineDocCacheMaxCountTip": "오프라인 캐시에 유지할 문서 수 상한으로, 초과 시 가장 오래 열지 않은 문서부터 제거됩니다",
 	"offlineCacheTitle": "오프라인 캐시",
 	"offlineCacheHint": "다음 문서는 오프라인 읽기 모드에서 열 수 있습니다. 캐시는 탐색에 따라 갱신되며 용량 초과 시 오래 사용하지 않은 항목부터 제거됩니다",
 	"offlineCacheEmpty": "오프라인용으로 캐시된 문서가 없습니다",

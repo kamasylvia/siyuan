@@ -1,4 +1,6 @@
 {
+	"offlineDocCacheMaxCount": "Maks. çevrimdışı önbellek belgesi",
+	"offlineDocCacheMaxCountTip": "Çevrimdışı önbellekte tutulacak maksimum belge sayısı; aşılırsa en uzun süredir görüntülenmeyenler kaldırılır",
 	"offlineCacheTitle": "Çevrimdışı önbellek",
 	"offlineCacheHint": "Bu belgeler çevrimdışı okuma modunda açılır; önbellek gezindikçe güncellenir ve sınır aşılırsa en uzun süredir kullanılmayan girdileri atar",
 	"offlineCacheEmpty": "Çevrimdışı kullanım için önbelleğe alınmış belge yok",

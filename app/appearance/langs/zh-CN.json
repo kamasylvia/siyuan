@@ -1,4 +1,6 @@
 {
+	"offlineDocCacheMaxCount": "离线缓存文档数上限",
+	"offlineDocCacheMaxCountTip": "离线缓存保留的文档数量上限，超出按最久未访问淘汰",
 	"offlineCacheTitle": "离线缓存",
 	"offlineCacheHint": "离线只读模式下可打开以下文档;缓存随浏览自动更新,超出容量按最久未访问淘汰",
 	"offlineCacheEmpty": "暂无离线缓存文档",

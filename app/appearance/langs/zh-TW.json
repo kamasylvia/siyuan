@@ -1,4 +1,6 @@
 {
+	"offlineDocCacheMaxCount": "離線快取文檔數上限",
+	"offlineDocCacheMaxCountTip": "離線快取保留的文檔數量上限，超出按最久未存取淘汰",
 	"offlineCacheTitle": "離線快取",
 	"offlineCacheHint": "離線唯讀模式下可開啟以下文件;快取隨瀏覽自動更新,超出容量按最久未存取淘汰",
 	"offlineCacheEmpty": "暫無離線快取文件",

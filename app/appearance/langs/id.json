@@ -1,4 +1,6 @@
 {
+	"offlineDocCacheMaxCount": "Batas dokumen cache offline",
+	"offlineDocCacheMaxCountTip": "Jumlah maksimum dokumen yang disimpan dalam cache offline; jika terlampaui, yang paling lama tidak dilihat akan dihapus",
 	"offlineCacheTitle": "Cache offline",
 	"offlineCacheHint": "Dokumen ini dapat dibuka dalam mode baca offline; cache diperbarui saat menjelajah dan menghapus entri paling lama tidak diakses saat melebihi batas",
 	"offlineCacheEmpty": "Tidak ada dokumen yang di-cache untuk penggunaan offline",

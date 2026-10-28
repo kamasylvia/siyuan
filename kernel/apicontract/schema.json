@@ -41398,6 +41398,16 @@
             }
           ]
         },
+        "offlineDocCacheMaxCount": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "onlySearchForDoc": {
           "anyOf": [
             {
@@ -45474,6 +45484,9 @@
             }
           ]
         },
+        "offlineDocCacheMaxCount": {
+          "type": "integer"
+        },
         "onlySearchForDoc": {
           "type": "boolean"
         },
@@ -45580,6 +45593,7 @@
         "listItemDotNumberClickFocus",
         "listLogicalOutdent",
         "markdown",
+        "offlineDocCacheMaxCount",
         "onlySearchForDoc",
         "pageScrollButtons",
         "pasteURLAutoConvert",
@@ -46251,6 +46265,16 @@
           "anyOf": [
             {
               "$ref": "#/$defs/SettingMarkdownInput"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "offlineDocCacheMaxCount": {
+          "anyOf": [
+            {
+              "type": "integer"
             },
             {
               "type": "null"

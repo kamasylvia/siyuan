@@ -1,4 +1,6 @@
 {
+	"offlineDocCacheMaxCount": "Nombre max. de documents hors ligne",
+	"offlineDocCacheMaxCountTip": "Nombre maximum de documents conservés dans le cache hors ligne ; au-delà, les moins récemment consultés sont supprimés",
 	"offlineCacheTitle": "Cache hors ligne",
 	"offlineCacheHint": "Ces documents s'ouvrent en mode lecture hors ligne ; le cache se met à jour à la navigation et évacue les entrées les moins récemment utilisées au-delà de sa limite",
 	"offlineCacheEmpty": "Aucun document en cache pour l'utilisation hors ligne",

@@ -1,4 +1,6 @@
 {
+	"offlineDocCacheMaxCount": "Maks. dokumentów w pamięci offline",
+	"offlineDocCacheMaxCountTip": "Maksymalna liczba dokumentów przechowywanych w pamięci offline; po przekroczeniu usuwane są najdawniej przeglądane",
 	"offlineCacheTitle": "Pamięć podręczna offline",
 	"offlineCacheHint": "Te dokumenty otwierają się w trybie czytania offline; pamięć podręczna aktualizuje się przy przeglądaniu i usuwa najdawniej używane wpisy po przekroczeniu limitu",
 	"offlineCacheEmpty": "Brak dokumentów w pamięci podręcznej do użytku offline",

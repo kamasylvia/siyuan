@@ -1,4 +1,6 @@
 {
+	"offlineDocCacheMaxCount": "Máx. de documentos en caché sin conexión",
+	"offlineDocCacheMaxCountTip": "Número máximo de documentos conservados en la caché sin conexión; si se supera, se eliminan los menos visitados recientemente",
 	"offlineCacheTitle": "Caché sin conexión",
 	"offlineCacheHint": "Estos documentos se abren en modo de lectura sin conexión; la caché se actualiza al navegar y expulsa las entradas menos usadas al superar su límite",
 	"offlineCacheEmpty": "No hay documentos en caché para uso sin conexión",
