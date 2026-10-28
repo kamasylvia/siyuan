@@ -1,4 +1,5 @@
 {
+	"offlineUntitledDoc": "Document sans titre",
 	"apiUnauthorizedTip": "Requêtes non autorisées (401) bloquées pour éviter une boucle de rechargement ; si cela persiste, reconnectez l'espace de travail",
 	"offlineDocCacheMaxCount": "Nombre max. de documents hors ligne",
 	"offlineDocCacheMaxCountTip": "Nombre maximum de documents conservés dans le cache hors ligne ; au-delà, les moins récemment consultés sont supprimés",

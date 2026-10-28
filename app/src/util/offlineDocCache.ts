@@ -212,16 +212,34 @@ export const listDocCache = async (): Promise<DocCacheEntry[]> => {
 
 // 删除单条缓存并清理指向它的别名
 export const deleteDocCache = async (docId: string) => {
+    await deleteDocCaches([docId]);
+};
+
+// 批量删除:文档被删除时联动清理其快照、元数据条目与别名;docId 与别名命中都清
+export const deleteDocCaches = async (docIds: string[]) => {
+    if (!docIds.length) {
+        return;
+    }
     try {
         const db = await openDb();
         const entries = await readEntries(db);
-        const kept = entries.filter(item => item.docId !== docId);
-        const aliases = evictAliases(await readAliases(db), new Set([docId]));
+        const idSet = new Set(docIds);
+        const aliases = await readAliases(db);
+        // 别名(块 ID → 根文档 ID)反向命中:要删的块 ID 是某条目的别名入口时,该条目一并清除
+        const hitIds = new Set(docIds);
+        Object.entries(aliases).forEach(([alias, target]) => {
+            if (idSet.has(alias) || idSet.has(target)) {
+                hitIds.add(alias);
+                hitIds.add(target);
+            }
+        });
+        const kept = entries.filter(item => !hitIds.has(item.docId));
         const tx = db.transaction([STORE_DOCS, STORE_META], "readwrite");
-        tx.objectStore(STORE_DOCS).delete(docId);
+        const docs = tx.objectStore(STORE_DOCS);
+        hitIds.forEach(id => docs.delete(id));
         const meta = tx.objectStore(STORE_META);
         meta.put(kept, DOC_META_KEY);
-        meta.put(aliases, DOC_ALIAS_KEY);
+        meta.put(evictAliases(aliases, hitIds), DOC_ALIAS_KEY);
     } catch (error) {
         console.warn("offline doc cache delete failed [" + error + "]");
     }

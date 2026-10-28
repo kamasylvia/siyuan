@@ -35,7 +35,7 @@ const openPreview = async (entry: DocCacheEntry, refresh: () => void) => {
     if (!cached) {
         return;
     }
-    const title = entry.title || entry.docId;
+    const title = entry.title || window.siyuan.languages.offlineUntitledDoc;
     const previewDialog = new Dialog({
         title,
         content: `<div class="offline-cache__preview b3-typography">${cached.data?.content || ""}</div>
@@ -62,7 +62,7 @@ export const openOfflineCacheManager = () => {
             }
             listElement.innerHTML = withTitles.map(entry => `
 <div class="b3-list-item" data-doc-id="${escapeHtml(entry.docId)}">
-    <span class="b3-list-item__text">${escapeHtml(entry.title || entry.docId)}
+    <span class="b3-list-item__text">${escapeHtml(entry.title || window.siyuan.languages.offlineUntitledDoc)}
         <span class="b3-list-item__meta">${formatBytes(entry.bytes)} · ${new Date(entry.at).toLocaleString()}</span>
     </span>
     <span class="b3-list-item__action" data-action="preview"><svg><use xlink:href="#iconPreview"></use></svg></span>
@@ -78,7 +78,7 @@ export const openOfflineCacheManager = () => {
                     if (action?.getAttribute("data-action") === "delete") {
                         confirmDialog(window.siyuan.languages.offlineCacheTitle,
                             window.siyuan.languages.offlineCacheDeleteConfirm.replace("{title}",
-                                entry?.title || docId), () => {
+                                entry?.title || window.siyuan.languages.offlineUntitledDoc), () => {
                                 void deleteDocCache(docId).then(() => renderList(element, emptyText));
                             });
                         return;

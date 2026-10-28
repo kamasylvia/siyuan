@@ -1,4 +1,5 @@
 {
+	"offlineUntitledDoc": "Documento senza titolo",
 	"apiUnauthorizedTip": "Richieste non autorizzate (401) bloccate per evitare un ciclo di ricaricamento; se persiste, riconnetti lo spazio di lavoro",
 	"offlineDocCacheMaxCount": "Numero massimo documenti offline",
 	"offlineDocCacheMaxCountTip": "Numero massimo di documenti conservati nella cache offline; oltre il limite vengono rimossi i meno recentemente accessi",

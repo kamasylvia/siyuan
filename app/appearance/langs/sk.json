@@ -1,4 +1,5 @@
 {
+	"offlineUntitledDoc": "Dokument bez názvu",
 	"apiUnauthorizedTip": "Neautorizované požiadavky (401) boli zablokované, aby sa zabránilo slučke opakovania; ak pretrváva, znova pripojte pracovný priestor",
 	"offlineDocCacheMaxCount": "Max. počet dokumentov offline",
 	"offlineDocCacheMaxCountTip": "Maximálny počet dokumentov uložených v offline medzipamäti; po prekročení sa odstránia najdlhšie nezobrazené",

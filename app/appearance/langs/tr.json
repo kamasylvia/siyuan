@@ -1,4 +1,5 @@
 {
+	"offlineUntitledDoc": "Başlıksız belge",
 	"apiUnauthorizedTip": "Yetkisiz istekler (401) yenileme döngüsünü önlemek için engellendi; sürüyorsa çalışma alanını yeniden bağlayın",
 	"offlineDocCacheMaxCount": "Maks. çevrimdışı önbellek belgesi",
 	"offlineDocCacheMaxCountTip": "Çevrimdışı önbellekte tutulacak maksimum belge sayısı; aşılırsa en uzun süredir görüntülenmeyenler kaldırılır",

@@ -10,7 +10,7 @@ import type {FetchGet, FetchPost, FetchSyncPost} from "../types/api";
 import {trackSettingRequest} from "../config/setting/pending";
 import {trackEditorSaveRequest} from "../protyle/util/editorSave";
 import {showMessage} from "../dialog/message";
-import {getDocCache, getTreeCache, putDocCache, putTreeCache} from "./offlineDocCache";
+import {deleteDocCaches, getDocCache, getTreeCache, putDocCache, putTreeCache} from "./offlineDocCache";
 import {isOffline} from "./offlineState";
 import {isRemoteKernel} from "./hostCapabilities";
 import {isBrowser} from "./functions";
@@ -175,6 +175,13 @@ export const fetchPost = ((
                 void putDocCache(data.id, response);
             } else if (url === "/api/filetree/listDocsByPath" && typeof data?.notebook === "string") {
                 void putTreeCache(data.notebook, data.path || "/", response);
+            } else if (url === "/api/filetree/removeDoc" && data?.path) {
+                // 文档删除联动清理离线缓存快照,避免管理窗与离线打开残留已删文档
+                void deleteDocCaches([String(data.path).split("/").pop().replace(/\.sy$/, "")]);
+            } else if (url === "/api/filetree/removeDocs" && Array.isArray(data?.paths)) {
+                void deleteDocCaches(data.paths.map((p: string) => String(p).split("/").pop().replace(/\.sy$/, "")).filter(Boolean));
+            } else if (url === "/api/filetree/removeDocByID" && data?.id) {
+                void deleteDocCaches([String(data.id)]);
             }
         }
         if (typeof response === "string") {
