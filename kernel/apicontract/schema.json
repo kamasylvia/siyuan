@@ -45485,7 +45485,14 @@
           ]
         },
         "offlineDocCacheMaxCount": {
-          "type": "integer"
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "onlySearchForDoc": {
           "type": "boolean"
