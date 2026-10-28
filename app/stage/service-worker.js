@@ -155,9 +155,28 @@ self.addEventListener("fetch", event => {
         return;
     }
 
-    // On fetch, go to the cache first, and then network.
+    // 前端构建资源网络优先并回写缓存，保证 NAS 部署新前端后浏览器立即拿到最新 bundle;
+    // 断网时回退缓存，离线只读仍可用。仅不可变资源(带内容哈希的文件名字体/图标)保持缓存优先。
+    const isImmutableAsset = /\.[0-9a-f]{8,}\.(js|css)$/i.test(url.pathname) ||
+        url.pathname.startsWith("/appearance/fonts/") ||
+        url.pathname.startsWith("/appearance/emojis/");
     event.respondWith((async () => {
         const cache = await caches.open(CACHE_NAME);
+        if (!isImmutableAsset) {
+            try {
+                const fetchResponse = await fetch(event.request);
+                if (fetchResponse && fetchResponse.ok) {
+                    await cache.put(event.request, fetchResponse.clone());
+                }
+                return fetchResponse;
+            } catch (error) {
+                const cachedResponse = await cache.match(event.request);
+                if (cachedResponse && cachedResponse.type !== 'opaque') {
+                    return cachedResponse;
+                }
+                throw error;
+            }
+        }
         const cachedResponse = await cache.match(event.request);
         if (cachedResponse && cachedResponse.type !== 'opaque') {
             return cachedResponse;
