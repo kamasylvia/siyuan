@@ -214,6 +214,7 @@ it("offline getDoc serves the cached snapshot without touching the network", asy
     await env.fetchPost("/api/filetree/getDoc", {id: "root-1"}, (response: IWebSocketData) => {
         served = response;
     });
+    await new Promise(resolve => setTimeout(resolve, 0));
     assert.equal(fetched, 0);
     assert.equal(served?.data?.content, "<div>cached</div>");
     assert.equal(env.notifications.length, 0);
@@ -228,7 +229,26 @@ it("offline getDoc without a cached snapshot fails fast with a notice", async ()
     let failures = 0;
     await env.fetchPost("/api/filetree/getDoc", {id: "missing"}, () => { throw new TypeError("unexpected success"); },
         undefined, () => { failures++; });
+    await new Promise(resolve => setTimeout(resolve, 0));
     assert.equal(fetched, 0);
     assert.equal(failures, 1);
     assert.ok(env.notifications.some(([message]) => message === "offlineDocNotCached"));
+});
+
+it("offline getBlockInfo synthesizes root info from the cached snapshot", async () => {
+    const cached = {code: 0, msg: "", data: {rootID: "root-1", box: "box-1", path: "/root.sy", ial: {title: "Doc A"}}} as IWebSocketData;
+    let fetched = 0;
+    const env = loadFetchPost(async () => {
+        fetched++;
+        throw new Error("network down");
+    }, () => true, {offline: true, cachedDoc: cached, cachedId: "root-1"});
+    let served: IWebSocketData | undefined;
+    await env.fetchSyncPost("/api/block/getBlockInfo", {id: "root-1"}).then((response: IWebSocketData) => {
+        served = response;
+    });
+    assert.equal(fetched, 0);
+    assert.equal(served?.code, 0);
+    assert.equal(served?.data?.rootID, "root-1");
+    assert.equal(served?.data?.rootTitle, "Doc A");
+    assert.equal(served?.data?.rootTitleEmpty, false);
 });

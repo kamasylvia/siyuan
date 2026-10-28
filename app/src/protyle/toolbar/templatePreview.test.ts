@@ -36,6 +36,10 @@ const loadPreview = () => {
         "./fetchTimeout": {withFetchTimeout},
         "../config/setting/pending": {trackSettingRequest},
         "../protyle/util/editorSave": {trackEditorSaveRequest},
+        "./offlineDocCache": {getDocCache: async (): Promise<null> => null, putDocCache: async (): Promise<void> => {}},
+        "./offlineState": {isOffline: () => false},
+        "./hostCapabilities": {isRemoteKernel: () => false},
+        "./functions": {isBrowser: () => false},
     });
     const previewModule = loadModule("util.ts", {
         "../../util/fetch": fetchModule,

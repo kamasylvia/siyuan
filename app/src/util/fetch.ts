@@ -24,6 +24,45 @@ const reportTransactionFailure = (url: string, error: Error) => {
     void kernelError();
 };
 
+// 离线只读兜底:getDoc 直读缓存快照,getBlockInfo 由快照合成(打开文档的前置调用)。
+// 返回 null 表示未接管;接管后 code=0 为命中,否则为快速失败(getDoc 缺缓存时已就地提示)
+const serveOfflineDocRequest = (url: string, data: any): Promise<IWebSocketData> | null => {
+    if (!isOffline() || !data?.id) {
+        return null;
+    }
+    if (url === "/api/filetree/getDoc") {
+        return getDocCache(data.id).then(cached => {
+            if (cached) {
+                return cached;
+            }
+            showMessage(window.siyuan.languages.offlineDocNotCached);
+            return {data: null, msg: "offline", code: 400} as IWebSocketData;
+        });
+    }
+    if (url === "/api/block/getBlockInfo") {
+        return getDocCache(data.id).then(cached => {
+            if (!cached) {
+                return {data: null, msg: "offline", code: 400} as IWebSocketData;
+            }
+            const ial = cached.data?.ial || {};
+            return {
+                code: 0,
+                msg: "",
+                data: {
+                    id: data.id,
+                    rootID: cached.data?.rootID || data.id,
+                    rootTitle: ial.title || "",
+                    rootTitleEmpty: !ial.title,
+                    rootIcon: ial.icon || "",
+                    box: cached.data?.box || "",
+                    path: cached.data?.path || "",
+                },
+            } as IWebSocketData;
+        });
+    }
+    return null;
+};
+
 export const fetchPost = ((
     url: string,
     data?: any,
@@ -38,18 +77,18 @@ export const fetchPost = ((
         showMessage(window.siyuan.languages.offlineTransactionBlocked, 0, "error");
         return;
     }
-    // 离线只读期间 getDoc 直接读缓存,避免请求挂起导致无限 loading;未缓存的立即提示
-    if (isOffline() && url === "/api/filetree/getDoc" && data?.id) {
-        void getDocCache(data.id).then(cached => {
-            if (cached && cb) {
-                cb(cached);
+    // 离线只读期间 getDoc/getBlockInfo 直接由缓存接管,避免请求挂起导致无限 loading
+    const offlineServed = serveOfflineDocRequest(url, data);
+    if (offlineServed) {
+        offlineServed.then(response => {
+            if (response.code === 0) {
+                cb?.(response);
                 return;
             }
-            showMessage(window.siyuan.languages.offlineDocNotCached);
             failCallback?.({
                 data: null,
-                msg: "offline",
-                code: 400,
+                msg: response.msg,
+                code: response.code,
             });
         });
         return;
@@ -188,6 +227,15 @@ export const fetchPost = ((
 
 export const fetchSyncPost = (async (url: string, data?: any, headers?: Record<string, string>, process = true,
                                     signal?: AbortSignal) => {
+    const offlineServed = serveOfflineDocRequest(url, data);
+    if (offlineServed) {
+        return offlineServed.then(response => {
+            if (process && response.code === 0) {
+                processMessage(response);
+            }
+            return response;
+        });
+    }
     const init: RequestInit = {
         method: "POST",
         signal,

@@ -261,6 +261,11 @@ export class Files extends Model {
                         afterOpen() {
                             target.removeAttribute("data-opening");
                         }
+                    }).then(result => {
+                        // 打开失败(如离线未缓存)时清理标记,避免该项后续点击被 data-opening 永久阻塞
+                        if (!result) {
+                            target.removeAttribute("data-opening");
+                        }
                     });
                     event.stopPropagation();
                     event.preventDefault();
@@ -356,6 +361,11 @@ export class Files extends Model {
                                     id: liElement.getAttribute("data-node-id"),
                                     action: isPhablet() ? [Constants.CB_GET_SCROLL] : [Constants.CB_GET_FOCUS, Constants.CB_GET_SCROLL],
                                     afterOpen() {
+                                        liElement.removeAttribute("data-opening");
+                                    }
+                                }).then(result => {
+                                    // 打开失败(如离线未缓存)时清理标记,避免该项后续点击被 data-opening 永久阻塞
+                                    if (!result) {
                                         liElement.removeAttribute("data-opening");
                                     }
                                 });
