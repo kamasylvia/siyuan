@@ -1,4 +1,5 @@
 {
+	"offlineTreeNotCached": "Tento priečinok nemožno offline rozbaliť; prehliadnite ho raz online",
 	"offlineCachedCount": "{n} dokumentov je k dispozícii offline",
 	"offlineReadonlyTip": "Offline iba na čítanie - automaticky sa odomkne po obnovení siete",
 	"offlineTransactionBlocked": "Úpravy nie sú dostupné v režime offline iba na čítanie",

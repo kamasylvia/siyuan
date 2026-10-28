@@ -1,4 +1,5 @@
 {
+	"offlineTreeNotCached": "Dieser Ordner kann offline nicht aufgeklappt werden; browsen Sie ihn einmal online",
 	"offlineCachedCount": "{n} Dokumente offline verfügbar",
 	"offlineReadonlyTip": "Offline schreibgeschützt - wird bei Netzwerkwiederherstellung automatisch entsperrt",
 	"offlineTransactionBlocked": "Bearbeiten ist im Offline-Schreibschutzmodus nicht verfügbar",

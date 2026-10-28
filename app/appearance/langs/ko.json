@@ -1,4 +1,5 @@
 {
+	"offlineTreeNotCached": "이 폴더는 오프라인에서 펼칠 수 없습니다. 온라인에서 한 번 열어 주세요",
 	"offlineCachedCount": "오프라인으로 볼 수 있는 문서 {n}개",
 	"offlineReadonlyTip": "오프라인 읽기 전용 - 네트워크가 복구되면 자동으로 잠금 해제됩니다",
 	"offlineTransactionBlocked": "오프라인 읽기 전용 모드에서는 편집할 수 없습니다",

@@ -5,6 +5,7 @@ import {DocCacheEntry, evictAliases, evictOverLimit} from "./offlineCore";
 
 const DB_NAME = "siyuan-offline-cache";
 const STORE_DOCS = "docs";
+const STORE_TREES = "trees";
 const STORE_META = "meta";
 const DOC_META_KEY = "entries";
 const DOC_ALIAS_KEY = "aliases";
@@ -14,12 +15,17 @@ interface CachedDoc {
     at: number;
 }
 
+const treeKey = (notebook: string, path: string) => `${notebook}\u0000${path}`;
+
 const openDb = (): Promise<IDBDatabase> => new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, 1);
     request.onupgradeneeded = () => {
         const db = request.result;
         if (!db.objectStoreNames.contains(STORE_DOCS)) {
             db.createObjectStore(STORE_DOCS);
+        }
+        if (!db.objectStoreNames.contains(STORE_TREES)) {
+            db.createObjectStore(STORE_TREES);
         }
         if (!db.objectStoreNames.contains(STORE_META)) {
             db.createObjectStore(STORE_META);
@@ -123,8 +129,9 @@ export const hasDocCache = async (docId: string): Promise<boolean> => {    try {
 // 供缓存管理入口清空
 export const clearDocCache = async () => {
     const db = await openDb();
-    const tx = db.transaction([STORE_DOCS, STORE_META], "readwrite");
+    const tx = db.transaction([STORE_DOCS, STORE_TREES, STORE_META], "readwrite");
     tx.objectStore(STORE_DOCS).clear();
+    tx.objectStore(STORE_TREES).clear();
     const meta = tx.objectStore(STORE_META);
     meta.clear();
 };
@@ -137,5 +144,32 @@ export const countDocCache = async (): Promise<number> => {
     } catch (error) {
         console.warn("offline doc cache count failed [" + error + "]");
         return -1;
+    }
+};
+
+// 目录展开响应(listDocsByPath)缓存:联网浏览过的目录离线才可展开,数据量小不做淘汰
+export const putTreeCache = async (notebook: string, path: string, response: IWebSocketData) => {
+    try {
+        const db = await openDb();
+        const tx = db.transaction(STORE_TREES, "readwrite");
+        tx.objectStore(STORE_TREES).put(JSON.stringify(response), treeKey(notebook, path));
+    } catch (error) {
+        console.warn("offline tree cache put failed [" + error + "]");
+    }
+};
+
+export const getTreeCache = async (notebook: string, path: string): Promise<IWebSocketData | null> => {
+    try {
+        const db = await openDb();
+        const tx = db.transaction(STORE_TREES, "readonly");
+        const cached = await requestToPromise<string | undefined>(tx.objectStore(STORE_TREES).get(treeKey(notebook, path)));
+        if (!cached) {
+            return null;
+        }
+        const response = JSON.parse(cached) as IWebSocketData;
+        return typeof response.code === "number" ? response : null;
+    } catch (error) {
+        console.warn("offline tree cache get failed [" + error + "]");
+        return null;
     }
 };

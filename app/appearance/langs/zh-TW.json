@@ -1,4 +1,5 @@
 {
+	"offlineTreeNotCached": "該目錄離線時無法展開,連線瀏覽過即可",
 	"offlineCachedCount": "離線可瀏覽 {n} 篇文件",
 	"offlineReadonlyTip": "離線唯讀 - 網路恢復後自動解鎖",
 	"offlineTransactionBlocked": "離線唯讀中,編輯暫不可用",

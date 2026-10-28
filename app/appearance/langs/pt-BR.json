@@ -1,4 +1,5 @@
 {
+	"offlineTreeNotCached": "Esta pasta não pode ser expandida offline; navegue por ela uma vez online",
 	"offlineCachedCount": "{n} documentos disponíveis offline",
 	"offlineReadonlyTip": "Somente leitura offline - desbloqueia automaticamente quando a rede é restaurada",
 	"offlineTransactionBlocked": "A edição está indisponível no modo somente leitura offline",

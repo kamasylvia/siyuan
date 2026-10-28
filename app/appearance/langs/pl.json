@@ -1,4 +1,5 @@
 {
+	"offlineTreeNotCached": "Tego folderu nie można rozwinąć offline; przejrzyj go raz online",
 	"offlineCachedCount": "Dokumenty dostępne offline: {n}",
 	"offlineReadonlyTip": "Offline tylko do odczytu - odblokowuje się automatycznie po przywróceniu sieci",
 	"offlineTransactionBlocked": "Edycja jest niedostępna w trybie offline tylko do odczytu",

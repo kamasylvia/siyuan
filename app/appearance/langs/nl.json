@@ -1,4 +1,5 @@
 {
+	"offlineTreeNotCached": "Deze map kan niet offline worden uitgeklapt; blader er online eenmaal door",
 	"offlineCachedCount": "{n} documenten offline beschikbaar",
 	"offlineReadonlyTip": "Offline alleen-lezen - wordt automatisch ontgrendeld wanneer het netwerk herstelt",
 	"offlineTransactionBlocked": "Bewerken is niet beschikbaar in offline alleen-lezenmodus",

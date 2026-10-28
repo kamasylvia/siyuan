@@ -10,7 +10,7 @@ import type {FetchGet, FetchPost, FetchSyncPost} from "../types/api";
 import {trackSettingRequest} from "../config/setting/pending";
 import {trackEditorSaveRequest} from "../protyle/util/editorSave";
 import {showMessage} from "../dialog/message";
-import {getDocCache, putDocCache} from "./offlineDocCache";
+import {getDocCache, getTreeCache, putDocCache, putTreeCache} from "./offlineDocCache";
 import {isOffline} from "./offlineState";
 import {isRemoteKernel} from "./hostCapabilities";
 import {isBrowser} from "./functions";
@@ -27,7 +27,7 @@ const reportTransactionFailure = (url: string, error: Error) => {
 // 离线只读兜底:getDoc 直读缓存快照,getBlockInfo 由快照合成(打开文档的前置调用)。
 // 返回 null 表示未接管;接管后 code=0 为命中,否则为快速失败(getDoc 缺缓存时已就地提示)
 const serveOfflineDocRequest = (url: string, data: any): Promise<IWebSocketData> | null => {
-    if (!isOffline() || !data?.id) {
+    if (!isOffline() || !data) {
         return null;
     }
     if (url === "/api/filetree/getDoc") {
@@ -58,6 +58,15 @@ const serveOfflineDocRequest = (url: string, data: any): Promise<IWebSocketData>
                     path: cached.data?.path || "",
                 },
             } as IWebSocketData;
+        });
+    }
+    if (url === "/api/filetree/listDocsByPath" && typeof data.notebook === "string") {
+        return getTreeCache(data.notebook, data.path || "/").then(cached => {
+            if (cached) {
+                return cached;
+            }
+            showMessage(window.siyuan.languages.offlineTreeNotCached);
+            return {data: null, msg: "offline", code: 400} as IWebSocketData;
         });
     }
     return null;
@@ -160,10 +169,13 @@ export const fetchPost = ((
             failCallback(response);
             return;
         }
-        // 在线打开的文档写入离线缓存(远程模式或浏览器访问,内核均不在本进程),断网兜底用
-        if (url === "/api/filetree/getDoc" && data?.id && (isRemoteKernel() || isBrowser()) &&
-            response && typeof response === "object" && response.code === 0) {
-            void putDocCache(data.id, response);
+        // 在线打开的文档与浏览过的目录写入离线缓存(远程模式或浏览器访问,内核均不在本进程),断网兜底用
+        if ((isRemoteKernel() || isBrowser()) && response && typeof response === "object" && response.code === 0 && !isOffline()) {
+            if (url === "/api/filetree/getDoc" && data?.id) {
+                void putDocCache(data.id, response);
+            } else if (url === "/api/filetree/listDocsByPath" && typeof data?.notebook === "string") {
+                void putTreeCache(data.notebook, data.path || "/", response);
+            }
         }
         if (typeof response === "string") {
             if (cb) {
@@ -255,6 +267,14 @@ export const fetchSyncPost = (async (url: string, data?: any, headers?: Record<s
         reportTransactionFailure(url, error);
         throw error;
     }).then(res2 => {
+        // 在线打开的文档与浏览过的目录写入离线缓存(fetchSyncPost 通道,与 fetchPost 咽喉对称)
+        if ((isRemoteKernel() || isBrowser()) && res2 && typeof res2 === "object" && res2.code === 0 && !isOffline()) {
+            if (url === "/api/filetree/getDoc" && data?.id) {
+                void putDocCache(data.id, res2);
+            } else if (url === "/api/filetree/listDocsByPath" && typeof data?.notebook === "string") {
+                void putTreeCache(data.notebook, data.path || "/", res2);
+            }
+        }
         if (process) {
             processMessage(res2);
         }

@@ -1,4 +1,5 @@
 {
+	"offlineTreeNotCached": "Ce dossier ne peut pas être développé hors ligne ; parcourez-le une fois en ligne",
 	"offlineCachedCount": "{n} documents disponibles hors ligne",
 	"offlineReadonlyTip": "Hors ligne en lecture seule - déverrouillage automatique au retour du réseau",
 	"offlineTransactionBlocked": "L'édition est indisponible en mode hors ligne lecture seule",

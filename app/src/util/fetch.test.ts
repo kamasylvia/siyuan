@@ -10,7 +10,8 @@ import {trackEditorSaveRequest} from "../protyle/util/editorSave";
 
 const loadFetchPost = (fetchImplementation: typeof fetch = () => new Promise(() => {}),
                        processResponse: (response: IWebSocketData) => boolean = () => true,
-                       options: {offline?: boolean, cachedDoc?: IWebSocketData, cachedId?: string} = {}) => {
+                       options: {offline?: boolean, cachedDoc?: IWebSocketData, cachedId?: string,
+                           cachedTree?: IWebSocketData, cachedTreePath?: string} = {}) => {
     const sends: unknown[][] = [];
     const timeouts: number[] = [];
     const notifications: unknown[][] = [];
@@ -38,6 +39,9 @@ const loadFetchPost = (fetchImplementation: typeof fetch = () => new Promise(() 
                     getDocCache: async (id: string) =>
                         (options.offline && options.cachedDoc && id === options.cachedId ? options.cachedDoc : null),
                     putDocCache: async (): Promise<void> => {},
+                    getTreeCache: async (_notebook: string, path: string) =>
+                        (options.offline && options.cachedTree && path === options.cachedTreePath ? options.cachedTree : null),
+                    putTreeCache: async (): Promise<void> => {},
                 };
                 case "./offlineState": return {isOffline: () => Boolean(options.offline)};
                 case "./hostCapabilities": return {isRemoteKernel: () => false};
@@ -56,7 +60,11 @@ const loadFetchPost = (fetchImplementation: typeof fetch = () => new Promise(() 
         location: {port: "6806"},
         navigator: {onLine: true},
         console: {warn: () => {}},
-        window: {siyuan: {languages: {transactionSaveUnconfirmed: "Save unconfirmed", offlineDocNotCached: "offlineDocNotCached"}}},
+        window: {siyuan: {languages: {
+            transactionSaveUnconfirmed: "Save unconfirmed",
+            offlineDocNotCached: "offlineDocNotCached",
+            offlineTreeNotCached: "offlineTreeNotCached",
+        }}},
     });
     return {fetchPost: exports.fetchPost, fetchSyncPost: exports.fetchSyncPost, sends, timeouts, notifications,
         kernelChecks: () => kernelChecks};
@@ -251,4 +259,25 @@ it("offline getBlockInfo synthesizes root info from the cached snapshot", async 
     assert.equal(served?.data?.rootID, "root-1");
     assert.equal(served?.data?.rootTitle, "Doc A");
     assert.equal(served?.data?.rootTitleEmpty, false);
+});
+
+it("offline tree expansion serves the cached listing and notices on misses", async () => {
+    const cachedTree = {code: 0, msg: "", data: {files: [{id: "doc-1", name: "Doc A"}]}} as IWebSocketData;
+    let fetched = 0;
+    const env = loadFetchPost(async () => {
+        fetched++;
+        throw new Error("network down");
+    }, () => true, {offline: true, cachedTree, cachedTreePath: "/seen"});
+    let served: IWebSocketData | undefined;
+    await env.fetchSyncPost("/api/filetree/listDocsByPath", {notebook: "box-1", path: "/seen"})
+        .then((response: IWebSocketData) => { served = response; });
+    assert.equal(fetched, 0);
+    assert.equal(served?.data?.files[0].id, "doc-1");
+
+    let failures = 0;
+    const missed = await env.fetchSyncPost("/api/filetree/listDocsByPath", {notebook: "box-1", path: "/never-seen"});
+    assert.equal(missed.code, 400);
+    assert.equal(fetched, 0);
+    assert.equal(failures, 0);
+    assert.ok(env.notifications.some(([message]) => message === "offlineTreeNotCached"));
 });

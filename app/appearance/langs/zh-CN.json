@@ -1,4 +1,5 @@
 {
+	"offlineTreeNotCached": "该目录离线时不可展开,联网浏览过即可",
 	"offlineCachedCount": "离线可浏览 {n} 篇文档",
 	"offlineReadonlyTip": "离线只读 - 网络恢复后自动解锁",
 	"offlineTransactionBlocked": "离线只读中,编辑暂不可用",
