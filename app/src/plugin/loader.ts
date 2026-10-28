@@ -1,6 +1,6 @@
 import {fetchSyncPost} from "../util/fetch";
 import {isOfflineEnabled, isOffline, onOfflineChange} from "../util/offlineState";
-import {filterSnoozed, recordPluginFailure, shouldSnooze} from "../util/pluginResilience";
+import {filterSnoozed, PLUGIN_SNOOZE_THRESHOLD, recordPluginFailure, shouldSnooze} from "../util/pluginResilience";
 import {showMessage} from "../dialog/message";
 import type {App} from "../index";
 import {markPluginDisposed, Plugin, type TPluginDataChangeReason} from "./index";

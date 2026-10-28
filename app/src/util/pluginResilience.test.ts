@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import {test} from "node:test";
-import {clearPluginSnooze, filterSnoozed, PLUGIN_SNOOZE_THRESHOLD, recordPluginFailure, shouldSnooze} from "./pluginResilience";
+import {clearPluginSnooze, filterSnoozed, PLUGIN_SNOOZE_THRESHOLD, PluginSnoozeState, recordPluginFailure, shouldSnooze} from "./pluginResilience";
 
 test("failures accumulate per plugin and reach the threshold", () => {
-    const state = {};
+    const state: PluginSnoozeState = {};
     assert.equal(recordPluginFailure(state, "a"), 1);
     assert.equal(recordPluginFailure(state, "a"), 2);
     assert.equal(shouldSnooze(state["a"], 3), false);
@@ -15,7 +15,7 @@ test("failures accumulate per plugin and reach the threshold", () => {
 });
 
 test("explicit enable or uninstall clears the snooze entry", () => {
-    const state = {"a": 3, "b": 1};
+    const state: PluginSnoozeState = {"a": 3, "b": 1};
     const next = clearPluginSnooze(state, "a");
     assert.equal(next["a"], undefined);
     assert.equal(next["b"], 1);
