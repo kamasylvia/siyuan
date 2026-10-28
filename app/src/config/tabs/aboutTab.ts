@@ -70,7 +70,7 @@ const registerAboutVersionGroup = (tab: SettingTabBuilder) => {
                     const clamped = Math.max(10, Math.min(1000, parsed));
                     countInput.value = String(clamped);
                     window.siyuan.config.editor.offlineDocCacheMaxCount = clamped;
-                    sendAppSetting("editor.offlineDocCacheMaxCount", clamped);
+                    void import("./editorRuntime").then(module => module.editorConfigApi.patch("editor.offlineDocCacheMaxCount", clamped));
                 });
             },
         });
