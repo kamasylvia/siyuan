@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {test} from "node:test";
-import {DocCacheEntry, evictAliases, evictOverLimit, nextOffline, OFFLINE_GRACE_MS, wantOffline} from "./offlineCore";
+import {DOC_CACHE_LIMIT_COUNT, DocCacheEntry, evictAliases, evictOverLimit, nextOffline, OFFLINE_GRACE_MS, wantOffline} from "./offlineCore";
 
 test("wantOffline covers both signals", () => {
     assert.equal(wantOffline({navOnline: true, wsConnected: true}), false);
@@ -40,6 +40,20 @@ test("evictOverLimit keeps recent entries and drops oldest first", () => {
     // 更新 at 后不再是最旧
     const refreshed = [{...entries[0], at: 9}, entries[1], entries[2]];
     assert.deepEqual(evictOverLimit(refreshed, 900), [entries[1]]);
+});
+
+test("evictOverLimit also enforces the document count cap", () => {
+    const entries: DocCacheEntry[] = [
+        {docId: "old", updated: "u1", bytes: 10, at: 1},
+        {docId: "mid", updated: "u2", bytes: 10, at: 2},
+        {docId: "new", updated: "u3", bytes: 10, at: 3},
+    ];
+    // 数量上限 2:最旧的被淘汰,字节限额远未触及
+    assert.deepEqual(evictOverLimit(entries, DOC_CACHE_LIMIT_COUNT * 100, 2), [entries[0]]);
+    // 两者同时超限取并集
+    assert.deepEqual(evictOverLimit(entries, 15, 2).map(item => item.docId).sort(), ["mid", "old"]);
+    // 上限内不淘汰
+    assert.deepEqual(evictOverLimit(entries, DOC_CACHE_LIMIT_COUNT * 100, DOC_CACHE_LIMIT_COUNT), []);
 });
 
 test("evictAliases drops entries pointing at evicted documents and evicted aliases", () => {

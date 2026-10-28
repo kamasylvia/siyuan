@@ -57,6 +57,27 @@ self.addEventListener("fetch", event => {
         return;
     }
 
+    // 外链图片(跨域)同样网络优先入离线缓存,断网时已显示过的图片仍可见;opaque 响应可入 Cache API。
+    if (event.request.destination === "image") {
+        event.respondWith((async () => {
+            try {
+                const fetchResponse = await fetch(event.request);
+                if (fetchResponse.ok || fetchResponse.type === "opaque") {
+                    const assetCache = await caches.open("siyuan-offline-assets");
+                    await assetCache.put(event.request, fetchResponse.clone());
+                }
+                return fetchResponse;
+            } catch (error) {
+                const cachedResponse = await caches.match(event.request, {cacheName: "siyuan-offline-assets"});
+                if (cachedResponse) {
+                    return cachedResponse;
+                }
+                throw error;
+            }
+        })());
+        return;
+    }
+
     // 启动页外观的选择和资源由内核校验，始终请求当前版本，避免切换或更新后命中旧缓存。
     if (url.origin === location.origin &&
         (url.pathname === "/api/system/getBootAppearance" ||

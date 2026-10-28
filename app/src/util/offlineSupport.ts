@@ -2,7 +2,7 @@
 // 依赖编辑器侧模块,统一在回调内动态 require,避免静态循环依赖。
 
 import {fetchPost} from "./fetch";
-import {countDocCache, hasDocCache} from "./offlineDocCache";
+import {countDocCache, hasDocCache, listDocCache} from "./offlineDocCache";
 import {isOffline, isOfflineEnabled, onOfflineChange} from "./offlineState";
 
 type ProtyleEditor = import("../protyle").Protyle;
@@ -48,6 +48,34 @@ export const prefetchLazyDocCache = () => {
                 size: window.siyuan.config.editor.dynamicLoadBlocks,
             }, () => {});
         });
+    });
+    // 联机回填旧条目缺失的标题,断网前就绪,面板不再显示文档 ID
+    void backfillOfflineTitles();
+};
+
+// 批量拉取无标题条目的标题并写入元数据;供预取与管理面板共用
+export const backfillOfflineTitles = (): Promise<void> => {
+    return listDocCache().then(async entries => {
+        const missing = entries.filter(entry => !entry.title).map(entry => entry.docId);
+        if (!missing.length || isOffline()) {
+            return;
+        }
+        const {fetchSyncPost} = require("./fetch") as typeof import("./fetch");
+        const {updateDocCacheTitles} = require("./offlineDocCache") as typeof import("./offlineDocCache");
+        const response = await fetchSyncPost("/api/block/getDocsInfo", {ids: missing.slice(0, 200), refCount: false, av: false});
+        if (response.code !== 0 || !Array.isArray(response.data)) {
+            return;
+        }
+        const titles: Record<string, string> = {};
+        response.data.forEach((info: { id: string, ial?: Record<string, string> }) => {
+            const title = info.ial?.title || "";
+            if (title) {
+                titles[info.id] = title;
+            }
+        });
+        if (Object.keys(titles).length) {
+            await updateDocCacheTitles(titles);
+        }
     });
 };
 

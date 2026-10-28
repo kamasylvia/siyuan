@@ -3,7 +3,8 @@
 import {confirmDialog} from "../dialog/confirmDialog";
 import {Dialog} from "../dialog";
 import {Constants} from "../constants";
-import {clearDocCache, deleteDocCache, getDocCache, listDocCache, updateDocCacheTitles} from "./offlineDocCache";
+import {clearDocCache, deleteDocCache, getDocCache, listDocCache} from "./offlineDocCache";
+import {backfillOfflineTitles} from "./offlineSupport";
 import {isOffline} from "./offlineState";
 
 type DocCacheEntry = import("./offlineCore").DocCacheEntry;
@@ -20,33 +21,13 @@ const openCachedDoc = (docId: string) => {
     openFileById({app: window.siyuan.ws.app, id: docId, action: [Constants.CB_GET_FOCUS]});
 };
 
-// 联机时回填旧条目缺失的标题(批量 getDocsInfo),仅写元数据不重写文档快照
-const backfillTitles = async (entries: DocCacheEntry[]): Promise<DocCacheEntry[]> => {
+// 联机时回填旧条目缺失的标题(批量 getDocsInfo),仅写元数据不重写文档快照;复用预取侧共享回填
+const backfillTitles = (entries: DocCacheEntry[]): Promise<DocCacheEntry[]> => {
     const missing = entries.filter(entry => !entry.title).map(entry => entry.docId);
     if (!missing.length || isOffline()) {
-        return entries;
+        return Promise.resolve(entries);
     }
-    try {
-        const response = await (require("./fetch") as typeof import("./fetch")).fetchSyncPost(
-            "/api/block/getDocsInfo", {ids: missing.slice(0, 200), refCount: false, av: false});
-        if (response.code !== 0 || !Array.isArray(response.data)) {
-            return entries;
-        }
-        const titles: Record<string, string> = {};
-        response.data.forEach((info: { id: string, ial?: Record<string, string> }) => {
-            const title = info.ial?.title || "";
-            if (title) {
-                titles[info.id] = title;
-            }
-        });
-        if (Object.keys(titles).length) {
-            await updateDocCacheTitles(titles);
-            return entries.map(entry => titles[entry.docId] ? {...entry, title: titles[entry.docId]} : entry);
-        }
-    } catch (error) {
-        console.warn("offline cache title backfill failed [" + error + "]");
-    }
-    return entries;
+    return backfillOfflineTitles().then(() => listDocCache());
 };
 
 const openPreview = async (entry: DocCacheEntry, refresh: () => void) => {

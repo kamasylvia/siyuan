@@ -3,6 +3,7 @@
 
 export const OFFLINE_GRACE_MS = 5000;
 export const DOC_CACHE_LIMIT_BYTES = 500 * 1024 * 1024;
+export const DOC_CACHE_LIMIT_COUNT = 50;
 export const OFFLINE_DOC_STORE = "siyuan-offline-docs";
 export const OFFLINE_META_KEY = "siyuan-offline-meta";
 
@@ -47,15 +48,21 @@ export const evictAliases = (aliases: Record<string, string>, evicted: Set<strin
 };
 
 // 追加/更新一条缓存记录后,超出容量上限时按最后访问时间升序给出应淘汰的记录。
-export const evictOverLimit = (entries: DocCacheEntry[], limitBytes: number = DOC_CACHE_LIMIT_BYTES): DocCacheEntry[] => {
+export const evictOverLimit = (entries: DocCacheEntry[], limitBytes: number = DOC_CACHE_LIMIT_BYTES,
+    limitCount: number = DOC_CACHE_LIMIT_COUNT): DocCacheEntry[] => {
+    const overBytes = evictOverBytes(entries, limitBytes);
+    const overCount = evictOverCount(entries, limitCount);
+    const evicted = new Set([...overBytes, ...overCount].map(entry => entry.docId));
+    return orderedByAccess(entries).filter(entry => evicted.has(entry.docId));
+};
+
+const orderedByAccess = (entries: DocCacheEntry[]) => [...entries].sort((a, b) => a.at - b.at);
+
+const evictOverBytes = (entries: DocCacheEntry[], limitBytes: number): DocCacheEntry[] => {
     const total = entries.reduce((sum, entry) => sum + entry.bytes, 0);
-    if (total <= limitBytes) {
-        return [];
-    }
-    const ordered = [...entries].sort((a, b) => a.at - b.at);
     const evicted: DocCacheEntry[] = [];
     let remaining = total;
-    for (const entry of ordered) {
+    for (const entry of orderedByAccess(entries)) {
         if (remaining <= limitBytes) {
             break;
         }
@@ -63,4 +70,12 @@ export const evictOverLimit = (entries: DocCacheEntry[], limitBytes: number = DO
         remaining -= entry.bytes;
     }
     return evicted;
+};
+
+const evictOverCount = (entries: DocCacheEntry[], limitCount: number): DocCacheEntry[] => {
+    const ordered = orderedByAccess(entries);
+    if (ordered.length <= limitCount) {
+        return [];
+    }
+    return ordered.slice(0, ordered.length - limitCount);
 };
