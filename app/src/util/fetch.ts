@@ -141,10 +141,10 @@ export const fetchPost = ((
                     code: -response.status,
                 };
             case 401:
-                // 返回鉴权失败的话直接刷新页面，避免用户在当前页面操作 https://github.com/siyuan-note/siyuan/issues/15163
-                setTimeout(() => {
-                    window.location.reload();
-                }, 3000);
+                // 401 可能来自插件经内核代理访问的第三方服务(与会话失效无关),盲目整页重载会造成刷新循环;
+                // 真正的会话失效由 WS logoutAuth 推送接管跳转认证页,这里只提示并放行给调用方
+                console.error("api 401 [" + url + "]");
+                showMessage(window.siyuan.languages.apiUnauthorizedTip, 0, "error", "api-unauthorized");
                 return {
                     data: null,
                     msg: response.statusText,

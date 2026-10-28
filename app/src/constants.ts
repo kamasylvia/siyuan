@@ -217,6 +217,7 @@ export abstract class Constants {
     /** @deprecated 内置偏好改用 config.appearance.outlineKeepCurrentExpand，不再读取此旧键 */
     public static readonly LOCAL_OUTLINE = "local-outline";
     public static readonly LOCAL_PLUGIN_DOCKS = "local-plugin-docks";
+    public static readonly LOCAL_PLUGIN_SNOOZE = "local-plugin-snooze";
     public static readonly LOCAL_IMAGES = "local-images";
     public static readonly LOCAL_EMOJIS = "local-emojis";
     public static readonly LOCAL_MOVE_PATH = "local-move-path";

@@ -1,4 +1,5 @@
 {
+	"apiUnauthorizedTip": "Nicht autorisierte Anfragen (401) wurden blockiert, um eine Reload-Schleife zu verhindern; bei anhaltendem Auftreten den Arbeitsbereich neu verbinden",
 	"offlineDocCacheMaxCount": "Max. Offline-Cache-Dokumente",
 	"offlineDocCacheMaxCountTip": "Maximale Anzahl der im Offline-Cache gehaltenen Dokumente; bei Überschreitung werden die am längsten nicht aufgerufenen entfernt",
 	"offlineCacheTitle": "Offline-Cache",

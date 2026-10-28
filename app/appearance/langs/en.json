@@ -1,4 +1,5 @@
 {
+	"apiUnauthorizedTip": "Unauthorized requests (401) were blocked to prevent a refresh loop; reconnect the workspace if this persists",
 	"offlineDocCacheMaxCount": "Max offline cached documents",
 	"offlineDocCacheMaxCountTip": "Maximum number of documents kept in the offline cache; beyond it, the least recently viewed are evicted",
 	"offlineCacheTitle": "Offline cache",

@@ -1,4 +1,5 @@
 {
+	"apiUnauthorizedTip": "Niet-geautoriseerde verzoeken (401) geblokkeerd om een verversingslus te voorkomen; verbind het werkblad opnieuw als dit aanhoudt",
 	"offlineDocCacheMaxCount": "Max. offline gecachte documenten",
 	"offlineDocCacheMaxCountTip": "Maximum aantal documenten in de offline cache; bij overschrijding worden langst niet bekeken documenten verwijderd",
 	"offlineCacheTitle": "Offline cache",

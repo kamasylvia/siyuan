@@ -1,4 +1,5 @@
 {
+	"apiUnauthorizedTip": "Permintaan tidak terautentikasi (401) diblokir untuk mencegah loop muat ulang; jika berlanjut, sambungkan ulang ruang kerja",
 	"offlineDocCacheMaxCount": "Batas dokumen cache offline",
 	"offlineDocCacheMaxCountTip": "Jumlah maksimum dokumen yang disimpan dalam cache offline; jika terlampaui, yang paling lama tidak dilihat akan dihapus",
 	"offlineCacheTitle": "Cache offline",

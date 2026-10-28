@@ -1,4 +1,5 @@
 {
+	"apiUnauthorizedTip": "Zablokowano nieautoryzowane żądania (401), aby zapobiec pętli odświeżania; jeśli się powtarza, połącz ponownie przestrzeń roboczą",
 	"offlineDocCacheMaxCount": "Maks. dokumentów w pamięci offline",
 	"offlineDocCacheMaxCountTip": "Maksymalna liczba dokumentów przechowywanych w pamięci offline; po przekroczeniu usuwane są najdawniej przeglądane",
 	"offlineCacheTitle": "Pamięć podręczna offline",

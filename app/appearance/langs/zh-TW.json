@@ -1,4 +1,5 @@
 {
+	"apiUnauthorizedTip": "存在未通過鑑權的請求(401),已攔截以免頁面反覆重新整理;若持續出現請重新連接工作空間",
 	"offlineDocCacheMaxCount": "離線快取文檔數上限",
 	"offlineDocCacheMaxCountTip": "離線快取保留的文檔數量上限，超出按最久未存取淘汰",
 	"offlineCacheTitle": "離線快取",

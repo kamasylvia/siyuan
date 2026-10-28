@@ -1,4 +1,7 @@
 import {fetchSyncPost} from "../util/fetch";
+import {isOfflineEnabled, isOffline, onOfflineChange} from "../util/offlineState";
+import {filterSnoozed, recordPluginFailure, shouldSnooze} from "../util/pluginResilience";
+import {showMessage} from "../dialog/message";
 import type {App} from "../index";
 import {markPluginDisposed, Plugin, type TPluginDataChangeReason} from "./index";
 /// #if !MOBILE
@@ -83,6 +86,8 @@ const createPlugin = (app: App, item: IPluginData) => {
     }
 };
 
+const pluginFailures = {};
+
 const getLifecycleManager = (app: App) => {
     let manager = lifecycleManagers.get(app);
     if (manager) {
@@ -117,7 +122,17 @@ const getLifecycleManager = (app: App) => {
             deactivateCustomBlockPlugin(plugin.name);
             destroyPlugin(app, plugin, isUninstall);
         },
-        onError: (name, hook, error) => console.error(`plugin ${name} ${hook} error:`, error),
+        onError: (name, hook, error) => {
+            console.error(`plugin ${name} ${hook} error:`, error);
+            // 同一次启动内反复出错的插件记入休眠名单,下次启动跳过加载;集市显式启用或卸载即解除
+            const failures = recordPluginFailure(pluginFailures, name);
+            if (shouldSnooze(failures, PLUGIN_SNOOZE_THRESHOLD)) {
+                const snooze = {...(window.siyuan.storage[Constants.LOCAL_PLUGIN_SNOOZE] || {}), [name]: Date.now()};
+                window.siyuan.storage[Constants.LOCAL_PLUGIN_SNOOZE] = snooze;
+                setStorageVal(Constants.LOCAL_PLUGIN_SNOOZE, snooze);
+                showMessage(window.siyuan.languages.pluginAutoSleepNotice.replace("{x}", name), 0, "error");
+            }
+        },
     });
     lifecycleManagers.set(app, manager);
     return manager;
@@ -145,6 +160,8 @@ const createPluginDataLoader = () => {
     };
 };
 
+const deferredOfflineLoads = new Set<App>();
+
 export const loadPlugins = async (app: App, names?: string[], init = true) => {
     if (!getHostCapabilities().plugins) {
         return;
@@ -153,12 +170,37 @@ export const loadPlugins = async (app: App, names?: string[], init = true) => {
     let tasks: Promise<void>[];
     let shouldStart = true;
     if (names) {
+        // 用户在集市显式启用:解除该插件的休眠记录
+        const snooze = {...(window.siyuan.storage[Constants.LOCAL_PLUGIN_SNOOZE] || {})};
+        const cleared = names.some(name => snooze[name] !== undefined);
+        names.forEach(name => delete snooze[name]);
+        if (cleared) {
+            window.siyuan.storage[Constants.LOCAL_PLUGIN_SNOOZE] = snooze;
+            setStorageVal(Constants.LOCAL_PLUGIN_SNOOZE, snooze);
+        }
         const loadPluginData = createPluginDataLoader();
         tasks = Array.from(new Set(names)).map(name => manager.requestLoad(name, () => loadPluginData(name)));
     } else {
+        // 离线态跳过插件加载(其网络初始化必然失败),恢复在线后补一次全量加载
+        if (isOfflineEnabled() && isOffline()) {
+            if (!deferredOfflineLoads.has(app)) {
+                deferredOfflineLoads.add(app);
+                onOfflineChange(offline => {
+                    if (!offline && deferredOfflineLoads.delete(app)) {
+                        void loadPlugins(app);
+                    }
+                });
+            }
+            return;
+        }
         const batch = manager.beginLoadBatch(!manager.isStarted());
         const items = await fetchPluginData();
-        tasks = items.map(item => manager.requestBatchLoad(item.name, item, batch));
+        const snooze = (typeof window !== "undefined" && window.siyuan?.storage?.[Constants.LOCAL_PLUGIN_SNOOZE]) || {};
+        const [allowed, blocked] = filterSnoozed(items, snooze);
+        if (blocked.length) {
+            showMessage(window.siyuan.languages.pluginAutoSleepSummary.replace("{n}", String(blocked.length)), 6000);
+        }
+        tasks = allowed.map(item => manager.requestBatchLoad(item.name, item, batch));
         shouldStart = manager.isLatestLoadBatch(batch);
     }
     if (shouldStart) {

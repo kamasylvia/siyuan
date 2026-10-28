@@ -1,4 +1,5 @@
 {
+	"apiUnauthorizedTip": "存在未通过鉴权的请求(401),已拦截以免页面反复刷新;若持续出现请重新连接工作空间",
 	"offlineDocCacheMaxCount": "离线缓存文档数上限",
 	"offlineDocCacheMaxCountTip": "离线缓存保留的文档数量上限，超出按最久未访问淘汰",
 	"offlineCacheTitle": "离线缓存",
