@@ -141,6 +141,19 @@ export const clearDocCache = async () => {
     meta.clear();
 };
 
+// 文件树灰显用:已缓存目录树键(notebook\u0000dir)集合,判断目录离线可否展开
+export const getCachedTreeKeys = async (): Promise<Set<string>> => {
+    try {
+        const db = await openDb();
+        const tx = db.transaction(STORE_TREES, "readonly");
+        const keys = await requestToPromise(tx.objectStore(STORE_TREES).getAllKeys());
+        return new Set(keys.map(key => String(key)));
+    } catch (error) {
+        console.warn("offline tree cache key list failed [" + error + "]");
+        return new Set();
+    }
+};
+
 // 文件树灰显用:已缓存文档 ID 与别名目标 ID 的合集
 export const getCachedDocIds = async (): Promise<Set<string>> => {
     try {

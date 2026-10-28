@@ -58,7 +58,7 @@ const serveOfflineDocRequest = (url: string, data: any): Promise<IWebSocketData>
             if (!cached) {
                 return {data: null, msg: "offline", code: 400} as IWebSocketData;
             }
-            const ial = cached.data?.ial || {};
+            const ial = cached.data?.docInfo?.ial || cached.data?.ial || {};
             return {
                 code: 0,
                 msg: "",
@@ -72,6 +72,16 @@ const serveOfflineDocRequest = (url: string, data: any): Promise<IWebSocketData>
                     path: cached.data?.path || "",
                 },
             } as IWebSocketData;
+        });
+    }
+    if (url === "/api/block/getDocInfo") {
+        // openFileById 以此响应决定页签标题,离线缺它则页签回退「未命名文档」
+        return getDocCache(data.id).then(cached => {
+            const docInfo = cached?.data?.docInfo;
+            if (!docInfo) {
+                return {data: null, msg: "offline", code: 400} as IWebSocketData;
+            }
+            return {code: 0, msg: "", data: docInfo} as IWebSocketData;
         });
     }
     if (url === "/api/filetree/listDocsByPath" && typeof data.notebook === "string") {
