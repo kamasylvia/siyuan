@@ -5,6 +5,7 @@
 	"offlineCacheClear": "ניקוי",
 	"offlineCacheClearConfirm": "לנקות את כל המסמכים במטמון הלא מקוון?",
 	"offlineCacheDeleteConfirm": "למחוק את המטמון הלא מקוון של „{title}”?",
+	"offlineCacheOpen": "פתח מסמך",
 	"offlineCacheManage": "ניהול",
 	"offlineTreeNotCached": "לא ניתן להרחיב תיקייה זו במצב לא מקוון; עיין בה פעם אחת בזמן שאתה מחובר",
 	"offlineCachedCount": "{n} מסמכים זמינים במצב לא מקוון",

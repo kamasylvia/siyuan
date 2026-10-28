@@ -5,6 +5,7 @@
 	"offlineCacheClear": "クリア",
 	"offlineCacheClearConfirm": "オフラインキャッシュのドキュメントをすべて消去しますか?",
 	"offlineCacheDeleteConfirm": "「{title}」のオフラインキャッシュを削除しますか?",
+	"offlineCacheOpen": "ドキュメントを開く",
 	"offlineCacheManage": "管理",
 	"offlineTreeNotCached": "このフォルダはオフラインでは展開できません。オンライン時に一度開いてください",
 	"offlineCachedCount": "オフラインで閲覧できるドキュメント {n} 件",

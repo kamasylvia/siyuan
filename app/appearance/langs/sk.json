@@ -5,6 +5,7 @@
 	"offlineCacheClear": "Vymazať",
 	"offlineCacheClearConfirm": "Vymazať všetky dokumenty v offline pamäti?",
 	"offlineCacheDeleteConfirm": "Odstrániť offline vyrovnávaciu pamäť dokumentu „{title}”?",
+	"offlineCacheOpen": "Otvoriť dokument",
 	"offlineCacheManage": "Spravovať",
 	"offlineTreeNotCached": "Tento priečinok nemožno offline rozbaliť; prehliadnite ho raz online",
 	"offlineCachedCount": "{n} dokumentov je k dispozícii offline",

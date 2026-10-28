@@ -5,6 +5,7 @@
 	"offlineCacheClear": "ล้าง",
 	"offlineCacheClearConfirm": "ล้างเอกสารที่แคชไว้ทั้งหมดสำหรับใช้ออฟไลน์?",
 	"offlineCacheDeleteConfirm": "ลบแคชออฟไลน์ของ \"{title}\" หรือไม่?",
+	"offlineCacheOpen": "เปิดเอกสาร",
 	"offlineCacheManage": "จัดการ",
 	"offlineTreeNotCached": "ไม่สามารถขยายโฟลเดอร์นี้แบบออฟไลน์ได้; เปิดดูครั้งหนึ่งขณะออนไลน์",
 	"offlineCachedCount": "ดูเอกสารได้ {n} ฉบับแบบออฟไลน์",

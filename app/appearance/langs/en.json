@@ -5,6 +5,7 @@
 	"offlineCacheClear": "Clear",
 	"offlineCacheClearConfirm": "Clear all cached offline documents?",
 	"offlineCacheDeleteConfirm": "Delete the offline cache of \"{title}\"?",
+	"offlineCacheOpen": "Open document",
 	"offlineCacheManage": "Manage",
 	"offlineTreeNotCached": "This folder cannot expand offline; browse it once while online",
 	"offlineCachedCount": "{n} documents available offline",

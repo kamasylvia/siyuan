@@ -5,6 +5,7 @@
 	"offlineCacheClear": "साफ़ करें",
 	"offlineCacheClearConfirm": "सभी कैश किए गए ऑफ़लाइन दस्तावेज़ हटाएँ?",
 	"offlineCacheDeleteConfirm": "\"{title}\" का ऑफ़लाइन कैश हटाएँ?",
+	"offlineCacheOpen": "दस्तावेज़ खोलें",
 	"offlineCacheManage": "प्रबंधित करें",
 	"offlineTreeNotCached": "यह फ़ोल्डर ऑफ़लाइन नहीं खुल सकता; ऑनलाइन होते समय इसे एक बार ब्राउज़ करें",
 	"offlineCachedCount": "{n} दस्तावेज़ ऑफ़लाइन उपलब्ध हैं",

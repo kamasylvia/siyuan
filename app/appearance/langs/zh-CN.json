@@ -5,6 +5,7 @@
 	"offlineCacheClear": "清空",
 	"offlineCacheClearConfirm": "确定清空全部离线缓存文档吗?",
 	"offlineCacheDeleteConfirm": "删除「{title}」的离线缓存?",
+	"offlineCacheOpen": "打开文档",
 	"offlineCacheManage": "管理",
 	"offlineTreeNotCached": "该目录离线时不可展开,联网浏览过即可",
 	"offlineCachedCount": "离线可浏览 {n} 篇文档",

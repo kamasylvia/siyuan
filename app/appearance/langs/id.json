@@ -5,6 +5,7 @@
 	"offlineCacheClear": "Kosongkan",
 	"offlineCacheClearConfirm": "Kosongkan semua dokumen cache offline?",
 	"offlineCacheDeleteConfirm": "Hapus cache offline dari \"{title}\"?",
+	"offlineCacheOpen": "Buka dokumen",
 	"offlineCacheManage": "Kelola",
 	"offlineTreeNotCached": "Folder ini tidak bisa dibuka offline; jelajahi sekali saat online",
 	"offlineCachedCount": "{n} dokumen tersedia offline",

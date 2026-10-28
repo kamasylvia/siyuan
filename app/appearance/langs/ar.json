@@ -5,6 +5,7 @@
 	"offlineCacheClear": "إفراغ",
 	"offlineCacheClearConfirm": "إفراغ كل المستندات المخزنة دون اتصال؟",
 	"offlineCacheDeleteConfirm": "حذف الذاكرة المؤقتة دون اتصال لـ «{title}»؟",
+	"offlineCacheOpen": "فتح المستند",
 	"offlineCacheManage": "إدارة",
 	"offlineTreeNotCached": "لا يمكن توسيع هذا المجلد دون اتصال; تصفحه مرة واحدة أثناء الاتصال",
 	"offlineCachedCount": "{n} من المستندات متاحة دون اتصال",

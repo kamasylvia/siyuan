@@ -5,6 +5,7 @@
 	"offlineCacheClear": "Wissen",
 	"offlineCacheClearConfirm": "Alle gecachete offline documenten wissen?",
 	"offlineCacheDeleteConfirm": "De offline cache van \"{title}\" verwijderen?",
+	"offlineCacheOpen": "Document openen",
 	"offlineCacheManage": "Beheren",
 	"offlineTreeNotCached": "Deze map kan niet offline worden uitgeklapt; blader er online eenmaal door",
 	"offlineCachedCount": "{n} documenten offline beschikbaar",

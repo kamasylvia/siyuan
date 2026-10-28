@@ -165,6 +165,18 @@ export const deleteDocCache = async (docId: string) => {
     }
 };
 
+// 管理面板联机回填标题:仅更新元数据,不重写文档快照
+export const updateDocCacheTitles = async (titles: Record<string, string>) => {
+    try {
+        const db = await openDb();
+        const entries = (await readEntries(db)).map(entry => ({...entry, title: titles[entry.docId] || entry.title}));
+        const tx = db.transaction(STORE_META, "readwrite");
+        tx.objectStore(STORE_META).put(entries, DOC_META_KEY);
+    } catch (error) {
+        console.warn("offline doc cache title update failed [" + error + "]");
+    }
+};
+
 // 离线横幅展示的缓存文档数;失败返回 -1 由调用方省略计数
 export const countDocCache = async (): Promise<number> => {
     try {

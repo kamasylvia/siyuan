@@ -5,6 +5,7 @@
 	"offlineCacheClear": "비우기",
 	"offlineCacheClearConfirm": "캐시된 모든 오프라인 문서를 지울까요?",
 	"offlineCacheDeleteConfirm": "\"{title}\"의 오프라인 캐시를 삭제할까요?",
+	"offlineCacheOpen": "문서 열기",
 	"offlineCacheManage": "관리",
 	"offlineTreeNotCached": "이 폴더는 오프라인에서 펼칠 수 없습니다. 온라인에서 한 번 열어 주세요",
 	"offlineCachedCount": "오프라인으로 볼 수 있는 문서 {n}개",

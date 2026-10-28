@@ -5,6 +5,7 @@
 	"offlineCacheClear": "清空",
 	"offlineCacheClearConfirm": "確定清空全部離線快取文件嗎?",
 	"offlineCacheDeleteConfirm": "刪除「{title}」的離線快取?",
+	"offlineCacheOpen": "開啟文件",
 	"offlineCacheManage": "管理",
 	"offlineTreeNotCached": "該目錄離線時無法展開,連線瀏覽過即可",
 	"offlineCachedCount": "離線可瀏覽 {n} 篇文件",

@@ -5,6 +5,7 @@
 	"offlineCacheClear": "Очистить",
 	"offlineCacheClearConfirm": "Очистить весь автономный кэш документов?",
 	"offlineCacheDeleteConfirm": "Удалить автономный кэш «{title}»?",
+	"offlineCacheOpen": "Открыть документ",
 	"offlineCacheManage": "Управлять",
 	"offlineTreeNotCached": "Эта папка не разворачивается офлайн; откройте её один раз онлайн",
 	"offlineCachedCount": "{n} документов доступно офлайн",

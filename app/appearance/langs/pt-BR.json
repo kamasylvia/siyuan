@@ -5,6 +5,7 @@
 	"offlineCacheClear": "Limpar",
 	"offlineCacheClearConfirm": "Limpar todos os documentos em cache offline?",
 	"offlineCacheDeleteConfirm": "Excluir o cache offline de \"{title}\"?",
+	"offlineCacheOpen": "Abrir documento",
 	"offlineCacheManage": "Gerenciar",
 	"offlineTreeNotCached": "Esta pasta não pode ser expandida offline; navegue por ela uma vez online",
 	"offlineCachedCount": "{n} documentos disponíveis offline",

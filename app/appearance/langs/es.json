@@ -5,6 +5,7 @@
 	"offlineCacheClear": "Vaciar",
 	"offlineCacheClearConfirm": "¿Vaciar toda la caché de documentos sin conexión?",
 	"offlineCacheDeleteConfirm": "¿Eliminar la caché sin conexión de «{title}»?",
+	"offlineCacheOpen": "Abrir documento",
 	"offlineCacheManage": "Gestionar",
 	"offlineTreeNotCached": "Esta carpeta no se puede expandir sin conexión; navegue por ella una vez con conexión",
 	"offlineCachedCount": "{n} documentos disponibles sin conexión",

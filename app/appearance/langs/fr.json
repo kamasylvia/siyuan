@@ -5,6 +5,7 @@
 	"offlineCacheClear": "Vider",
 	"offlineCacheClearConfirm": "Vider tout le cache des documents hors ligne ?",
 	"offlineCacheDeleteConfirm": "Supprimer le cache hors ligne de « {title} » ?",
+	"offlineCacheOpen": "Ouvrir le document",
 	"offlineCacheManage": "Gérer",
 	"offlineTreeNotCached": "Ce dossier ne peut pas être développé hors ligne ; parcourez-le une fois en ligne",
 	"offlineCachedCount": "{n} documents disponibles hors ligne",

@@ -5,6 +5,7 @@
 	"offlineCacheClear": "Leeren",
 	"offlineCacheClearConfirm": "Alle zwischengespeicherten Offline-Dokumente leeren?",
 	"offlineCacheDeleteConfirm": "Den Offline-Cache von „{title}“ löschen?",
+	"offlineCacheOpen": "Dokument öffnen",
 	"offlineCacheManage": "Verwalten",
 	"offlineTreeNotCached": "Dieser Ordner kann offline nicht aufgeklappt werden; browsen Sie ihn einmal online",
 	"offlineCachedCount": "{n} Dokumente offline verfügbar",

@@ -5,6 +5,7 @@
 	"offlineCacheClear": "Wyczyść",
 	"offlineCacheClearConfirm": "Wyczyścić całą pamięć podręczną dokumentów offline?",
 	"offlineCacheDeleteConfirm": "Usunąć pamięć podręczną offline dokumentu „{title}”?",
+	"offlineCacheOpen": "Otwórz dokument",
 	"offlineCacheManage": "Zarządzaj",
 	"offlineTreeNotCached": "Tego folderu nie można rozwinąć offline; przejrzyj go raz online",
 	"offlineCachedCount": "Dokumenty dostępne offline: {n}",

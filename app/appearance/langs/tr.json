@@ -5,6 +5,7 @@
 	"offlineCacheClear": "Temizle",
 	"offlineCacheClearConfirm": "Önbelleğe alınan tüm çevrimdışı belgeler temizlensin mi?",
 	"offlineCacheDeleteConfirm": "\"{title}\" belgesinin çevrimdışı önbelleği silinsin mi?",
+	"offlineCacheOpen": "Belgeyi aç",
 	"offlineCacheManage": "Yönet",
 	"offlineTreeNotCached": "Bu klasör çevrimdışı açılamaz; çevrimiçiyken bir kez göz atın",
 	"offlineCachedCount": "{n} belge çevrimdışı kullanılabilir",

@@ -64,6 +64,15 @@ test("shared fetch helpers attach the caller and preserve payloads", async () =>
             "./fetchTimeout": {withFetchTimeout: (run: (signal: AbortSignal) => unknown, signal: AbortSignal) => run(signal)},
             "../config/setting/pending": {trackSettingRequest: (_url: string, promise: Promise<unknown>) => promise},
             "../protyle/util/editorSave": {trackEditorSaveRequest},
+            "./offlineDocCache": {
+                getDocCache: async (): Promise<null> => null,
+                putDocCache: async (): Promise<void> => {},
+                getTreeCache: async (): Promise<null> => null,
+                putTreeCache: async (): Promise<void> => {},
+            },
+            "./offlineState": {isOffline: () => false},
+            "./hostCapabilities": {isRemoteKernel: () => false},
+            "./functions": {isBrowser: () => false},
         }) as typeof import("./fetch");
         const signal = new AbortController().signal;
         const headers = Object.freeze({Authorization: "Token test"});

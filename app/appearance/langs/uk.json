@@ -5,6 +5,7 @@
 	"offlineCacheClear": "Очистити",
 	"offlineCacheClearConfirm": "Очистити весь автономний кеш документів?",
 	"offlineCacheDeleteConfirm": "Видалити автономний кеш «{title}»?",
+	"offlineCacheOpen": "Відкрити документ",
 	"offlineCacheManage": "Керувати",
 	"offlineTreeNotCached": "Цю папку не можна розгорнути офлайн; перегляньте її раз онлайн",
 	"offlineCachedCount": "{n} документів доступно офлайн",

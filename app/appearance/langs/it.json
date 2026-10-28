@@ -5,6 +5,7 @@
 	"offlineCacheClear": "Svuota",
 	"offlineCacheClearConfirm": "Svuotare tutta la cache dei documenti offline?",
 	"offlineCacheDeleteConfirm": "Eliminare la cache offline di «{title}»?",
+	"offlineCacheOpen": "Apri documento",
 	"offlineCacheManage": "Gestisci",
 	"offlineTreeNotCached": "Questa cartella non può essere espansa offline; sfogliala una volta online",
 	"offlineCachedCount": "{n} documenti disponibili offline",

@@ -5,6 +5,7 @@
 	"offlineCacheClear": "Испразни",
 	"offlineCacheClearConfirm": "Испразнути цео кеш докумената ван мреже?",
 	"offlineCacheDeleteConfirm": "Избрисати кеш ван мреже за „{title}”?",
+	"offlineCacheOpen": "Отвори документ",
 	"offlineCacheManage": "Управљај",
 	"offlineTreeNotCached": "Ова папка се не може развијати ван мреже; прегледајте је једном онлайн",
 	"offlineCachedCount": "{n} докумената је доступно ван мреже",

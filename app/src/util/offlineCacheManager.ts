@@ -1,9 +1,12 @@
-// 离线缓存管理面板:列出缓存文档(标题/大小/时间),支持单条删除与清空;
-// 离线时点击底部横幅打开,兼作离线文档门户;联机时从设置-关于进入做清理。
+// 离线缓存管理面板:列出缓存文档(标题/大小/时间),整行点击跳转,预览小窗先睹内容;
+// 支持单条删除与清空;离线时点击底部横幅打开,兼作离线文档门户;联机时从设置-关于进入做清理。
 import {confirmDialog} from "../dialog/confirmDialog";
 import {Dialog} from "../dialog";
 import {Constants} from "../constants";
-import {clearDocCache, deleteDocCache, listDocCache} from "./offlineDocCache";
+import {clearDocCache, deleteDocCache, getDocCache, listDocCache, updateDocCacheTitles} from "./offlineDocCache";
+import {isOffline} from "./offlineState";
+
+type DocCacheEntry = import("./offlineCore").DocCacheEntry;
 
 const escapeHtml = (value: string) => value.replace(/[&<>"']/g, ch => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
@@ -17,22 +20,97 @@ const openCachedDoc = (docId: string) => {
     openFileById({app: window.siyuan.ws.app, id: docId, action: [Constants.CB_GET_FOCUS]});
 };
 
+// 联机时回填旧条目缺失的标题(批量 getDocsInfo),仅写元数据不重写文档快照
+const backfillTitles = async (entries: DocCacheEntry[]): Promise<DocCacheEntry[]> => {
+    const missing = entries.filter(entry => !entry.title).map(entry => entry.docId);
+    if (!missing.length || isOffline()) {
+        return entries;
+    }
+    try {
+        const response = await (require("./fetch") as typeof import("./fetch")).fetchSyncPost(
+            "/api/block/getDocsInfo", {ids: missing.slice(0, 200), refCount: false, av: false});
+        if (response.code !== 0 || !Array.isArray(response.data)) {
+            return entries;
+        }
+        const titles: Record<string, string> = {};
+        response.data.forEach((info: { id: string, ial?: Record<string, string> }) => {
+            const title = info.ial?.title || "";
+            if (title) {
+                titles[info.id] = title;
+            }
+        });
+        if (Object.keys(titles).length) {
+            await updateDocCacheTitles(titles);
+            return entries.map(entry => titles[entry.docId] ? {...entry, title: titles[entry.docId]} : entry);
+        }
+    } catch (error) {
+        console.warn("offline cache title backfill failed [" + error + "]");
+    }
+    return entries;
+};
+
+const openPreview = async (entry: DocCacheEntry, refresh: () => void) => {
+    const cached = await getDocCache(entry.docId);
+    if (!cached) {
+        return;
+    }
+    const title = entry.title || entry.docId;
+    const previewDialog = new Dialog({
+        title,
+        content: `<div class="offline-cache__preview b3-typography">${cached.data?.content || ""}</div>
+<div class="offline-cache__preview-bar">
+    <button class="b3-button b3-button--text" data-action="open">${window.siyuan.languages.offlineCacheOpen}</button>
+</div>`,
+        width: "720px",
+        height: "80vh",
+    });
+    previewDialog.element.querySelector("[data-action=open]").addEventListener("click", () => {
+        previewDialog.destroy();
+        openCachedDoc(entry.docId);
+    });
+};
+
 export const openOfflineCacheManager = () => {
     const renderList = (element: HTMLElement, emptyText: string) => {
-        void listDocCache().then(entries => {
+        void listDocCache().then(async entries => {
+            const withTitles = await backfillTitles(entries);
             const listElement = element.querySelector(".offline-cache__list") as HTMLElement;
-            if (!entries.length) {
+            if (!withTitles.length) {
                 listElement.innerHTML = `<div class="b3-list--empty">${emptyText}</div>`;
                 return;
             }
-            listElement.innerHTML = entries.map(entry => `
+            listElement.innerHTML = withTitles.map(entry => `
 <div class="b3-list-item" data-doc-id="${escapeHtml(entry.docId)}">
     <span class="b3-list-item__text">${escapeHtml(entry.title || entry.docId)}
         <span class="b3-list-item__meta">${formatBytes(entry.bytes)} · ${new Date(entry.at).toLocaleString()}</span>
     </span>
-    <span class="b3-list-item__action" data-action="open"><svg><use xlink:href="#iconRight"></use></svg></span>
-    <span class="b3-list-item__action" data-action="delete"><svg><use xlink:href="#iconTrash"></use></svg></span>
+    <span class="b3-list-item__action" data-action="preview"><svg><use xlink:href="#iconPreview"></use></svg></span>
+    <span class="b3-list-item__action offline-cache__delete" data-action="delete">
+        <svg><use xlink:href="#iconTrashcan"></use></svg>
+    </span>
 </div>`).join("");
+            listElement.querySelectorAll<HTMLElement>(".b3-list-item").forEach(item => {
+                const docId = item.getAttribute("data-doc-id");
+                const entry = withTitles.find(candidate => candidate.docId === docId);
+                item.addEventListener("click", (event) => {
+                    const action = (event.target as HTMLElement).closest("[data-action]") as HTMLElement;
+                    if (action?.getAttribute("data-action") === "delete") {
+                        confirmDialog(window.siyuan.languages.offlineCacheTitle,
+                            window.siyuan.languages.offlineCacheDeleteConfirm.replace("{title}",
+                                entry?.title || docId), () => {
+                                void deleteDocCache(docId).then(() => renderList(element, emptyText));
+                            });
+                        return;
+                    }
+                    if (action?.getAttribute("data-action") === "preview") {
+                        void openPreview(entry, () => renderList(element, emptyText));
+                        return;
+                    }
+                    // 整行点击即跳转打开
+                    dialog.destroy();
+                    openCachedDoc(docId);
+                });
+            });
         });
     };
 
@@ -51,34 +129,10 @@ export const openOfflineCacheManager = () => {
     });
     const element = dialog.element;
     renderList(element, window.siyuan.languages.offlineCacheEmpty);
-    element.addEventListener("click", (event) => {
-        const target = (event.target as HTMLElement).closest("[data-action]") as HTMLElement;
-        if (!target) {
-            return;
-        }
-        if (target.getAttribute("data-action") === "clear") {
-            confirmDialog(window.siyuan.languages.offlineCacheTitle,
-                window.siyuan.languages.offlineCacheClearConfirm, () => {
-                    void clearDocCache().then(() => renderList(element, window.siyuan.languages.offlineCacheEmpty));
-                });
-            return;
-        }
-        const item = target.closest("[data-doc-id]") as HTMLElement;
-        const docId = item?.getAttribute("data-doc-id");
-        if (!docId) {
-            return;
-        }
-        if (target.getAttribute("data-action") === "delete") {
-            confirmDialog(window.siyuan.languages.offlineCacheTitle,
-                window.siyuan.languages.offlineCacheDeleteConfirm.replace("{title}",
-                    item.querySelector(".b3-list-item__text")?.textContent || docId), () => {
-                    void deleteDocCache(docId).then(() => renderList(element, window.siyuan.languages.offlineCacheEmpty));
-                });
-            return;
-        }
-        if (target.getAttribute("data-action") === "open") {
-            dialog.destroy();
-            openCachedDoc(docId);
-        }
+    element.querySelector("[data-action=clear]").addEventListener("click", () => {
+        confirmDialog(window.siyuan.languages.offlineCacheTitle,
+            window.siyuan.languages.offlineCacheClearConfirm, () => {
+                void clearDocCache().then(() => renderList(element, window.siyuan.languages.offlineCacheEmpty));
+            });
     });
 };
