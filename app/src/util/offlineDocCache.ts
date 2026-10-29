@@ -343,6 +343,21 @@ export const updateDocCacheTitles = async (titles: Record<string, string>) => {
     }
 };
 
+// 联机回填旧条目的路径与笔记本 ID(合成目录列表与别名展开依赖),仅更新元数据
+export const updateDocCachePaths = async (updates: Record<string, { path: string, notebook: string }>) => {
+    try {
+        const db = await openDb();
+        const entries = (await readEntries(db)).map(entry => {
+            const update = updates[entry.docId];
+            return update ? {...entry, path: update.path, notebook: update.notebook} : entry;
+        });
+        const tx = db.transaction(STORE_META, "readwrite");
+        tx.objectStore(STORE_META).put(entries, DOC_META_KEY);
+    } catch (error) {
+        console.warn("offline doc cache path update failed [" + error + "]");
+    }
+};
+
 // 离线横幅展示的缓存文档数;失败返回 -1 由调用方省略计数
 export const countDocCache = async (): Promise<number> => {
     try {

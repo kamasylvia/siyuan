@@ -49,8 +49,9 @@ export const prefetchLazyDocCache = () => {
             }, () => {});
         });
     });
-    // 联机回填旧条目缺失的标题,断网前就绪,面板不再显示文档 ID
+    // 联机回填旧条目缺失的标题与路径,断网前就绪,面板不再显示文档 ID,合成目录列表也能覆盖旧条目
     void backfillOfflineTitles();
+    void backfillOfflinePaths();
 };
 
 // 批量拉取无标题条目的标题并写入元数据;供预取与管理面板共用
@@ -75,6 +76,33 @@ export const backfillOfflineTitles = (): Promise<void> => {
         });
         if (Object.keys(titles).length) {
             await updateDocCacheTitles(titles);
+        }
+    });
+};
+
+// 批量回填旧条目缺失的路径与笔记本 ID(逐条 getBlockInfo,封顶 40 条),合成目录列表依赖这两项
+export const backfillOfflinePaths = (): Promise<void> => {
+    return listDocCache().then(async entries => {
+        const missing = entries.filter(entry => !entry.path || !entry.notebook).map(entry => entry.docId);
+        if (!missing.length || isOffline()) {
+            return;
+        }
+        const {fetchSyncPost} = require("./fetch") as typeof import("./fetch");
+        const {updateDocCachePaths} = require("./offlineDocCache") as typeof import("./offlineDocCache");
+        const updates: Record<string, { path: string, notebook: string }> = {};
+        for (const docId of missing.slice(0, 40)) {
+            try {
+                const response = await fetchSyncPost("/api/block/getBlockInfo", {id: docId});
+                if (response.code === 0 && typeof response.data?.path === "string" &&
+                    typeof response.data?.box === "string") {
+                    updates[docId] = {path: response.data.path, notebook: response.data.box};
+                }
+            } catch (error) {
+                console.warn("offline path backfill failed [" + docId + "]", error);
+            }
+        }
+        if (Object.keys(updates).length) {
+            await updateDocCachePaths(updates);
         }
     });
 };
