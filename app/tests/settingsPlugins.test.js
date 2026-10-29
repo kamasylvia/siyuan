@@ -41,6 +41,7 @@ const runCases = async sources => {
         normalizeStoragePath: value => value,
         fetchPost: (_url, _body, callback) => callback({...preferences}),
         getAllEditor: () => [], getAllModels: () => ({custom: []}),
+        isOffline: () => false, isOfflineEnabled: () => false, prefetchLazyDocCache() {},
         resolvePluginToolbar: () => [], clearPluginToolbarItems() {},
         activateCustomBlockPlugin() {}, deactivateCustomBlockPlugin() {},
         refreshDockCatalog() {}, applyTopBarEntryVisibility() {},
