@@ -92,7 +92,8 @@ const markTreeCacheState = () => {
         items.forEach(item => {
             const nodeId = item.getAttribute("data-node-id");
             const docPath = item.getAttribute("data-path") || "";
-            if (!nodeId || !docPath.startsWith("/")) {
+            // 笔记本根条目(data-path="/" 且无 node-id)只是导航锚点,永不灰显;其余条目需有路径才标记
+            if (!nodeId || !docPath.startsWith("/") || docPath === "/") {
                 return;
             }
             const notebook = docPath.split("/")[1] || "";

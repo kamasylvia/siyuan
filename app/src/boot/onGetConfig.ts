@@ -99,6 +99,7 @@ export const onGetConfig = async (isStart: boolean, app: App) => {
                     /// #endif
                     openChangelog();
                 } catch (e) {
+                    console.error("JSONToLayout failed:", e);
                     resetLayout();
                 }
                 openDesktopOnboarding(app);
