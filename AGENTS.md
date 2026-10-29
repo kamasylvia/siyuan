@@ -293,3 +293,14 @@ All Go libraries above are dependencies in `kernel/go.mod`. GitHub org: `siyuan-
 ## 7. Response style
 
 1. **Language:** Match the user's language; do not mix languages mid-sentence (keep proper nouns / identifiers in their original form)
+
+---
+
+## 8. Fork client builds (macOS)
+
+Fork mac clients (arm64 DMG) are built **locally** and pushed to GitHub releases by hand. The `Fork macOS Client` GitHub Actions workflow is kept only as an optional cloud backup: the shared macOS runner pools (macos-13/14/15) have repeatedly dropped queued jobs for hours, so never wait on or depend on a remote build.
+
+1. **Build:** run `scripts/fork-mac-build.sh <fork-build-tag>` from a clean tree on the verified HEAD. The script stamps `forkBuild` in `app/package.json` from the tag, builds the kernel (fts5 + sqlcipher, China GOPROXY mirrors), builds the frontend, prepares OCR assets through mirrors (hf-mirror / gh-proxy, sha256 verified against `scripts/ocr-assets.json`), and packages with electron-builder using pnpm 12.6.0 on `PATH`. The stamped `package.json` is left dirty on purpose: commit the stamp with the release-tagging commit or restore it, per the release flow
+2. **Release:** push the `v*` tag, then create the GitHub release by hand with `gh release create` attaching the local DMG plus a `SHA256SUMS.txt` (values must match a local `shasum -a 256`). Do not attach a DMG produced by a different commit than the tag
+3. **Docker images** still build on GitHub Actions (the Linux runner pool is reliable) and are triggered by the same `v*` tag push
+4. **Queue hygiene:** cancel stale queued mac runs before dispatching anything new; `concurrency: fork-mac-client` serializes builds, so a stuck pending run blocks all later ones
