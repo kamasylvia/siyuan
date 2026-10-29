@@ -172,21 +172,6 @@ export const getCachedDocIds = async (): Promise<Set<string>> => {
     }
 };
 
-// 文件树灰显/离线展开用:可展开键 = 已缓存目录列表键 ∪ 由缓存条目路径合成的父目录键。
-// 后者让「子文档已缓存但父目录列表从未拉取」的历史条目也能在离线树中定位展开。
-export const getOfflineExpandableKeys = async (): Promise<Set<string>> => {
-    const [treeKeys, entries] = await Promise.all([getCachedTreeKeys(), listRawEntries()]);
-    const keys = new Set(treeKeys);
-    entries.forEach(entry => {
-        if (entry.notebook && entry.path && entry.path.startsWith("/" + entry.notebook + "/")) {
-            const dir = entry.path.slice(0, entry.path.lastIndexOf("/")) || "/";
-            keys.add(entry.notebook + "\u0000" + dir);
-            keys.add(entry.notebook + "\u0000" + "/");
-        }
-    });
-    return keys;
-};
-
 const listRawEntries = async (): Promise<DocCacheEntry[]> => {
     try {
         const db = await openDb();
