@@ -10,7 +10,7 @@ import type {FetchGet, FetchPost, FetchSyncPost} from "../types/api";
 import {trackSettingRequest} from "../config/setting/pending";
 import {trackEditorSaveRequest} from "../protyle/util/editorSave";
 import {showMessage} from "../dialog/message";
-import {deleteDocCaches, getDocCache, getTreeCache, putDocCache, putTreeCache} from "./offlineDocCache";
+import {deleteDocCaches, getDocCache, getSyntheticTreeListing, getTreeCache, putDocCache, putTreeCache} from "./offlineDocCache";
 import {isOffline} from "./offlineState";
 import {isRemoteKernel} from "./hostCapabilities";
 import {isBrowser} from "./functions";
@@ -85,13 +85,24 @@ const serveOfflineDocRequest = (url: string, data: any): Promise<IWebSocketData>
         });
     }
     if (url === "/api/filetree/listDocsByPath" && typeof data.notebook === "string") {
-        return getTreeCache(data.notebook, data.path || "/").then(cached => {
-            if (cached) {
-                return cached;
-            }
-            showMessage(window.siyuan.languages.offlineTreeNotCached);
-            return {data: null, msg: "offline", code: 400} as IWebSocketData;
-        });
+        const dir = data.path || "/";
+        return Promise.all([getTreeCache(data.notebook, dir), getSyntheticTreeListing(data.notebook, dir)])
+            .then(([cached, synthetic]) => {
+                if (cached && synthetic?.data?.files?.length) {
+                    // 合并:真实列表 + 缓存条目合成的子文档,按 id 去重
+                    const seen = new Set(cached.data?.files?.map((file: { id?: string }) => file.id) || []);
+                    const extra = synthetic.data.files.filter((file: { id?: string }) => !seen.has(file.id));
+                    return {...cached, data: {...cached.data, files: [...(cached.data?.files || []), ...extra]}};
+                }
+                if (cached) {
+                    return cached;
+                }
+                if (synthetic) {
+                    return synthetic;
+                }
+                showMessage(window.siyuan.languages.offlineTreeNotCached);
+                return {data: null, msg: "offline", code: 400} as IWebSocketData;
+            });
     }
     return null;
 };

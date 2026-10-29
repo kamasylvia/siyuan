@@ -34,6 +34,8 @@ export interface DocCacheEntry {
     at: number;
     rootId?: string;
     title?: string;
+    path?: string;
+    notebook?: string;
 }
 
 // 淘汰记录时同时给出应删除的别名(块 id → 根文档 id 映射),避免别名悬空指向已淘汰文档。

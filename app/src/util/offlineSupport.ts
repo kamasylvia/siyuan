@@ -2,7 +2,7 @@
 // 依赖编辑器侧模块,统一在回调内动态 require,避免静态循环依赖。
 
 import {fetchPost} from "./fetch";
-import {countDocCache, getCachedDocIds, getCachedTreeKeys, hasDocCache, listDocCache} from "./offlineDocCache";
+import {countDocCache, getCachedDocIds, getOfflineExpandableKeys, hasDocCache, listDocCache} from "./offlineDocCache";
 import {isOffline, isOfflineEnabled, onOfflineChange} from "./offlineState";
 
 type ProtyleEditor = import("../protyle").Protyle;
@@ -88,7 +88,7 @@ const markTreeCacheState = () => {
     if (!items.length) {
         return;
     }
-    void Promise.all([getCachedDocIds(), getCachedTreeKeys()]).then(([cachedDocs, cachedTrees]) => {
+    void Promise.all([getCachedDocIds(), getOfflineExpandableKeys()]).then(([cachedDocs, cachedTrees]) => {
         items.forEach(item => {
             const nodeId = item.getAttribute("data-node-id");
             const docPath = item.getAttribute("data-path") || "";

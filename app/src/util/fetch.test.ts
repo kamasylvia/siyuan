@@ -42,6 +42,8 @@ const loadFetchPost = (fetchImplementation: typeof fetch = () => new Promise(() 
                     getTreeCache: async (_notebook: string, path: string) =>
                         (options.offline && options.cachedTree && path === options.cachedTreePath ? options.cachedTree : null),
                     putTreeCache: async (): Promise<void> => {},
+                    getSyntheticTreeListing: async (): Promise<IWebSocketData | null> => null,
+                    hasTreeCache: async (): Promise<boolean> => false,
                 };
                 case "./offlineState": return {isOffline: () => Boolean(options.offline)};
                 case "./hostCapabilities": return {isRemoteKernel: () => false};

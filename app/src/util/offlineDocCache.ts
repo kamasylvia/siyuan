@@ -66,6 +66,8 @@ export const putDocCache = async (docId: string, response: IWebSocketData) => {
             bytes: json.length,
             at: Date.now(),
             title: typeof response.data?.docInfo?.ial?.title === "string" ? response.data.docInfo.ial.title : "",
+            path: typeof response.data?.path === "string" ? response.data.path : "",
+            notebook: typeof response.data?.box === "string" ? response.data.box : "",
             ...(rootId && rootId !== docId ? {rootId} : {}),
         };
         const db = await openDb();
@@ -169,6 +171,77 @@ export const getCachedDocIds = async (): Promise<Set<string>> => {
         return new Set();
     }
 };
+
+// 文件树灰显/离线展开用:可展开键 = 已缓存目录列表键 ∪ 由缓存条目路径合成的父目录键。
+// 后者让「子文档已缓存但父目录列表从未拉取」的历史条目也能在离线树中定位展开。
+export const getOfflineExpandableKeys = async (): Promise<Set<string>> => {
+    const [treeKeys, entries] = await Promise.all([getCachedTreeKeys(), listRawEntries()]);
+    const keys = new Set(treeKeys);
+    entries.forEach(entry => {
+        if (entry.notebook && entry.path && entry.path.startsWith("/" + entry.notebook + "/")) {
+            const dir = entry.path.slice(0, entry.path.lastIndexOf("/")) || "/";
+            keys.add(entry.notebook + "\u0000" + dir);
+            keys.add(entry.notebook + "\u0000" + "/");
+        }
+    });
+    return keys;
+};
+
+const listRawEntries = async (): Promise<DocCacheEntry[]> => {
+    try {
+        const db = await openDb();
+        return await readEntries(db);
+    } catch (error) {
+        console.warn("offline doc cache raw list failed [" + error + "]");
+        return [];
+    }
+};
+
+// 离线合成目录列表:从缓存条目按父目录归组生成 files(与 listDocsByPath 响应同构),
+// 让从未拉取过列表的父目录也能展开定位到已缓存的子文档
+export const getSyntheticTreeListing = async (notebook: string, dir: string): Promise<IWebSocketData | null> => {
+    try {
+        const entries = (await listRawEntries()).filter(entry => {
+            if (entry.notebook !== notebook || !entry.path) {
+                return false;
+            }
+            const parentDir = entry.path.slice(0, entry.path.lastIndexOf("/")) || "/";
+            return parentDir === dir;
+        });
+        if (!entries.length) {
+            return null;
+        }
+        const files = entries.map(entry => ({
+            path: entry.path || "",
+            name: entry.title || entry.docId,
+            icon: "",
+            name1: "",
+            alias: "",
+            memo: "",
+            bookmark: "",
+            id: entry.docId,
+            count: 0,
+            size: entry.bytes,
+            hSize: formatCacheBytes(entry.bytes),
+            mtime: Math.round(entry.at / 1000),
+            ctime: Math.round(entry.at / 1000),
+            hMtime: new Date(entry.at).toLocaleString(),
+            hCtime: new Date(entry.at).toLocaleString(),
+            sort: 0,
+            subFileCount: 0,
+            newFlashcardCount: 0,
+            dueFlashcardCount: 0,
+        }));
+        return {code: 0, msg: "", data: {box: notebook, path: dir, files, effectiveSortMode: 0, page: 1,
+            totals: files.length, pageCount: 1}} as IWebSocketData;
+    } catch (error) {
+        console.warn("offline synthetic tree listing failed [" + error + "]");
+        return null;
+    }
+};
+
+const formatCacheBytes = (bytes: number) => bytes > 1024 * 1024 ? (bytes / 1024 / 1024).toFixed(1) + " MB" :
+    Math.max(1, Math.round(bytes / 1024)) + " KB";
 
 // 缓存管理清单:按最后访问时间倒序;缺标题的条目(旧版写入或元数据回填未跑)直接从缓存快照派生,离线也能显示标题
 export const listDocCache = async (): Promise<DocCacheEntry[]> => {
