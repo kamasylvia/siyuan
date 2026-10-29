@@ -29,12 +29,13 @@ npx -y pnpm@12.6.0 install --frozen-lockfile
 npx -y pnpm@12.6.0 run build
 
 echo "== prepare OCR assets (missing entries download via mirrors, sha256 verified)"
+cd "$ROOT"
 python3 - <<'PY'
 import hashlib, json, urllib.request
 from pathlib import Path
 
 UA = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
-root = Path(__file__).resolve().parent
+root = Path.cwd()
 manifest = json.loads((root / "scripts/ocr-assets.json").read_text(encoding="utf-8"))
 stage = root / "app/stage/ocr"
 cache = root / ".cache/ocr"
@@ -70,6 +71,7 @@ PY
 python3 scripts/prepare-ocr.py --runtime darwin-arm64
 
 echo "== package arm64 dmg (electron-builder, pnpm 12 on PATH)"
+cd "$ROOT/app"
 PNPM12_DIR="$(mktemp -d)"
 npm install --prefix "$PNPM12_DIR" pnpm@12.6.0 --no-save --silent
 export PATH="$PNPM12_DIR/node_modules/.bin:$PATH"
