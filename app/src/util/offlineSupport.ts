@@ -2,7 +2,7 @@
 // 依赖编辑器侧模块,统一在回调内动态 require,避免静态循环依赖。
 
 import {fetchPost} from "./fetch";
-import {countDocCache, getCachedDocIds, getOfflineExpandableKeys, hasDocCache, listDocCache} from "./offlineDocCache";
+import {countDocCache, getCachedDocIds, hasDocCache, listDocCache} from "./offlineDocCache";
 import {isOffline, isOfflineEnabled, onOfflineChange} from "./offlineState";
 
 type ProtyleEditor = import("../protyle").Protyle;
@@ -109,14 +109,13 @@ export const backfillOfflinePaths = (): Promise<void> => {
 
 // 离线时按缓存状态标记文件树:未缓存文档灰显(点击仍会得到「未缓存」提示),恢复在线时清除标记
 let treeObserver: MutationObserver;
-// 灰显仅标记「死胡同」:文档未缓存 且 所在目录的展开缓存也没有(离线既打不开也无法展开定位)。
-// 可展开的父目录(目录展开缓存命中)保持正常色,作为离线导航路径。
+// 用户裁决:文档内容未缓存即灰显(含可展开的父目录),不做可展开豁免;恢复在线时清除标记。
 const markTreeCacheState = () => {
     const items = [...document.querySelectorAll(".b3-list-item[data-node-id]")];
     if (!items.length) {
         return;
     }
-    void Promise.all([getCachedDocIds(), getOfflineExpandableKeys()]).then(([cachedDocs, cachedTrees]) => {
+    void getCachedDocIds().then((cachedDocs) => {
         items.forEach(item => {
             const nodeId = item.getAttribute("data-node-id");
             const docPath = item.getAttribute("data-path") || "";
@@ -124,16 +123,9 @@ const markTreeCacheState = () => {
             if (!nodeId || !docPath.startsWith("/") || docPath === "/") {
                 return;
             }
-            const notebook = docPath.split("/")[1] || "";
-            const dir = docPath.slice(0, docPath.lastIndexOf("/")) || "/";
-            const normalizedDir = dir === "/" + notebook ? "/" : dir;
-            // 展开键命中任一形态即算可展开:目录页预取键(无 .sy)、文档自身子列表键(带 .sy)、笔记本根列表键
-            const expandable = cachedTrees.has(notebook + "\u0000" + normalizedDir) ||
-                cachedTrees.has(notebook + "\u0000" + docPath) ||
-                cachedTrees.has(notebook + "\u0000" + docPath.replace(/\.sy$/, "")) ||
-                cachedTrees.has(notebook + "\u0000" + "/");
+            // 用户裁决:文档内容未缓存即灰显(含可展开的父目录),不做可展开豁免
             const docCached = cachedDocs.has(nodeId);
-            item.classList.toggle("offline-uncached", !docCached && !expandable);
+            item.classList.toggle("offline-uncached", !docCached);
         });
     });
 };

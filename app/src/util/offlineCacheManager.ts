@@ -30,7 +30,7 @@ const backfillTitles = (entries: DocCacheEntry[]): Promise<DocCacheEntry[]> => {
     return backfillOfflineTitles().then(() => listDocCache());
 };
 
-const openPreview = async (entry: DocCacheEntry, refresh: () => void) => {
+const openPreview = async (entry: DocCacheEntry) => {
     const cached = await getDocCache(entry.docId);
     if (!cached) {
         return;
@@ -84,7 +84,7 @@ export const openOfflineCacheManager = () => {
                         return;
                     }
                     if (action?.getAttribute("data-action") === "preview") {
-                        void openPreview(entry, () => renderList(element, emptyText));
+                        void openPreview(entry);
                         return;
                     }
                     // 整行点击即跳转打开

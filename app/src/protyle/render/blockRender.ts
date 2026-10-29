@@ -126,7 +126,6 @@ const renderEmbed = (blocks: {
     const tableMode = "table" === renderMode || "recent" === renderMode;
     const rawTable = !tableMode && "raw" === renderMode ? blocks.find((blocksItem) => blocksItem.rawRows)?.rawRows : undefined;
     let html = "";
-<<<<<<< HEAD
     if (!tableMode && rawTable) {
         // raw/recent 渲染模式：内核返回原始行数据，直接渲染通用表格
         item.firstElementChild.insertAdjacentHTML("afterend", normalizeHTMLAssetIFrameBlockDOM(genRawTableHTML(rawTable.columns, rawTable.rows)));
