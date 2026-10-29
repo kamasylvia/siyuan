@@ -4,7 +4,6 @@ import {processRender} from "../util/processCode";
 import {highlightRender} from "./highlightRender";
 import {genBreadcrumb, improveBreadcrumbAppearance} from "../wysiwyg/renderBacklink";
 import {avRender} from "./av/render";
-import {genRenderFrame} from "./util";
 import {isEncryptedBox} from "../../util/pathName";
 import {disabledWYSIWYG} from "../util/disabledWYSIWYG";
 import {normalizeHTMLAssetIFrameBlockDOM} from "../../asset/html";
@@ -13,6 +12,9 @@ import {getHostCapabilities} from "../../util/hostCapabilities";
 import {isDirectHeadingEmbed} from "./embedHeading";
 import {isFoldedRenderContent} from "./foldedContent";
 import {genEmbedTableHTML, genRawTableHTML, getEmbedRenderMode} from "./embedTable";
+import {getEmbedBreadcrumbPaths, resolveEmbedBreadcrumbPreference} from "./embedBreadcrumb";
+import {Constants} from "../../constants";
+import {genEmbedRenderFrame, renderEmbedToolbarVisibility} from "../wysiwyg/embedToolbarVisibility";
 
 /**
  * 渲染嵌入块
@@ -34,13 +36,13 @@ export const blockRender = (protyle: IProtyle, element: Element, top?: number, o
         }
         const content = Lute.UnEscapeHTMLStr(item.getAttribute("data-content"));
         if (!content.trim()) {
-            genRenderFrame(item);
+            genEmbedRenderFrame(item);
             finishEmptyEmbedRender(item, onEmbedRender);
             return;
         }
         // 需置于请求返回前，否则快速滚动会导致重复加载 https://ld246.com/article/1666857862494?r=88250
         item.setAttribute("data-render", "true");
-        genRenderFrame(item);
+        genEmbedRenderFrame(item);
         const loadingState: IEmbedRenderLoadingState = {
             rotateElement: item.querySelector(":scope > .protyle-icons .protyle-action__reload .fn__rotate"),
         };
@@ -54,8 +56,7 @@ export const blockRender = (protyle: IProtyle, element: Element, top?: number, o
                 }
             }
         }
-        const breadcrumbAttribute = item.getAttribute("breadcrumb");
-        const breadcrumb = breadcrumbAttribute ? breadcrumbAttribute === "true" : window.siyuan.config.editor.embedBlockBreadcrumb;
+        const breadcrumb = resolveEmbedBreadcrumbPreference(item.getAttribute("breadcrumb"), window.siyuan.config.editor.embedBlockBreadcrumb);
 
         if (content.startsWith("//!js")) {
             // 安全模式下禁用 JS 查询嵌入块，与代码片段（CSS/JS snippet）的处理保持一致
@@ -125,6 +126,7 @@ const renderEmbed = (blocks: {
     const tableMode = "table" === renderMode || "recent" === renderMode;
     const rawTable = !tableMode && "raw" === renderMode ? blocks.find((blocksItem) => blocksItem.rawRows)?.rawRows : undefined;
     let html = "";
+<<<<<<< HEAD
     if (!tableMode && rawTable) {
         // raw/recent 渲染模式：内核返回原始行数据，直接渲染通用表格
         item.firstElementChild.insertAdjacentHTML("afterend", normalizeHTMLAssetIFrameBlockDOM(genRawTableHTML(rawTable.columns, rawTable.rows)));
@@ -144,7 +146,9 @@ const renderEmbed = (blocks: {
         blocks.forEach((blocksItem, index) => {
             let breadcrumbHTML = "";
             if (blocksItem.blockPaths.length !== 0) {
-                breadcrumbHTML = genBreadcrumb(blocksItem.blockPaths, true);
+                breadcrumbHTML = genBreadcrumb(getEmbedBreadcrumbPaths(blocksItem.blockPaths, blocksItem.block.rootID,
+                    resolveEmbedBreadcrumbPreference(item.getAttribute(Constants.CUSTOM_SY_EMBED_BREADCRUMB_PARENT_PATH),
+                        window.siyuan.config.editor.embedBlockBreadcrumbParentPath ?? true)), true);
             }
             let popover = "";
             if (index !== 0) {
@@ -177,6 +181,7 @@ ${popover}${breadcrumbHTML}${blocksItem.block.content}
     }
 
     processRender(item);
+    renderEmbedToolbarVisibility(item);
     highlightRender(item);
     avRender(item, protyle);
     if (protyle.disabled) {
