@@ -22,6 +22,15 @@ CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 \
     GOPROXY="https://mirrors.aliyun.com/goproxy/,https://goproxy.cn,direct" \
     go build -tags "fts5 sqlcipher" -o ../app/kernel-darwin-arm64/SiYuan-Kernel -ldflags "-s -w" .
 
+# 防旧二进制混入发布包:校验内核版本串与源码 Ver 一致(曾因陈旧内核导致 v3.8.9.1 闪退)
+EXPECTED_VER=$(sed -nE 's/^[[:space:]]*Ver[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' "$ROOT/kernel/util/working.go" | /usr/bin/head -1)
+KERNEL_BIN="$ROOT/app/kernel-darwin-arm64/SiYuan-Kernel"
+if [ -z "$EXPECTED_VER" ] || ! strings "$KERNEL_BIN" | /usr/bin/grep -qF "$EXPECTED_VER"; then
+    echo "FATAL: kernel binary does not contain version [$EXPECTED_VER] — stale build refused" >&2
+    exit 1
+fi
+echo "kernel version check ok [$EXPECTED_VER]"
+
 echo "== install + build frontend"
 cd "$ROOT/app"
 export ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
