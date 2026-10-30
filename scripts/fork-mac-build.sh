@@ -23,13 +23,15 @@ CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 \
     go build -tags "fts5 sqlcipher" -o ../app/kernel-darwin-arm64/SiYuan-Kernel -ldflags "-s -w" .
 
 # 防旧二进制混入发布包:校验内核版本串与源码 Ver 一致(曾因陈旧内核导致 v3.8.9.1 闪退)
-EXPECTED_VER=$(sed -nE 's/^[[:space:]]*Ver[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' "$ROOT/kernel/util/working.go" | /usr/bin/head -1)
+# 注意:不用 grep -q,避免 strings 在大文件上触发 SIGPIPE 与 pipefail 叠加导致误判
+EXPECTED_VER=$(sed -nE 's/^const Ver = "([^"]+)".*/\1/p' "$ROOT/kernel/util/working.go" | /usr/bin/head -1)
 KERNEL_BIN="$ROOT/app/kernel-darwin-arm64/SiYuan-Kernel"
-if [ -z "$EXPECTED_VER" ] || ! strings "$KERNEL_BIN" | /usr/bin/grep -qF "$EXPECTED_VER"; then
+MATCH_COUNT=$(/usr/bin/strings "$KERNEL_BIN" | /usr/bin/grep -cF "$EXPECTED_VER")
+if [ -z "$EXPECTED_VER" ] || [ "$MATCH_COUNT" -eq 0 ]; then
     echo "FATAL: kernel binary does not contain version [$EXPECTED_VER] — stale build refused" >&2
     exit 1
 fi
-echo "kernel version check ok [$EXPECTED_VER]"
+echo "kernel version check ok [$EXPECTED_VER, $MATCH_COUNT matches]"
 
 echo "== install + build frontend"
 cd "$ROOT/app"
