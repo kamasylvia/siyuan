@@ -26,10 +26,13 @@ test("connection restart waits for every detached window to finish closing", asy
 test("switching removes stale connection flags and keeps unrelated launch settings", () => {
     const args = ["main.js", "--workspace=D:/notes", "--port=6806", "--safe-mode=1", "--openAsHidden",
         "--remote=https://a.example", "--trust-remote-extensions", "--ignore-certificate-errors",
-        "--disable-web-security", "--no-proxy-server", "--lang=en", "siyuan://blocks/test", "--foo=bar"];
+        "--disable-web-security", "--no-proxy-server", "--connection-session", "--auto-reconnect",
+        "--lang=en", "siyuan://blocks/test", "--foo=bar"];
     assert.deepEqual(connectionArgs(args, {mode: "remote", origin: "https://B.example:443/", lang: "ja"},
         "https://a.example"), ["main.js", "--foo=bar", "--remote=https://b.example", "--lang=ja"]);
     assert.equal(connectionArgs(args, {mode: "local"}).some(arg => arg.startsWith("--remote")), false);
+    assert.equal(connectionArgs(args, {mode: "remote", origin: "https://a.example", trustRemoteExtensions: true})
+        .includes("--auto-reconnect"), false);
     assert.equal(connectionArgs(args, {mode: "remote", origin: "https://a.example"}, "https://a.example")
         .includes("--trust-remote-extensions"), true);
     assert.equal(connectionArgs(args, {mode: "remote", origin: "https://a.example", trustRemoteExtensions: false}, "https://a.example")
@@ -59,6 +62,10 @@ test("connection history preserves corrupt or unsupported files and writes atomi
         assert.deepEqual(readConnections(file).trustedOrigins, []);
         writeConnections(file, {...readConnections(file), trustedOrigins: ["https://EXAMPLE.com:443/", "https://example.com:8443"]});
         assert.deepEqual(readConnections(file).trustedOrigins, ["https://example.com"]);
+        writeConnections(file, {...readConnections(file), lastMode: "remote", lastRemoteOrigin: "https://example.com"});
+        assert.deepEqual(
+            {lastMode: readConnections(file).lastMode, lastRemoteOrigin: readConnections(file).lastRemoteOrigin},
+            {lastMode: "remote", lastRemoteOrigin: "https://example.com"});
         assert.deepEqual(fs.readdirSync(directory), ["connections.json"]);
         for (const contents of ["corrupt", '{"version":2,"origins":[]}',
             '{"version":1,"origins":["http://example.com"]}',

@@ -45,7 +45,7 @@ const {installKernelRequestLog} = require("./kernelRequestLog");
 const {saveRemoteExport} = require("./remoteExport");
 const remoteExportSenders = new WeakSet();
 const {createConnectionManager, getRemoteSession} = require("./connectionManager");
-const {connectionArgs, readConnections, closeConnectionWindows} = require("./connectionStore");
+const {connectionArgs, readConnections, writeConnections, closeConnectionWindows} = require("./connectionStore");
 const {
     rawFormatType, readClipboardBuffer, readClipboardText, getClipboardFormats, parseClipboardFilePaths
 } = require("./clipboard");
@@ -2163,13 +2163,13 @@ const initMainWindow = (kernel = kernelPort, remoteAuthenticated = true) => {
     // 记住上次的连接模式与远程地址:下次普通启动自动回到上次的连接状态
     try {
         const connectionsFile = path.join(confDir, "connections.json");
-        const historyData = JSON.parse(fs.readFileSync(connectionsFile, "utf8"));
+        const historyData = readConnections(connectionsFile);
         const lastMode = kernelTarget.mode === "remote" ? "remote" : "local";
         const lastRemoteOrigin = kernelTarget.mode === "remote" ? kernelTarget.origin : "";
         if (historyData.lastMode !== lastMode || historyData.lastRemoteOrigin !== lastRemoteOrigin) {
             historyData.lastMode = lastMode;
             historyData.lastRemoteOrigin = lastRemoteOrigin;
-            fs.writeFileSync(connectionsFile, JSON.stringify(historyData, null, 2), {mode: 0o600});
+            writeConnections(connectionsFile, historyData);
         }
     } catch (e) {
         writeLog("persist last connection mode failed: " + e.message);
@@ -3134,6 +3134,25 @@ const requestRemoteKernelVersion = async (target) => {
 const isRemoteKernelAuthenticated = (target) =>
     probeRemoteKernelAuthentication(net, getRemoteSession(target), target.origin + "/stage/build/app/");
 
+// 自动重连启动失败时清除记住的连接状态,让下次普通启动直接进入本地工作区
+const clearAutoReconnectMarker = () => {
+    if (!process.argv.includes("--auto-reconnect")) {
+        return;
+    }
+    try {
+        const connectionsFile = path.join(confDir, "connections.json");
+        const historyData = readConnections(connectionsFile);
+        if (historyData.lastMode !== "local" || historyData.lastRemoteOrigin !== "") {
+            historyData.lastMode = "local";
+            historyData.lastRemoteOrigin = "";
+            writeConnections(connectionsFile, historyData);
+            writeLog("cleared auto reconnect marker after remote boot failure");
+        }
+    } catch (error) {
+        writeLog("clear auto reconnect marker failed: " + error.message);
+    }
+};
+
 const initRemoteKernel = async (target) => {
     remoteBootCanceled = false;
     await connectionManager.prepareSession(target);
@@ -3183,6 +3202,7 @@ const initRemoteKernel = async (target) => {
     }
     const versionStatus = getRemoteKernelVersionStatus(versionData, appVer);
     if (versionStatus === "invalid") {
+        clearAutoReconnectMarker();
         showErrorWindow("连接远程内核失败", "Failed to connect to the remote kernel",
             "<div>无法连接远程内核，请检查地址、网络和 TLS 证书。</div>" +
             "<div>Unable to connect to the remote kernel. Check the address, network, and TLS certificate.</div>" +
@@ -3192,6 +3212,7 @@ const initRemoteKernel = async (target) => {
     }
     writeLog("got remote kernel version [" + versionData.data + "]");
     if (versionStatus === "mismatch") {
+        clearAutoReconnectMarker();
         const remoteVersion = escapeHTML(versionData.data);
         showErrorWindow("远程内核版本不匹配", "Remote kernel version mismatch",
             "<div>客户端版本 " + appVer + " 与远程内核版本 " + remoteVersion + " 不一致。</div>" +
@@ -3223,6 +3244,7 @@ const initRemoteKernel = async (target) => {
         return;
     }
     if (!booted) {
+        clearAutoReconnectMarker();
         showErrorWindow("连接远程内核超时", "Remote kernel connection timed out",
             "<div>等待远程内核完成启动超时。</div><div>Timed out waiting for the remote kernel to finish booting.</div>");
         bootWindow.destroy();
@@ -3237,6 +3259,7 @@ const initRemoteKernel = async (target) => {
         if (remoteBootCanceled) {
             return;
         }
+        clearAutoReconnectMarker();
         showErrorWindow("检查远程内核鉴权失败", "Failed to check remote kernel authentication",
             "<div>无法检查远程内核的鉴权状态。</div><div>Unable to check the remote kernel authentication state.</div>" +
             "<div>" + escapeHTML(error.message) + "</div>");
@@ -3260,8 +3283,47 @@ app.whenReady().then(() => {
     const appCrashInfo = readAppCrashInfo();
     writeLog("read app crash info [" + (Date.now() - startupStartedAt) + "ms since app ready]");
     let preparedBoot;
+    // 记住上次连接的远程空间:普通启动(无 --workspace/--safe-mode/siyuan:// 链接)自动重连,
+    // 通过外部重启让新进程走标准 --remote 启动流程,连接失败时提示错误并清除自动重连标记
+    const getAutoReconnectTarget = (crashInfo) => {
+        if (remoteKernelArgError || remoteKernelTarget || firstOpen || crashInfo || lastWorkspaceMissing ||
+            getArg("--workspace") || getArg("--remote") !== undefined || getArg("--safe-mode") === "true" ||
+            (Array.isArray(process.argv) && process.argv.some(item => item.startsWith("siyuan://")))) {
+            return null;
+        }
+        try {
+            const historyData = readConnections(path.join(confDir, "connections.json"));
+            if (historyData.lastMode === "remote" && historyData.origins.includes(historyData.lastRemoteOrigin)) {
+                return historyData;
+            }
+        } catch (e) {
+            writeLog("read auto reconnect marker failed: " + e.message);
+        }
+        return null;
+    };
+    const relaunchForAutoReconnect = (historyData) => {
+        try {
+            const origin = historyData.lastRemoteOrigin;
+            writeLog("auto reconnect last remote workspace [" + origin + "], relaunching with --remote");
+            const autoTarget = createRemoteKernelTarget(origin, process.argv);
+            if (historyData.trustedOrigins.includes(origin)) {
+                autoTarget.trustRemoteExtensions = true;
+            }
+            // app.exit 立即终止当前进程,新实例带 --remote 参数按标准流程启动
+            app.relaunch({args: connectionArgs(linuxInputMethodLaunchArguments.slice(1), autoTarget,
+                autoTarget.origin).concat(["--auto-reconnect"])});
+            app.exit(0);
+            return true;
+        } catch (error) {
+            writeLog("build auto reconnect args failed, boot local workspace [" + error.message + "]");
+            return false;
+        }
+    };
+    const autoReconnectHistory = getAutoReconnectTarget(appCrashInfo);
+    // app.exit 正常情况立即终止进程;万一退出被延迟,以 relaunched 标记跳过后续启动分支,避免半启动状态
+    const autoReconnectRelaunched = autoReconnectHistory !== null && relaunchForAutoReconnect(autoReconnectHistory);
     // 仅普通本地启动提前创建窗口，其他启动分支使用各自的窗口。
-    if (!remoteKernelArgError && !remoteKernelTarget && !firstOpen && !appCrashInfo && !lastWorkspaceMissing) {
+    if (!autoReconnectRelaunched && !remoteKernelArgError && !remoteKernelTarget && !firstOpen && !appCrashInfo && !lastWorkspaceMissing) {
         createBootWindow();
         const currentBootWindow = bootWindow;
         preparedBoot = {
@@ -3274,16 +3336,6 @@ app.whenReady().then(() => {
             }),
         };
     }
-
-    // 记住上次连接的远程空间:普通启动(无 --workspace/--safe-mode)自动重连,连接失败回退本地工作区
-    let savedLastRemote = "";
-    try {
-        const historyData = JSON.parse(fs.readFileSync(path.join(confDir, "connections.json"), "utf8"));
-        if (historyData.version === 1 && Array.isArray(historyData.origins) && historyData.origins.length > 0 &&
-            !getArg("--workspace") && getArg("--safe-mode") !== "true") {
-            savedLastRemote = historyData.origins[0];
-        }
-    } catch (e) {}
 
     const bootLocalWorkspace = () => {
         const workspace = getArg("--workspace");
@@ -4603,6 +4655,7 @@ app.whenReady().then(() => {
             }
         }).catch((error) => {
             writeLog("initialize remote kernel failed: " + error);
+            clearAutoReconnectMarker();
             if (bootWindow && !bootWindow.isDestroyed()) {
                 bootWindow.destroy();
             }
@@ -4741,33 +4794,7 @@ app.whenReady().then(() => {
             });
             missingWorkspaceWindow.destroy();
         });
-    } else if (savedLastRemote) {
-        // 记住了上次的远程空间连接:普通启动自动重连;连接失败回退本地工作区
-        writeLog("auto reconnect last remote workspace [" + savedLastRemote + "]");
-        if (bootWindow && !bootWindow.isDestroyed()) {
-            bootWindow.destroy();
-        }
-        const autoTarget = createRemoteKernelTarget(savedLastRemote, process.argv);
-        try {
-            const historyData = JSON.parse(fs.readFileSync(path.join(confDir, "connections.json"), "utf8"));
-            if ((historyData.trustedOrigins || []).includes(savedLastRemote)) {
-                autoTarget.trustRemoteExtensions = true;
-            }
-        } catch (e) {}
-        // 与 --remote 启动一致:赋值模块级 target,使 loadBootWindow 的 query.remote、
-        // 会话清理与窗口处理都按远程流程工作
-        remoteKernelTarget = autoTarget;
-        initRemoteKernel(remoteKernelTarget).then((result) => {
-            if (result) {
-                initMainWindow(result.target, result.authenticated);
-            } else {
-                bootLocalWorkspace();
-            }
-        }).catch((error) => {
-            writeLog("auto reconnect last remote failed, fall back to local workspace [" + error.message + "]");
-            bootLocalWorkspace();
-        });
-    } else {
+    } else if (!autoReconnectRelaunched) {
         bootLocalWorkspace();
     }
 

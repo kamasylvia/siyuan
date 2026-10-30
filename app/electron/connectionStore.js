@@ -44,7 +44,7 @@ const writeConnections = (file, data) => {
 // 切换时移除目标相关参数，避免把本地安全开关或远程扩展信任带到另一个连接。
 const connectionArgs = (args, target, currentOrigin) => {
     const removed = new Set(["--remote", "--workspace", "--port", "--safe-mode", "--openAsHidden",
-        "--trust-remote-extensions", "--no-proxy-server", "--connection-session"]);
+        "--trust-remote-extensions", "--no-proxy-server", "--connection-session", "--auto-reconnect"]);
     const result = args.filter(arg => !removed.has(arg.split("=", 1)[0]) &&
         !arg.startsWith("siyuan://") && !getUnsafeRemoteChromiumSwitchName(arg));
     if (target.mode === "remote") {
