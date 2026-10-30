@@ -2160,6 +2160,20 @@ const initMainWindow = (kernel = kernelPort, remoteAuthenticated = true) => {
         return;
     }
     const kernelTarget = getKernelTarget(kernel);
+    // 记住上次的连接模式与远程地址:下次普通启动自动回到上次的连接状态
+    try {
+        const connectionsFile = path.join(confDir, "connections.json");
+        const historyData = JSON.parse(fs.readFileSync(connectionsFile, "utf8"));
+        const lastMode = kernelTarget.mode === "remote" ? "remote" : "local";
+        const lastRemoteOrigin = kernelTarget.mode === "remote" ? kernelTarget.origin : "";
+        if (historyData.lastMode !== lastMode || historyData.lastRemoteOrigin !== lastRemoteOrigin) {
+            historyData.lastMode = lastMode;
+            historyData.lastRemoteOrigin = lastRemoteOrigin;
+            fs.writeFileSync(connectionsFile, JSON.stringify(historyData, null, 2), {mode: 0o600});
+        }
+    } catch (e) {
+        writeLog("persist last connection mode failed: " + e.message);
+    }
     const currentKernelPort = kernelTarget.port;
     const startup = kernelTarget.mode === "remote" ? undefined : Array.from(localKernelStartups.values())
         .find(item => item.port?.toString() === currentKernelPort.toString());
@@ -3260,6 +3274,41 @@ app.whenReady().then(() => {
             }),
         };
     }
+
+    // 记住上次连接的远程空间:普通启动(无 --workspace/--safe-mode)自动重连,连接失败回退本地工作区
+    let savedLastRemote = "";
+    try {
+        const historyData = JSON.parse(fs.readFileSync(path.join(confDir, "connections.json"), "utf8"));
+        if (historyData.version === 1 && Array.isArray(historyData.origins) && historyData.origins.length > 0 &&
+            !getArg("--workspace") && getArg("--safe-mode") !== "true") {
+            savedLastRemote = historyData.origins[0];
+        }
+    } catch (e) {}
+
+    const bootLocalWorkspace = () => {
+        const workspace = getArg("--workspace");
+        if (workspace) {
+            writeLog("got arg [--workspace=" + workspace + "]");
+        }
+        const port = getArg("--port");
+        if (port) {
+            writeLog("got arg [--port=" + port + "]");
+        }
+        const safeMode = getArg("--safe-mode") === "true";
+        if (safeMode) {
+            writeLog("got arg [--safe-mode=true]");
+        }
+        const lang = getArg("--lang") || "";
+        if (lang) {
+            writeLog("got arg [--lang=" + lang + "]");
+        }
+        writeLog("initializing local kernel [" + (Date.now() - startupStartedAt) + "ms since app ready]");
+        initKernel(workspace, port, lang, safeMode, preparedBoot).then((startedKernelPort) => {
+            if (startedKernelPort) {
+                initMainWindow(startedKernelPort);
+            }
+        });
+    };
     connectionManager = createConnectionManager({
         confDir,
         languageDir: path.join(appDir, "appearance", "langs"),
@@ -4692,29 +4741,31 @@ app.whenReady().then(() => {
             });
             missingWorkspaceWindow.destroy();
         });
-    } else {
-        const workspace = getArg("--workspace");
-        if (workspace) {
-            writeLog("got arg [--workspace=" + workspace + "]");
+    } else if (savedLastRemote) {
+        // 记住了上次的远程空间连接:普通启动自动重连;连接失败回退本地工作区
+        writeLog("auto reconnect last remote workspace [" + savedLastRemote + "]");
+        if (bootWindow && !bootWindow.isDestroyed()) {
+            bootWindow.destroy();
         }
-        const port = getArg("--port");
-        if (port) {
-            writeLog("got arg [--port=" + port + "]");
-        }
-        const safeMode = getArg("--safe-mode") === "true";
-        if (safeMode) {
-            writeLog("got arg [--safe-mode=true]");
-        }
-        const lang = getArg("--lang") || "";
-        if (lang) {
-            writeLog("got arg [--lang=" + lang + "]");
-        }
-        writeLog("initializing local kernel [" + (Date.now() - startupStartedAt) + "ms since app ready]");
-        initKernel(workspace, port, lang, safeMode, preparedBoot).then((startedKernelPort) => {
-            if (startedKernelPort) {
-                initMainWindow(startedKernelPort);
+        const autoTarget = createRemoteKernelTarget(savedLastRemote, process.argv);
+        try {
+            const historyData = JSON.parse(fs.readFileSync(path.join(confDir, "connections.json"), "utf8"));
+            if ((historyData.trustedOrigins || []).includes(savedLastRemote)) {
+                autoTarget.trustRemoteExtensions = true;
             }
+        } catch (e) {}
+        initRemoteKernel(autoTarget).then((result) => {
+            if (result) {
+                initMainWindow(result.target, result.authenticated);
+            } else {
+                bootLocalWorkspace();
+            }
+        }).catch((error) => {
+            writeLog("auto reconnect last remote failed, fall back to local workspace [" + error.message + "]");
+            bootLocalWorkspace();
         });
+    } else {
+        bootLocalWorkspace();
     }
 
     // 电源相关事件必须放在 whenReady 里面，否则会导致 Linux 端无法正常启动 Trace/breakpoint trap (core dumped) https://github.com/siyuan-note/siyuan/issues/9347
