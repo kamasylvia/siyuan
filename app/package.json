@@ -2,7 +2,7 @@
   "name": "SiYuan",
   "desktopName": "org.b3log.siyuan",
   "version": "3.8.9",
-  "forkBuild": "v3.8.9.2",
+  "forkBuild": "v3.8.9.3",
   "description": "From thought to insight, with agents",
   "homepage": "https://b3log.org/siyuan",
   "main": "./electron/main.js",
