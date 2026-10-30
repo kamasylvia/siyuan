@@ -25,6 +25,12 @@ Before implementing a requirement, evaluate its premise and approach with effort
 
 Unambiguous mechanical edits with no behavioral or compatibility impact need no separate evaluation round. Continue to follow applicable repository checks; a rename, version bump, or documentation update is not automatically exempt
 
+### Plugin-first implementation
+
+- New capabilities default to a pure plugin/widget implementation (frontend `index.js` + backend `kernel.js` + host sidecar where needed), without kernel changes
+- Consider kernel changes only after falsifying the plugin/widget route with file:line-level evidence (for example, an authentication, routing, sandbox, or event gap), and get explicit user approval before changing the kernel
+- A kernel-change proposal MUST include the falsification evidence, the blast radius (sync, history, encryption, publish, authorization), and a rollback plan
+
 ### Do not hand-edit
 
 - `app/stage/protyle/js/lute/lute.min.js` (built from upstream `88250/lute`)

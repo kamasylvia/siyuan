@@ -1,5 +1,6 @@
 {
 	"offlineUntitledDoc": "Unbenanntes Dokument",
+	"offlineLongDocTruncated": "Offline-Modus: Dieses lange Dokument kann nur im geladenen Umfang gelesen werden",
 	"apiUnauthorizedTip": "Nicht autorisierte Anfragen (401) wurden blockiert, um eine Reload-Schleife zu verhindern; bei anhaltendem Auftreten den Arbeitsbereich neu verbinden",
 	"offlineDocCacheMaxCount": "Max. Offline-Cache-Dokumente",
 	"offlineDocCacheMaxCountTip": "Maximale Anzahl der im Offline-Cache gehaltenen Dokumente; bei Überschreitung werden die am längsten nicht aufgerufenen entfernt",
@@ -22,7 +23,6 @@
 	"embedRenderModeRecent": "Zuletzt angesehen",
 	"pdfPreview": "PDF-Asset-Links im Dokument anzeigen",
 	"pdfPreviewTip": "Wenn aktiviert, werden PDF-Asset-Links direkt im Dokument eingebettet angezeigt; beim Deaktivieren öffnet ein Klick wie gewohnt den Asset-Tab",
-	"docTreeJumpPage": "Zu Seite springen",
 	"embedRenderMode": "Rendermodus",
 	"embedRenderModeTable": "Tabelle",
 	"workspaceStorageView": "Anzeigen",

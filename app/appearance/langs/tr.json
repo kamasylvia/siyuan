@@ -1,5 +1,6 @@
 {
 	"offlineUntitledDoc": "Başlıksız belge",
+	"offlineLongDocTruncated": "Çevrimdışı: bu uzun belge yalnızca yüklenen bölüm kadar okunabilir",
 	"apiUnauthorizedTip": "Yetkisiz istekler (401) yenileme döngüsünü önlemek için engellendi; sürüyorsa çalışma alanını yeniden bağlayın",
 	"offlineDocCacheMaxCount": "Maks. çevrimdışı önbellek belgesi",
 	"offlineDocCacheMaxCountTip": "Çevrimdışı önbellekte tutulacak maksimum belge sayısı; aşılırsa en uzun süredir görüntülenmeyenler kaldırılır",
@@ -22,7 +23,6 @@
 	"embedRenderModeRecent": "Son görüntülenenler",
 	"pdfPreview": "PDF bağlantılarını belgede önizle",
 	"pdfPreviewTip": "Etkinleştirildiğinde PDF varlık bağlantıları belgede satır içi önizlenir; devre dışıyken tıklamak her zamanki gibi varlık sekmesini açar",
-	"docTreeJumpPage": "Sayfaya git",
 	"embedRenderMode": "İşleme modu",
 	"embedRenderModeTable": "Tablo",
 	"workspaceStorageView": "Görüntüle",

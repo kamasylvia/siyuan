@@ -1,5 +1,6 @@
 {
 	"offlineUntitledDoc": "Dokument bez tytułu",
+	"offlineLongDocTruncated": "Offline: ten długi dokument jest czytelny tylko w zakresie wczytanej części",
 	"apiUnauthorizedTip": "Zablokowano nieautoryzowane żądania (401), aby zapobiec pętli odświeżania; jeśli się powtarza, połącz ponownie przestrzeń roboczą",
 	"offlineDocCacheMaxCount": "Maks. dokumentów w pamięci offline",
 	"offlineDocCacheMaxCountTip": "Maksymalna liczba dokumentów przechowywanych w pamięci offline; po przekroczeniu usuwane są najdawniej przeglądane",
@@ -22,7 +23,6 @@
 	"embedRenderModeRecent": "Ostatnio przeglądane",
 	"pdfPreview": "Podglądaj łącza PDF w dokumencie",
 	"pdfPreviewTip": "Po włączeniu łącza zasobów PDF są wyświetlane bezpośrednio w dokumencie; po wyłączeniu kliknięcie otwiera kartę zasobu jak zwykle",
-	"docTreeJumpPage": "Przejdź do strony",
 	"embedRenderMode": "Tryb renderowania",
 	"embedRenderModeTable": "Tabela",
 	"workspaceStorageView": "Pokaż",

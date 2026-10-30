@@ -1,5 +1,6 @@
 {
 	"offlineUntitledDoc": "Untitled document",
+	"offlineLongDocTruncated": "Offline: this document is long; only the loaded portion is readable",
 	"apiUnauthorizedTip": "Unauthorized requests (401) were blocked to prevent a refresh loop; reconnect the workspace if this persists",
 	"offlineDocCacheMaxCount": "Max offline cached documents",
 	"offlineDocCacheMaxCountTip": "Maximum number of documents kept in the offline cache; beyond it, the least recently viewed are evicted",
@@ -22,7 +23,6 @@
 	"embedRenderModeRecent": "Recently viewed",
 	"pdfPreview": "Preview PDF asset links in the document",
 	"pdfPreviewTip": "When enabled, PDF asset links in documents are previewed inline; when disabled, clicking a PDF asset link opens it in the asset tab as usual",
-	"docTreeJumpPage": "Jump to page",
 	"embedRenderMode": "Render mode",
 	"embedRenderModeTable": "Table",
 	"workspaceStorageView": "View",

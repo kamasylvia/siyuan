@@ -31,7 +31,7 @@ import {
 } from "../../emoji/fileTreeIcon";
 import {importNotebook, newEncryptedNotebook, newNotebook, openEncryptedNotebook} from "../../util/mount";
 import {isNotCtrl, isOnlyMeta, isPhablet, setStorageVal, updateHotkeyAfterTip} from "../../protyle/util/compatibility";
-import {openAsset, openFileById} from "../../editor/util";
+import {openFileById} from "../../editor/util";
 import {
     hasClosestByClassName,
     hasClosestByTag,
@@ -97,8 +97,6 @@ export class Files extends Model {
     private docSortModeRefreshTimeout: number;
     private docSortModeChanges = new Map<string, IDocSortModeChanged>();
     private movedExpandedDocIDs = new Set<string>();
-    // 文档树分页：记录每个展开目录的当前页码 https://github.com/siyuan-note/siyuan/issues/12164
-    private docTreePages = new Map<string, number>();
 
     constructor(options: { tab: Tab, app: App }) {
         super({app: options.app});
@@ -243,10 +241,6 @@ export class Files extends Model {
             }
         });
         this.element.addEventListener("mousedown", (event) => {
-            // 分页控件不触发中键打开
-            if ((event.target as HTMLElement).closest(".file-tree-pager")) {
-                return;
-            }
             // 点击鼠标滚轮关闭
             if (event.button !== 1 || !window.siyuan.config.fileTree.openFilesUseCurrentTab) {
                 return;
@@ -274,60 +268,6 @@ export class Files extends Model {
                     break;
                 }
                 target = target.parentElement;
-            }
-        });
-        this.element.addEventListener("keydown", (event: KeyboardEvent) => {
-            // 分页跳页输入框：回车提交目标页码
-            const inputElement = (event.target as HTMLElement).closest(".file-tree-pager__input") as HTMLInputElement;
-            if (!inputElement) {
-                return;
-            }
-            if (event.key === "Enter") {
-                event.stopPropagation();
-                event.preventDefault();
-                const pagerElement = inputElement.closest(".file-tree-pager") as HTMLElement;
-                const page = parseInt(inputElement.value, 10);
-                const pageCount = parseInt(pagerElement.getAttribute("data-page-count") || "1", 10);
-                const currentPage = parseInt(pagerElement.getAttribute("data-page") || "1", 10);
-                if (!Number.isNaN(page) && page >= 1 && page <= pageCount && page !== currentPage) {
-                    this.docTreePages.set(pagerElement.getAttribute("data-box") + "\t" + pagerElement.getAttribute("data-path"), page);
-                    this.refreshDocTreePage(pagerElement.getAttribute("data-box"), pagerElement.getAttribute("data-path"));
-                } else {
-                    inputElement.value = currentPage.toString();
-                }
-            } else if (event.key !== "Escape") {
-                event.stopPropagation();
-            }
-        });
-        this.element.addEventListener("click", (event) => {
-            // 文档树分页控件：翻页与跳页，独立监听器避免影响文档选中/展开逻辑
-            const pagerElement = (event.target as HTMLElement).closest(".file-tree-pager") as HTMLElement;
-            if (!pagerElement) {
-                return;
-            }
-            const target = event.target as HTMLElement;
-            event.stopImmediatePropagation();
-            event.preventDefault();
-            if (target.closest(".file-tree-pager__input")) {
-                return;
-            }
-            const actionElement = target.closest("[data-type]") as HTMLElement;
-            const type = actionElement?.getAttribute("data-type");
-            const page = parseInt(pagerElement.getAttribute("data-page") || "1", 10);
-            const pageCount = parseInt(pagerElement.getAttribute("data-page-count") || "1", 10);
-            let targetPage = 0;
-            if (type === "first" && page > 1) {
-                targetPage = 1;
-            } else if (type === "prev" && page > 1) {
-                targetPage = page - 1;
-            } else if (type === "next" && page < pageCount) {
-                targetPage = page + 1;
-            } else if (type === "last" && page < pageCount) {
-                targetPage = pageCount;
-            }
-            if (targetPage) {
-                this.docTreePages.set(pagerElement.getAttribute("data-box") + "\t" + pagerElement.getAttribute("data-path"), targetPage);
-                this.refreshDocTreePage(pagerElement.getAttribute("data-box"), pagerElement.getAttribute("data-path"));
             }
         });
         this.element.addEventListener("click", (event) => {
@@ -503,20 +443,6 @@ export class Files extends Model {
                         event.preventDefault();
                         event.stopPropagation();
                         window.siyuan.menus.menu.remove();
-                        break;
-                    } else if (target.tagName === "LI" && target.getAttribute("data-type") === "navigation-asset") {
-                        // 资产文件单击直接打开预览，目录走展开逻辑
-                        this.lastSelectedElement = target;
-                        this.setCurrent(target, false);
-                        const assetPath = target.getAttribute("data-path") || "";
-                        if (!assetPath.endsWith("/")) {
-                            openAsset(options.app, assetPath.replace(/^\//, ""), 0);
-                        }
-                        this.element.querySelector('[select-end="true"]')?.removeAttribute("select-end");
-                        this.element.querySelector('[select-start="true"]')?.removeAttribute("select-start");
-                        window.siyuan.menus.menu.remove();
-                        event.stopPropagation();
-                        event.preventDefault();
                         break;
                     } else if (target.tagName === "LI") {
                         this.parentDocClick.cancel();
@@ -759,12 +685,6 @@ export class Files extends Model {
                     return;
                 }
                 const targetType = liElement.getAttribute("data-type");
-                // 资产条目与分页控件不作为拖放目标
-                if (targetType === "navigation-asset" || liElement.classList.contains("file-tree-pager")) {
-                    hideDragTip();
-                    event.preventDefault();
-                    return;
-                }
                 const targetChanged = dragOverLastObj.element !== liElement;
                 if (targetChanged) {
                     dragOverLastObj.element?.classList.remove("dragover", "dragover__bottom", "dragover__top");
@@ -1924,22 +1844,17 @@ data-type="navigation-root" data-path="/" data-count="${item.subFileCount || 0}"
 
     private onLsHTML(data: IFileTreeList, scrollTop?: number) {
         this.parentDocClick.cancel();
-        if (data.files.length === 0 && (data.pageCount || 1) <= 1) {
+        if (data.files.length === 0) {
             return;
         }
         const liElement = this.element.querySelector(`ul[data-url="${data.box}"] li[data-path="${data.path}"]`);
         if (!liElement) {
             return;
         }
-        if (typeof data.page === "number") {
-            // 以内核返回的页码为准，避免其它刷新路径把页码状态带偏
-            this.docTreePages.set(data.box + "\t" + data.path, data.page);
-        }
         let fileHTML = "";
         data.files.forEach((item: IFile) => {
             fileHTML += this.genFileHTML(item);
         });
-        fileHTML += this.genPagerHTML(data);
         const effectiveSortMode = getResponseEffectiveSortMode(data, data.box);
         let nextElement = liElement.nextElementSibling;
         if (nextElement && nextElement.tagName === "UL") {
@@ -1994,17 +1909,7 @@ data-type="navigation-root" data-path="/" data-count="${item.subFileCount || 0}"
     }
 
     private async onLsSelect(data: IFileTreeList, filePath: string, setStorage: boolean, isSetCurrent: boolean) {
-        if (typeof data.page === "number") {
-            // 以内核返回的页码为准，恢复展开状态时保持页码状态同步
-            this.docTreePages.set(data.box + "\t" + data.path, data.page);
-        }
-        let fileHTML = "";
-        data.files.forEach((item: IFile) => {
-            fileHTML += this.genFileHTML(item);
-        });
-        // 恢复展开状态与选中导航与展开刷新一致，渲染分页控件
-        fileHTML += this.genPagerHTML(data);
-        if (fileHTML === "") {
+        if (data.files.length === 0) {
             return;
         }
         const liElement = this.element.querySelector(`ul[data-url="${data.box}"] li[data-path="${data.path}"]`);
@@ -2076,7 +1981,6 @@ data-type="navigation-root" data-path="/" data-count="${item.subFileCount || 0}"
             toggleElement.classList.remove("b3-list-item__arrow--open");
             if (leafElement?.tagName === "UL") {
                 leafElement.remove();
-                this.docTreePages.delete(notebookId + "\t" + liElement.getAttribute("data-path"));
                 this.getOpenPaths();
             } else {
                 // 没有UL，直接更新路径
@@ -2087,7 +1991,6 @@ data-type="navigation-root" data-path="/" data-count="${item.subFileCount || 0}"
         fetchPost("/api/filetree/listDocsByPath", {
             notebook: notebookId,
             path: liElement.getAttribute("data-path"),
-            page: this.docTreePages.get(notebookId + "\t" + liElement.getAttribute("data-path")) || 1,
             app: Constants.SIYUAN_APPID,
         }, response => {
             if (response.data.path === "/" && response.data.files.length === 0) {
@@ -2165,9 +2068,6 @@ data-type="navigation-root" data-path="/" data-count="${item.subFileCount || 0}"
     }
 
     private genFileHTML(item: IFile) {
-        if (item.isAsset) {
-            return this.genAssetHTML(item);
-        }
         let countHTML = "";
         if (item.count && item.count > 0) {
             countHTML = `<span class="popover__block counter b3-tooltips b3-tooltips__nw" aria-label="${window.siyuan.languages.ref}">${item.count}</span>`;
@@ -2200,53 +2100,6 @@ aria-label="${ariaLabel}">${getDocDisplayName(item.name, item.titleEmpty, true)}
         <svg><use xlink:href="#iconAdd"></use></svg>
     </span>
     ${countHTML}
-</li>`;
-    }
-
-    // 文档树分页控件：首页/上一页/跳页输入/总页数/下一页/尾页，追加在目录子列表末尾 https://github.com/siyuan-note/siyuan/issues/12164
-    private genPagerHTML(data: IFileTreeList) {
-        const page = data.page || 1;
-        const pageCount = data.pageCount || 1;
-        if (pageCount <= 1) {
-            return "";
-        }
-        const paddingLeft = (data.path.split("/").length - 1) * 18;
-        return `<li class="b3-list-item file-tree-pager" data-box="${data.box}" data-path="${data.path}" data-page="${page}" data-page-count="${pageCount}"
-style="--file-toggle-width:${paddingLeft + 18}px;--file-action-offset:${paddingLeft + 20}px">
-    <span style="padding-left: ${paddingLeft}px" class="file-tree-pager__btn" data-type="first"${page <= 1 ? " data-disabled=\"true\"" : ""}><svg><use xlink:href="#iconDoubleLeft"></use></svg></span>
-    <span class="file-tree-pager__btn" data-type="prev"${page <= 1 ? " data-disabled=\"true\"" : ""}><svg><use xlink:href="#iconLeft"></use></svg></span>
-    <input class="b3-text-field file-tree-pager__input" data-type="jump" value="${page}" aria-label="${window.siyuan.languages.docTreeJumpPage}">
-    <span class="file-tree-pager__total">/ ${pageCount}</span>
-    <span class="file-tree-pager__btn" data-type="next"${page >= pageCount ? " data-disabled=\"true\"" : ""}><svg><use xlink:href="#iconRight"></use></svg></span>
-    <span class="file-tree-pager__btn" data-type="last"${page >= pageCount ? " data-disabled=\"true\"" : ""}><svg><use xlink:href="#iconDoubleRight"></use></svg></span>
-</li>`;
-    }
-
-    private refreshDocTreePage(box: string, path: string) {
-        fetchPost("/api/filetree/listDocsByPath", {
-            notebook: box,
-            path,
-            page: this.docTreePages.get(box + "\t" + path) || 1,
-            ignoreMaxListHint: true,
-            app: Constants.SIYUAN_APPID,
-        }, response => {
-            this.onLsHTML(response.data);
-        });
-    }
-
-    // 资产条目：assets 目录与递归列出的文件，单击文件直接打开预览（PDF/图片等）
-    private genAssetHTML(item: IFile) {
-        const isDir = item.path.endsWith("/");
-        // /assets/ 深度为 1，/assets/public/x.pdf 为 2，以此类推
-        const depth = item.path.replace(/\/+$/, "").split("/").length - 1;
-        const paddingLeft = depth * 18;
-        return `<li data-type="navigation-asset" data-name="${escapeHtmlTextAndAttr(item.name)}" data-path="${item.path}"
-class="b3-list-item b3-list-item--hide-action" style="--file-toggle-width:${paddingLeft + 18}px;--file-action-offset:${paddingLeft + 20}px">
-    <span style="padding-left: ${paddingLeft - 18}px" class="b3-list-item__toggle b3-list-item__toggle--hl${isDir ? "" : " fn__hidden"}">
-        <svg class="b3-list-item__arrow"><use xlink:href="#iconRight"></use></svg>
-    </span>
-    <span class="b3-list-item__icon">${getFileTreeIconHTML("", isDir ? "folder" : "file")}</span>
-    <span class="b3-list-item__text ariaLabel" data-delay="200" data-position="parentE">${escapeHtml(item.name)}</span>
 </li>`;
     }
 

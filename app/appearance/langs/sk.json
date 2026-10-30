@@ -1,5 +1,6 @@
 {
 	"offlineUntitledDoc": "Dokument bez názvu",
+	"offlineLongDocTruncated": "Offline: tento dlhý dokument je čitateľný len v načítanej časti",
 	"apiUnauthorizedTip": "Neautorizované požiadavky (401) boli zablokované, aby sa zabránilo slučke opakovania; ak pretrváva, znova pripojte pracovný priestor",
 	"offlineDocCacheMaxCount": "Max. počet dokumentov offline",
 	"offlineDocCacheMaxCountTip": "Maximálny počet dokumentov uložených v offline medzipamäti; po prekročení sa odstránia najdlhšie nezobrazené",
@@ -22,7 +23,6 @@
 	"embedRenderModeRecent": "Nedávno zobrazené",
 	"pdfPreview": "Zobraziť PDF odkazy v dokumente",
 	"pdfPreviewTip": "Pri zapnutí sa PDF odkazy na zdroje zobrazia priamo v dokumente; pri vypnutí kliknutie otvorí kartu zdroja ako zvyčajne",
-	"docTreeJumpPage": "Prejsť na stranu",
 	"embedRenderMode": "Režim zobrazenia",
 	"embedRenderModeTable": "Tabuľka",
 	"workspaceStorageView": "Zobraziť",

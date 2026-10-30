@@ -233,6 +233,10 @@ export const fetchPost = ((
             void getDocCache(data.id).then(cached => {
                 if (cached && cb) {
                     cb(cached);
+                    // 快照非完整(动态加载中途缓存)时提示可读范围,避免误以为已到文末
+                    if (cached.data?.eof === false) {
+                        showMessage(window.siyuan.languages.offlineLongDocTruncated, 6000, "info");
+                    }
                     return;
                 }
                 if (isOffline()) {

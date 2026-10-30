@@ -1,5 +1,6 @@
 {
 	"offlineUntitledDoc": "เอกสารไม่มีชื่อ",
+	"offlineLongDocTruncated": "ออฟไลน์: เอกสารยาวนี้อ่านได้เฉพาะส่วนที่โหลดไว้",
 	"apiUnauthorizedTip": "บล็อกคำขอที่ไม่ผ่านการยืนยัน (401) เพื่อป้องกันการรีเฟรชวนซ้ำ; หากยังคงมีให้เชื่อมต่อพื้นที่ทำงานใหม่",
 	"offlineDocCacheMaxCount": "จำกัดจำนวนเอกสารออฟไลน์",
 	"offlineDocCacheMaxCountTip": "จำนวนเอกสารสูงสุดที่เก็บในแคชออฟไลน์; หากเกินจะลบเอกสารที่ไม่ได้เปิดนานที่สุดออก",
@@ -22,7 +23,6 @@
 	"embedRenderModeRecent": "ดูล่าสุด",
 	"pdfPreview": "ดูตัวอย่างลิงก์ PDF ในเอกสาร",
 	"pdfPreviewTip": "เมื่อเปิดใช้ ลิงก์เนื้อหา PDF จะแสดงฝังในเอกสารโดยตรง เมื่อปิดใช้ การคลิกจะเปิดในแท็บเนื้อหาตามปกติ",
-	"docTreeJumpPage": "ไปที่หน้า",
 	"embedRenderMode": "โหมดการแสดงผล",
 	"embedRenderModeTable": "ตาราง",
 	"workspaceStorageView": "ดู",
