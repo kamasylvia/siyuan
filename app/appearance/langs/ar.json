@@ -1,6 +1,5 @@
 {
 	"offlineUntitledDoc": "مستند بدون عنوان",
-	"offlineLongDocTruncated": "离线模式:本篇较长,仅已加载部分可读",
 	"apiUnauthorizedTip": "تم حجب طلبات غير مصرح بها (401) لمنع حلقة إعادة التحميل؛ إذا استمر أعد الاتصال بمساحة العمل",
 	"offlineDocCacheMaxCount": "الحد الأقصى للمستندات المخزنة دون اتصال",
 	"offlineDocCacheMaxCountTip": "الحد الأقصى لعدد المستندات المحفوظة في ذاكرة عدم الاتصال؛ عند التجاوز تُزال المستندات الأقدم استخدامًا",
@@ -23,6 +22,7 @@
 	"embedRenderModeRecent": "شوهدت مؤخرًا",
 	"pdfPreview": "معاينة روابط PDF داخل المستند",
 	"pdfPreviewTip": "عند التمكين، تُعرض روابط أصول PDF داخل المستند مباشرة؛ وعند التعطيل تُفتح في علامة تبويب الأصل كالمعتاد بعد النقر",
+	"docTreeJumpPage": "الانتقال إلى الصفحة",
 	"embedRenderMode": "وضع العرض",
 	"embedRenderModeTable": "جدول",
 	"workspaceStorageView": "عرض",

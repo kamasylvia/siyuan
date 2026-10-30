@@ -1,6 +1,5 @@
 {
 	"offlineUntitledDoc": "Documento senza titolo",
-	"offlineLongDocTruncated": "Offline: questo documento è lungo; è leggibile solo la parte caricata",
 	"apiUnauthorizedTip": "Richieste non autorizzate (401) bloccate per evitare un ciclo di ricaricamento; se persiste, riconnetti lo spazio di lavoro",
 	"offlineDocCacheMaxCount": "Numero massimo documenti offline",
 	"offlineDocCacheMaxCountTip": "Numero massimo di documenti conservati nella cache offline; oltre il limite vengono rimossi i meno recentemente accessi",
@@ -23,6 +22,7 @@
 	"embedRenderModeRecent": "Visti di recente",
 	"pdfPreview": "Anteprima dei link PDF nel documento",
 	"pdfPreviewTip": "Quando attivo, i link alle risorse PDF vengono visualizzati direttamente nel documento; quando disattivo, un clic apre la scheda della risorsa come al solito",
+	"docTreeJumpPage": "Vai alla pagina",
 	"embedRenderMode": "Modalità di rendering",
 	"embedRenderModeTable": "Tabella",
 	"workspaceStorageView": "Visualizza",

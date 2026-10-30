@@ -1,6 +1,5 @@
 {
 	"offlineUntitledDoc": "未命名文档",
-	"offlineLongDocTruncated": "离线模式:本篇较长,仅已加载部分可读",
 	"apiUnauthorizedTip": "存在未通过鉴权的请求(401),已拦截以免页面反复刷新;若持续出现请重新连接工作空间",
 	"offlineDocCacheMaxCount": "离线缓存文档数上限",
 	"offlineDocCacheMaxCountTip": "离线缓存保留的文档数量上限，超出按最久未访问淘汰",
@@ -23,6 +22,7 @@
 	"embedRenderModeRecent": "最近浏览",
 	"pdfPreview": "在文档中直接预览 PDF",
 	"pdfPreviewTip": "开启后，文档中的 PDF 资产链接将直接内嵌预览；关闭后保持默认，点击后在资产页签中打开",
+	"docTreeJumpPage": "跳至页",
 	"embedRenderMode": "渲染模式",
 	"embedRenderModeTable": "表格",
 	"workspaceStorageView": "查看",

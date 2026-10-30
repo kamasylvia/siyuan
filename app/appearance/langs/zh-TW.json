@@ -1,6 +1,5 @@
 {
 	"offlineUntitledDoc": "未命名文檔",
-	"offlineLongDocTruncated": "離線模式:本篇較長,僅已載入部分可讀",
 	"apiUnauthorizedTip": "存在未通過鑑權的請求(401),已攔截以免頁面反覆重新整理;若持續出現請重新連接工作空間",
 	"offlineDocCacheMaxCount": "離線快取文檔數上限",
 	"offlineDocCacheMaxCountTip": "離線快取保留的文檔數量上限，超出按最久未存取淘汰",
@@ -23,6 +22,7 @@
 	"embedRenderModeRecent": "最近瀏覽",
 	"pdfPreview": "在文件中直接預覽 PDF",
 	"pdfPreviewTip": "開啟後，文件中的 PDF 資產連結將直接內嵌預覽；關閉後保持預設，點擊後在資產分頁中開啟",
+	"docTreeJumpPage": "跳至頁",
 	"embedRenderMode": "渲染模式",
 	"embedRenderModeTable": "表格",
 	"databaseAttrLayout": "資料庫面板欄位佈局",

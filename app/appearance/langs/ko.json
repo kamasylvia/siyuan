@@ -1,6 +1,5 @@
 {
 	"offlineUntitledDoc": "제목 없는 문서",
-	"offlineLongDocTruncated": "오프라인: 이 긴 문서는 로드된 부분만 읽을 수 있습니다",
 	"apiUnauthorizedTip": "인증되지 않은 요청(401)을 차단하여 새로 고침 반복을 방지했습니다. 지속되면 작업 공간에 다시 연결하세요",
 	"offlineDocCacheMaxCount": "오프라인 캐시 문서 수 상한",
 	"offlineDocCacheMaxCountTip": "오프라인 캐시에 유지할 문서 수 상한으로, 초과 시 가장 오래 열지 않은 문서부터 제거됩니다",
@@ -23,6 +22,7 @@
 	"embedRenderModeRecent": "최근 조회",
 	"pdfPreview": "문서에서 PDF 바로 미리보기",
 	"pdfPreviewTip": "활성화하면 문서의 PDF 자산 링크를 인라인으로 미리 봅니다. 비활성화하면 기존과 같이 클릭 후 자산 탭에서 열립니다",
+	"docTreeJumpPage": "페이지로 이동",
 	"embedRenderMode": "렌더링 모드",
 	"embedRenderModeTable": "표",
 	"workspaceStorageView": "보기",

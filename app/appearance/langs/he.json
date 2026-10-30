@@ -1,6 +1,5 @@
 {
 	"offlineUntitledDoc": "מסמך ללא כותרת",
-	"offlineLongDocTruncated": "מצב לא מקוון: מסמך זה ארוך; ניתן לקרוא רק את החלק שנטען",
 	"apiUnauthorizedTip": "בקשות לא מורשות (401) נחסמו למניעת לולאת רענון; אם זה נמשך, התחבר מחדש לסביבת העבודה",
 	"offlineDocCacheMaxCount": "המספר המרבי של מסמכים במטמון ללא חיבור",
 	"offlineDocCacheMaxCountTip": "המספר המרבי של מסמכים שיישמרו במטמון ללא חיבור; בחריגה יוסרו המסמכים שלא נצפו זה מכבר",
@@ -23,6 +22,7 @@
 	"embedRenderModeRecent": "נצפו לאחרונה",
 	"pdfPreview": "תצוגה מקדימה של קישורי PDF במסמך",
 	"pdfPreviewTip": "כאשר מופעל, קישורי PDF מוצגים במסמך ישירות; כאשר כבוי, לחיצה פותחת בלשית הנכס כרגיל",
+	"docTreeJumpPage": "מעבר לעמוד",
 	"embedRenderMode": "מצב עיבוד",
 	"embedRenderModeTable": "טבלה",
 	"workspaceStorageView": "הצג",

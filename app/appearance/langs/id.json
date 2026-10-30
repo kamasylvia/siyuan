@@ -1,6 +1,5 @@
 {
 	"offlineUntitledDoc": "Dokumen tanpa judul",
-	"offlineLongDocTruncated": "Offline: dokumen ini panjang; hanya bagian yang dimuat yang dapat dibaca",
 	"apiUnauthorizedTip": "Permintaan tidak terautentikasi (401) diblokir untuk mencegah loop muat ulang; jika berlanjut, sambungkan ulang ruang kerja",
 	"offlineDocCacheMaxCount": "Batas dokumen cache offline",
 	"offlineDocCacheMaxCountTip": "Jumlah maksimum dokumen yang disimpan dalam cache offline; jika terlampaui, yang paling lama tidak dilihat akan dihapus",
@@ -23,6 +22,7 @@
 	"embedRenderModeRecent": "Baru saja dilihat",
 	"pdfPreview": "Pratinjau tautan PDF dalam dokumen",
 	"pdfPreviewTip": "Saat diaktifkan, tautan aset PDF dipratinjau langsung di dalam dokumen; saat dinonaktifkan, klik membukanya di tab aset seperti biasa",
+	"docTreeJumpPage": "Menuju halaman",
 	"embedRenderMode": "Mode render",
 	"embedRenderModeTable": "Tabel",
 	"workspaceStorageView": "Lihat",
