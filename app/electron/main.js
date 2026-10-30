@@ -4754,7 +4754,10 @@ app.whenReady().then(() => {
                 autoTarget.trustRemoteExtensions = true;
             }
         } catch (e) {}
-        initRemoteKernel(autoTarget).then((result) => {
+        // 与 --remote 启动一致:赋值模块级 target,使 loadBootWindow 的 query.remote、
+        // 会话清理与窗口处理都按远程流程工作
+        remoteKernelTarget = autoTarget;
+        initRemoteKernel(remoteKernelTarget).then((result) => {
             if (result) {
                 initMainWindow(result.target, result.authenticated);
             } else {
