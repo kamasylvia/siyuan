@@ -23,7 +23,7 @@ export const prefetchLazyDocCache = () => {
             }
             return;
         }
-        const initTab = tab.headElement.getAttribute("data-initdata");
+        const initTab = tab.headElement?.getAttribute("data-initdata");
         if (!initTab) {
             return;
         }
