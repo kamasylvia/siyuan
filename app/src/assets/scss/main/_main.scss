@@ -401,7 +401,8 @@ html.window-controls-overlay {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 4px;
+    flex-wrap: nowrap;
+    gap: 2px;
     padding-right: 8px;
     color: var(--b3-theme-on-surface);
     font-size: 12px;
@@ -413,6 +414,7 @@ html.window-controls-overlay {
       border-radius: var(--b3-border-radius);
       cursor: pointer;
       padding: 2px;
+      flex-shrink: 0;
 
       &:hover {
         background-color: var(--b3-list-icon-hover);
@@ -434,12 +436,15 @@ html.window-controls-overlay {
       height: 20px;
       padding: 0 4px;
       text-align: center;
-      width: 36px;
+      width: 30px;
+      flex-shrink: 0;
       font-size: 12px;
     }
 
     .file-tree-pager__total {
       opacity: .68;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
   }
 

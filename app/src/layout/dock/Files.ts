@@ -2196,7 +2196,7 @@ aria-label="${ariaLabel}">${getDocDisplayName(item.name, item.titleEmpty, true)}
         const paddingLeft = (data.path.split("/").length - 1) * 18;
         return `<li class="b3-list-item file-tree-pager" data-box="${data.box}" data-path="${data.path}" data-page="${page}" data-page-count="${pageCount}"
 style="--file-toggle-width:${paddingLeft + 18}px;--file-action-offset:${paddingLeft + 20}px">
-    <span style="padding-left: ${paddingLeft}px" class="file-tree-pager__btn" data-type="first"${page <= 1 ? " data-disabled=\"true\"" : ""}><svg><use xlink:href="#iconDoubleLeft"></use></svg></span>
+    <span class="file-tree-pager__btn" data-type="first"${page <= 1 ? " data-disabled=\"true\"" : ""}><svg><use xlink:href="#iconDoubleLeft"></use></svg></span>
     <span class="file-tree-pager__btn" data-type="prev"${page <= 1 ? " data-disabled=\"true\"" : ""}><svg><use xlink:href="#iconLeft"></use></svg></span>
     <input class="b3-text-field file-tree-pager__input" data-type="jump" value="${page}" aria-label="${window.siyuan.languages.docTreeJumpPage}">
     <span class="file-tree-pager__total">/ ${pageCount}</span>
