@@ -178,9 +178,9 @@ var backupSampleCmd = &cobra.Command{
 			Include: backup.Include{Data: true, Conf: true},
 			Targets: []*backup.Target{
 				{ID: "local-1", Name: "Local disk", Type: backup.TypeLocal, Enabled: true,
-					Local: &backup.Local{Path: "/path/to/backup"}, Retention: &backup.Retention{KeepLast: 30}},
+					Local: &backup.Local{Path: "/path/to/backup"}, Retention: &backup.Retention{KeepLast: 30, MaxAgeDays: 90}},
 				{ID: "pg-1", Name: "PostgreSQL", Type: backup.TypePG, Enabled: false,
-					PG: &backup.PG{DSN: "postgres://user:pass@host:5432/siyuan?sslmode=disable", Schema: "siyuan_backup"}},
+					PG: &backup.PG{Host: "127.0.0.1", Port: 5432, User: "postgres", Password: "", Database: "siyuan", SSLMode: "disable"}},
 			},
 		}
 		data, _ := json.MarshalIndent(cfg, "", "  ")

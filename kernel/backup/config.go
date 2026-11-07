@@ -64,8 +64,18 @@ type Local struct {
 }
 
 type PG struct {
-	DSN    string `json:"dsn"`
-	Schema string `json:"schema"`
+	// DSN is a legacy/expert connection string. When set it wins over the
+	// structured fields below.
+	DSN            string `json:"dsn,omitempty"`
+	Host           string `json:"host,omitempty"`
+	Port           int    `json:"port,omitempty"`
+	User           string `json:"user,omitempty"`
+	Password       string `json:"password,omitempty"`
+	Database       string `json:"database,omitempty"`
+	SSLMode        string `json:"sslMode,omitempty"`
+	Schema         string `json:"schema,omitempty"`
+	Timeout        int    `json:"timeout,omitempty"`
+	ConcurrentReqs int    `json:"concurrentReqs,omitempty"`
 }
 
 type S3 struct {
@@ -144,7 +154,7 @@ func (cfg *Config) Normalize() error {
 			target.Name = target.ID
 		}
 		if target.Retention == nil {
-			target.Retention = &Retention{KeepLast: DefaultKeepLast}
+			target.Retention = &Retention{KeepLast: DefaultKeepLast, MaxAgeDays: 90}
 		}
 		if target.Retention.KeepLast <= 0 && target.Retention.MaxAgeDays <= 0 {
 			target.Retention.KeepLast = DefaultKeepLast
@@ -155,8 +165,18 @@ func (cfg *Config) Normalize() error {
 				return fmt.Errorf("backup target [%s] requires local.path", target.ID)
 			}
 		case TypePG:
-			if target.PG == nil || strings.TrimSpace(target.PG.DSN) == "" {
-				return fmt.Errorf("backup target [%s] requires pg.dsn", target.ID)
+			if target.PG == nil {
+				return fmt.Errorf("backup target [%s] requires pg settings", target.ID)
+			}
+			if strings.TrimSpace(target.PG.DSN) == "" &&
+				(strings.TrimSpace(target.PG.Host) == "" || strings.TrimSpace(target.PG.Database) == "") {
+				return fmt.Errorf("backup target [%s] requires pg.host and pg.database", target.ID)
+			}
+			if target.PG.Port == 0 {
+				target.PG.Port = 5432
+			}
+			if target.PG.SSLMode == "" {
+				target.PG.SSLMode = "disable"
 			}
 			if target.PG.Schema == "" {
 				target.PG.Schema = "public"
@@ -194,7 +214,7 @@ func validIdentifier(value string) bool {
 
 func (target *Target) RetentionSpec() Retention {
 	if target == nil || target.Retention == nil {
-		return Retention{KeepLast: DefaultKeepLast}
+		return Retention{KeepLast: DefaultKeepLast, MaxAgeDays: 90}
 	}
 	return *target.Retention
 }

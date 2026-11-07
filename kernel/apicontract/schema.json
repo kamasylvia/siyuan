@@ -17899,31 +17899,73 @@
     "BackupPG": {
       "type": "object",
       "properties": {
+        "concurrentReqs": {
+          "type": "integer"
+        },
+        "database": {
+          "type": "string"
+        },
         "dsn": {
           "type": "string"
         },
+        "host": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
+        },
         "schema": {
+          "type": "string"
+        },
+        "sslMode": {
+          "type": "string"
+        },
+        "timeout": {
+          "type": "integer"
+        },
+        "user": {
           "type": "string"
         }
       },
-      "required": [
-        "dsn"
-      ],
       "additionalProperties": false
     },
     "BackupPGInput": {
       "type": "object",
       "properties": {
+        "concurrentReqs": {
+          "type": "integer"
+        },
+        "database": {
+          "type": "string"
+        },
         "dsn": {
           "type": "string"
         },
+        "host": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
+        },
         "schema": {
+          "type": "string"
+        },
+        "sslMode": {
+          "type": "string"
+        },
+        "timeout": {
+          "type": "integer"
+        },
+        "user": {
           "type": "string"
         }
       },
-      "required": [
-        "dsn"
-      ],
       "additionalProperties": false
     },
     "BackupRetention": {

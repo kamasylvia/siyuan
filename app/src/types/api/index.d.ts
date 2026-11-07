@@ -770,9 +770,9 @@ export type BackupLocal = { "path": string; };
 
 export type BackupLocalInput = { "path": string; };
 
-export type BackupPG = { "dsn": string; "schema"?: string; };
+export type BackupPG = { "concurrentReqs"?: number; "database"?: string; "dsn"?: string; "host"?: string; "password"?: string; "port"?: number; "schema"?: string; "sslMode"?: string; "timeout"?: number; "user"?: string; };
 
-export type BackupPGInput = { "dsn": string; "schema"?: string; };
+export type BackupPGInput = { "concurrentReqs"?: number; "database"?: string; "dsn"?: string; "host"?: string; "password"?: string; "port"?: number; "schema"?: string; "sslMode"?: string; "timeout"?: number; "user"?: string; };
 
 export type BackupRetention = { "keepLast"?: number; "maxAgeDays"?: number; };
 

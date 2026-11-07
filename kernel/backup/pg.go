@@ -8,6 +8,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net"
+	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -114,4 +117,39 @@ func (target *PGTarget) List(ctx context.Context, prefix string) ([]string, erro
 		keys = append(keys, key)
 	}
 	return keys, rows.Err()
+}
+
+// ConnectionString prefers the explicit DSN and otherwise builds one from the
+// structured settings shown in the settings UI.
+func (pg *PG) ConnectionString() string {
+	if pg == nil {
+		return ""
+	}
+	if strings.TrimSpace(pg.DSN) != "" {
+		return pg.DSN
+	}
+	host := strings.TrimSpace(pg.Host)
+	if host == "" || strings.TrimSpace(pg.Database) == "" {
+		return ""
+	}
+	port := pg.Port
+	if port <= 0 {
+		port = 5432
+	}
+	sslmode := pg.SSLMode
+	if sslmode == "" {
+		sslmode = "disable"
+	}
+	u := &url.URL{Scheme: "postgres", Host: net.JoinHostPort(host, strconv.Itoa(port)), Path: "/" + strings.TrimPrefix(pg.Database, "/")}
+	if pg.User != "" {
+		if pg.Password != "" {
+			u.User = url.UserPassword(pg.User, pg.Password)
+		} else {
+			u.User = url.User(pg.User)
+		}
+	}
+	query := url.Values{}
+	query.Set("sslmode", sslmode)
+	u.RawQuery = query.Encode()
+	return u.String()
 }

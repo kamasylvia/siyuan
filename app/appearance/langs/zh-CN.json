@@ -1,4 +1,5 @@
 {
+	"backupSSLMode": "SSL 模式",
 	"backupEncryption": "加密",
 	"backupPassphrase": "加密口令",
 	"backupTargets": "备份目标",

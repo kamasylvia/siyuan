@@ -1,4 +1,5 @@
 {
+	"backupSSLMode": "SSL mode",
 	"backupEncryption": "Encryption",
 	"backupPassphrase": "Passphrase",
 	"backupTargets": "Backup targets",

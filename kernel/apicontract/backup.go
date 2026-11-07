@@ -21,8 +21,16 @@ type BackupLocal struct {
 }
 
 type BackupPG struct {
-	DSN    string `json:"dsn"`
-	Schema string `json:"schema,omitempty" api:"optional"`
+	DSN            string `json:"dsn,omitempty" api:"optional"`
+	Host           string `json:"host,omitempty" api:"optional"`
+	Port           int    `json:"port,omitempty" api:"optional"`
+	User           string `json:"user,omitempty" api:"optional"`
+	Password       string `json:"password,omitempty" api:"optional"`
+	Database       string `json:"database,omitempty" api:"optional"`
+	SSLMode        string `json:"sslMode,omitempty" api:"optional"`
+	Schema         string `json:"schema,omitempty" api:"optional"`
+	Timeout        int    `json:"timeout,omitempty" api:"optional"`
+	ConcurrentReqs int    `json:"concurrentReqs,omitempty" api:"optional"`
 }
 
 type BackupS3 struct {

@@ -172,7 +172,7 @@ func NewTarget(target *Target) (Store, error) {
 	case TypeLocal:
 		return NewLocalTarget(target.ID, target.Local.Path)
 	case TypePG:
-		return NewPGTarget(target.ID, target.PG.DSN, target.PG.Schema)
+		return NewPGTarget(target.ID, target.PG.ConnectionString(), target.PG.Schema)
 	case TypeS3:
 		return NewS3Target(target)
 	case TypeWebDAV:

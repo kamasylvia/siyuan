@@ -7,7 +7,7 @@ type BackupType = "local" | "pg" | "s3" | "webdav";
 
 type Retention = {keepLast?: number; maxAgeDays?: number};
 type LocalConfig = {path: string};
-type PGConfig = {dsn: string; schema?: string};
+type PGConfig = {host: string; port?: number; user?: string; password?: string; database: string; sslMode?: string; schema?: string};
 type S3Config = {endpoint: string; accessKey?: string; secretKey?: string; bucket: string; region?: string;
     pathStyle?: boolean; skipTlsVerify?: boolean; timeout?: number};
 type WebDAVConfig = {endpoint: string; username?: string; password?: string; skipTlsVerify?: boolean; timeout?: number};
@@ -62,7 +62,7 @@ const defaultTarget = (): BackupTarget => ({
     type: "local",
     enabled: true,
     local: {path: ""},
-    retention: {keepLast: 30},
+    retention: {keepLast: 30, maxAgeDays: 90},
 });
 
 const defaultConfig = (): BackupConfig => ({
@@ -104,8 +104,17 @@ const typeFields = (target: BackupTarget): string => {
         case "local":
             return field("backupLocalPath", text("backupPath", "Directory"), target.local?.path || "");
         case "pg":
-            return field("backupPGDSN", text("backupDSN", "DSN"), target.pg?.dsn || "") +
-                field("backupPGSchema", text("backupSchema", "Schema"), target.pg?.schema || "public");
+            return field("backupPGHost", "Host", target.pg?.host || "") +
+                field("backupPGPort", "Port", String(target.pg?.port || 5432), "number") +
+                field("backupPGUser", text("backupUsername", "Username"), target.pg?.user || "") +
+                field("backupPGPassword", text("backupPassword", "Password"), target.pg?.password || "", "password") +
+                field("backupPGDatabase", "Database", target.pg?.database || "") +
+                `<label class="fn__flex b3-label" style="align-items:center;margin:0 0 6px 0">
+                    <span class="fn__flex-1">${escapeHtmlTextAndAttr(text("backupSSLMode", "SSL mode"))}</span>
+                    <select id="backupPGSSLMode" class="b3-select fn__flex-1">
+                        ${["disable", "prefer", "require"].map(mode => `<option value="${mode}" ${(target.pg?.sslMode || "disable") === mode ? "selected" : ""}>${mode}</option>`).join("")}
+                    </select>
+                </label>`;
         case "s3":
             return field("backupS3Endpoint", text("backupEndpoint", "Endpoint"), target.s3?.endpoint || "") +
                 field("backupS3AccessKey", text("backupAccessKey", "Access key"), target.s3?.accessKey || "") +
@@ -153,7 +162,7 @@ const render = () => {
             ${selectType("local")}
             ${checkbox("backupTargetEnabled", text("backupEnabled", "Enabled"), true)}
             ${field("backupKeepLast", text("backupKeepLast", "Keep last"), "30", "number")}
-            ${field("backupMaxAgeDays", text("backupMaxAgeDays", "Max age (days)"), "0", "number")}
+            ${field("backupMaxAgeDays", text("backupMaxAgeDays", "Max age (days)"), "90", "number", 'placeholder="0 = unlimited"')}
             <div id="backupTypeFields"></div>
             <div class="fn__flex" style="gap:8px;margin-top:8px">
                 <button class="b3-button b3-button--outline" id="backupSave">${escapeHtmlTextAndAttr(window.siyuan.languages.save)}</button>
@@ -222,7 +231,7 @@ const bind = () => {
         draft.s3 = undefined;
         draft.webdav = undefined;
         if (draft.type === "local") draft.local = {path: ""};
-        if (draft.type === "pg") draft.pg = {dsn: "", schema: "public"};
+        if (draft.type === "pg") draft.pg = {host: "", port: 5432, user: "", password: "", database: "", sslMode: "disable"};
         if (draft.type === "s3") draft.s3 = {endpoint: "", bucket: "", region: "", pathStyle: true, timeout: 60};
         if (draft.type === "webdav") draft.webdav = {endpoint: "", username: "", password: "", timeout: 60};
         const container = panelRoot?.querySelector("#backupTypeFields");
@@ -251,7 +260,7 @@ const openForm = (target: BackupTarget) => {
     (panelRoot?.querySelector("#backupTargetType") as HTMLSelectElement).value = target.type;
     (panelRoot?.querySelector("#backupTargetEnabled") as HTMLInputElement).checked = target.enabled;
     (panelRoot?.querySelector("#backupKeepLast") as HTMLInputElement).value = String(target.retention?.keepLast ?? 30);
-    (panelRoot?.querySelector("#backupMaxAgeDays") as HTMLInputElement).value = String(target.retention?.maxAgeDays ?? 0);
+    (panelRoot?.querySelector("#backupMaxAgeDays") as HTMLInputElement).value = String(target.retention?.maxAgeDays ?? 90);
     const fields = panelRoot?.querySelector("#backupTypeFields");
     if (fields) {
         fields.innerHTML = typeFields(target);
@@ -282,7 +291,12 @@ const readForm = (): BackupTarget => {
             target.local = {path: value("backupLocalPath").trim()};
             break;
         case "pg":
-            target.pg = {dsn: value("backupPGDSN").trim(), schema: value("backupPGSchema").trim() || "public"};
+            target.pg = {
+                host: value("backupPGHost").trim(), port: Number(value("backupPGPort")) || 5432,
+                user: value("backupPGUser").trim(), password: value("backupPGPassword"),
+                database: value("backupPGDatabase").trim(),
+                sslMode: (panelRoot?.querySelector("#backupPGSSLMode") as HTMLSelectElement)?.value || "disable",
+            };
             break;
         case "s3":
             target.s3 = {

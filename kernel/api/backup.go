@@ -70,7 +70,12 @@ func maskBackupConfig(cfg *backup.Config) *apicontract.BackupConfig {
 			item.Local = &apicontract.BackupLocal{Path: target.Local.Path}
 		}
 		if target.PG != nil {
-			item.PG = &apicontract.BackupPG{DSN: maskDSN(target.PG.DSN), Schema: target.PG.Schema}
+			item.PG = &apicontract.BackupPG{
+				DSN: maskDSN(target.PG.DSN), Host: target.PG.Host, Port: target.PG.Port,
+				User: target.PG.User, Password: maskSecret(target.PG.Password),
+				Database: target.PG.Database, SSLMode: target.PG.SSLMode, Schema: target.PG.Schema,
+				Timeout: target.PG.Timeout, ConcurrentReqs: target.PG.ConcurrentReqs,
+			}
 		}
 		if target.S3 != nil {
 			item.S3 = &apicontract.BackupS3{
@@ -147,7 +152,22 @@ func unmaskBackupConfig(cfg *apicontract.BackupConfig, old *backup.Config) *back
 					dsn = ""
 				}
 			}
-			target.PG = &backup.PG{DSN: dsn, Schema: item.PG.Schema}
+			password := item.PG.Password
+			if password == "" || password == backupMasked {
+				if previous != nil && previous.PG != nil {
+					password = previous.PG.Password
+				} else if password == backupMasked {
+					password = ""
+				}
+			}
+			if dsn == "" && item.PG.Host == "" && previous != nil && previous.PG != nil && previous.PG.DSN != "" {
+				dsn = previous.PG.DSN
+			}
+			target.PG = &backup.PG{
+				DSN: dsn, Host: item.PG.Host, Port: item.PG.Port, User: item.PG.User,
+				Password: password, Database: item.PG.Database, SSLMode: item.PG.SSLMode,
+				Schema: item.PG.Schema, Timeout: item.PG.Timeout, ConcurrentReqs: item.PG.ConcurrentReqs,
+			}
 		}
 		if item.S3 != nil {
 			secret := item.S3.SecretKey
