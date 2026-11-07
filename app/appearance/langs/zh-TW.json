@@ -1,4 +1,7 @@
 {
+	"backupEnableGlobal": "備份總開關",
+	"backupEnableTarget": "啟用此目標",
+	"backupTargetName": "目標名稱",
 	"backupSSLMode": "SSL 模式",
 	"backupEncryption": "加密",
 	"backupPassphrase": "加密口令",

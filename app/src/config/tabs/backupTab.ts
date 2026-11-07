@@ -146,7 +146,7 @@ const render = () => {
     <div class="fn__flex" style="align-items:center;gap:8px;margin-bottom:10px">
         <button class="b3-button b3-button--outline" id="backupAdd">${escapeHtmlTextAndAttr(text("backupAddTarget", "Add target"))}</button>
         <button class="b3-button b3-button--outline" id="backupRun">${escapeHtmlTextAndAttr(text("backupRunNow", "Back up now"))}</button>
-        <label class="fn__flex" style="align-items:center;gap:4px"><input id="backupEnabled" type="checkbox" class="b3-switch" ${currentConfig.enabled ? "checked" : ""}>${escapeHtmlTextAndAttr(text("backupEnabled", "Enabled"))}</label>
+        <label class="fn__flex" style="align-items:center;gap:4px"><input id="backupEnabled" type="checkbox" class="b3-switch" ${currentConfig.enabled ? "checked" : ""}>${escapeHtmlTextAndAttr(text("backupEnableGlobal", "Backup master switch"))}</label>
         <span class="fn__space"></span>
         <label class="fn__flex" style="align-items:center;gap:4px"><input id="backupIncludeData" type="checkbox" class="b3-switch" ${currentConfig.include?.data ? "checked" : ""}>${escapeHtmlTextAndAttr(text("backupIncludeData", "Data"))}</label>
         <label class="fn__flex" style="align-items:center;gap:4px"><input id="backupIncludeConf" type="checkbox" class="b3-switch" ${currentConfig.include?.conf ? "checked" : ""}>${escapeHtmlTextAndAttr(text("backupIncludeConf", "Configuration"))}</label>
@@ -161,9 +161,9 @@ const render = () => {
     <div id="backupForm" class="fn__none" style="margin-top:12px;border-top:1px solid var(--b3-border-color);padding-top:10px">
         <div class="b3-label__text" id="backupFormTitle"></div>
         <div style="margin-top:8px">
-            ${field("backupTargetName", window.siyuan.languages.name || "Name", "")}
+            ${field("backupTargetName", text("backupTargetName", "Target name"), "")}
             ${selectType("local")}
-            ${checkbox("backupTargetEnabled", text("backupEnabled", "Enabled"), true)}
+            ${checkbox("backupTargetEnabled", text("backupEnableTarget", "Enable this target"), true)}
             ${field("backupKeepLast", text("backupKeepLast", "Keep last"), "30", "number")}
             ${field("backupMaxAgeDays", text("backupMaxAgeDays", "Max age (days)"), "90", "number", 'placeholder="0 = unlimited"')}
             <div id="backupTypeFields"></div>

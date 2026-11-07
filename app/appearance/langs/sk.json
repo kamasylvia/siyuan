@@ -1,4 +1,7 @@
 {
+	"backupEnableGlobal": "Backup master switch",
+	"backupEnableTarget": "Enable this target",
+	"backupTargetName": "Target name",
 	"backupSSLMode": "SSL mode",
 	"backupEncryption": "Encryption",
 	"backupPassphrase": "Passphrase",
