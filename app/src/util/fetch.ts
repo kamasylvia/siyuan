@@ -15,6 +15,15 @@ import {isOffline} from "./offlineState";
 import {isRemoteKernel} from "./hostCapabilities";
 import {isBrowser} from "./functions";
 
+const beginTemplateHTTPRequest = (url: string, data: {id?: string; blockID?: string},
+                                  headers?: Record<string, string>, signal?: AbortSignal) => {
+    if (!["/api/template/render", "/api/av/renderAttributeView", "/api/av/getAttributeViewKeys", "/api/filetree/createDailyNote"].includes(url)) {
+        return undefined;
+    }
+    const {beginTemplateHTTPRequest: begin}: typeof import("../template/http") = require("../template/http");
+    return begin(url, data, headers, signal);
+};
+
 const reportTransactionFailure = (url: string, error: Error) => {
     if (url !== "/api/transactions" || error?.name === "AbortError") {
         return;
@@ -123,6 +132,9 @@ export const fetchPost = ((
         });
         return;
     }
+    const templateRequest = beginTemplateHTTPRequest(url, data, headers, signal);
+    headers = templateRequest?.headers || headers;
+    signal = templateRequest?.signal || signal;
     const init: RequestInit = {
         method: "POST",
     };
@@ -186,6 +198,9 @@ export const fetchPost = ((
         reportTransactionFailure(url, error);
         throw error;
     }).then((response: IWebSocketData) => {
+        if (signal?.aborted || (templateRequest && !templateRequest.isCurrent())) {
+            return;
+        }
         if (failCallback && url === "/api/file/getFile" && isGetFile202) {
             failCallback(response);
             return;
@@ -224,7 +239,7 @@ export const fetchPost = ((
             cb(response);
         }
     }).catch((e) => {
-        if (e?.name === "AbortError") {
+        if (e?.name === "AbortError" || (templateRequest && !templateRequest.isCurrent())) {
             return;
         }
         // 网络不可达时 getDoc 从离线缓存兜底;isOffline() 有 5 秒宽限,用 navigator.onLine 即时补盲区,
@@ -262,7 +277,7 @@ export const fetchPost = ((
             ipcRenderer.send(Constants.SIYUAN_QUIT, location.port);
         }
         /// #endif
-    });
+    }).finally(() => templateRequest?.finish());
 }) as FetchPost<IWebSocketData>;
 
 export const fetchSyncPost = (async (url: string, data?: any, headers?: Record<string, string>, process = true,
@@ -276,6 +291,9 @@ export const fetchSyncPost = (async (url: string, data?: any, headers?: Record<s
             return response;
         });
     }
+    const templateRequest = beginTemplateHTTPRequest(url, data, headers, signal);
+    headers = templateRequest?.headers || headers;
+    signal = templateRequest?.signal || signal;
     const init: RequestInit = {
         method: "POST",
         signal,
@@ -292,9 +310,17 @@ export const fetchSyncPost = (async (url: string, data?: any, headers?: Record<s
     }
     return trackSettingRequest(url, trackEditorSaveRequest(url, data,
         fetchWithAppId(url, init).then(res => res.json() as Promise<IWebSocketData>)).catch(error => {
+        if (templateRequest && (signal?.aborted || !templateRequest.isCurrent())) {
+            const cancelled: IWebSocketData = {code: -1, msg: "", data: null};
+            return cancelled;
+        }
         reportTransactionFailure(url, error);
         throw error;
     }).then(res2 => {
+        if (signal?.aborted || (templateRequest && !templateRequest.isCurrent())) {
+            const cancelled: IWebSocketData = {code: -1, msg: "", data: null};
+            return cancelled;
+        }
         // 在线打开的文档与浏览过的目录写入离线缓存(fetchSyncPost 通道,与 fetchPost 咽喉对称)
         if ((isRemoteKernel() || isBrowser()) && res2 && typeof res2 === "object" && res2.code === 0 && !isOffline()) {
             if (url === "/api/filetree/getDoc" && data?.id) {
@@ -307,7 +333,8 @@ export const fetchSyncPost = (async (url: string, data?: any, headers?: Record<s
             processMessage(res2);
         }
         return res2;
-    }), url === "/api/storage/setLocalStorageVal" && data?.key === Constants.LOCAL_SLASH_USAGE);
+    }), url === "/api/storage/setLocalStorageVal" && data?.key === Constants.LOCAL_SLASH_USAGE)
+        .finally(() => templateRequest?.finish());
 }) as FetchSyncPost<IWebSocketData>;
 
 export const fetchGet = ((url: string, cb: (response: IWebSocketData | IObject | string) => void) => {

@@ -340,6 +340,23 @@ html.window-controls-overlay {
 }
 
 .status {
+  &--floating {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    max-width: 100%;
+    visibility: hidden;
+    pointer-events: none;
+    background-color: var(--b3-theme-background);
+    border-radius: var(--b3-border-radius) 0 0 0;
+    box-shadow: var(--b3-point-shadow);
+  }
+
+  &--floating-open {
+    visibility: visible;
+    pointer-events: auto;
+  }
+
   & > [data-entry-hidden="true"] {
     display: none !important;
   }
@@ -396,59 +413,6 @@ html.window-controls-overlay {
 }
 
 .file-tree {
-  // 文档树分页控件：目录子列表末尾的前后翻页与跳页输入
-  .file-tree-pager {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    flex-wrap: nowrap;
-    gap: 2px;
-    padding-right: 8px;
-    color: var(--b3-theme-on-surface);
-    font-size: 12px;
-    user-select: none;
-
-    .file-tree-pager__btn {
-      display: flex;
-      align-items: center;
-      border-radius: var(--b3-border-radius);
-      cursor: pointer;
-      padding: 2px;
-      flex-shrink: 0;
-
-      &:hover {
-        background-color: var(--b3-list-icon-hover);
-      }
-
-      &[data-disabled="true"] {
-        opacity: .38;
-        cursor: not-allowed;
-        background-color: transparent;
-      }
-
-      svg {
-        height: 12px;
-        width: 12px;
-      }
-    }
-
-    .file-tree-pager__input {
-      height: 20px;
-      padding: 0 4px;
-      text-align: center;
-      width: 30px;
-      flex-shrink: 0;
-      font-size: 12px;
-    }
-
-    .file-tree-pager__total {
-      opacity: .68;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-  }
-
-
   .block__icons:not(.protyle-wysiwyg *) .block__icon:not(.backlinkList__toggle),
   &:not(.fullscreen) .block__icons:not(.protyle-wysiwyg *) .fn__space {
     display: none;

@@ -1,3 +1,4 @@
+import {mobileConfirmDialog} from "../../dialog/mobileConfirmDialog";
 import {fetchPost} from "../../util/fetch";
 import {registerBuiltinSlashHint} from "./builtinSlash";
 import {canPickIOSPhotos} from "../upload/iosPhotos";
@@ -46,7 +47,6 @@ import {
     isBuiltinInlineStyleVisible,
     TBuiltinInlineStyleID,
 } from "../toolbar/inlineStyle";
-import {confirmDialog} from "../../dialog/confirmDialog";
 import {buildSemanticInlineHTML} from "../util/inlineElementMarker";
 import {getHostCapabilities} from "../../util/hostCapabilities";
 import {areProtylePluginExtensionsEnabled} from "../runtimeCapabilities";
@@ -58,7 +58,9 @@ import {
 } from "../wysiwyg/blockSelection";
 import {countBlockWord} from "../../layout/status";
 import {genTemplateDocTreePlanHTML} from "../../template/docTree";
+import {guardTemplateHTTPRequest} from "../../template/http";
 import {getDailyNoteHints} from "./dailyNote";
+import {isTitleSlashContext, TITLE_INLINE_SLASH_IDS} from "./titleSlash";
 
 const slashBuiltinStyleIDs: Partial<Record<string, TBuiltinInlineStyleID>> = {
     infoStyle: "info",
@@ -570,7 +572,7 @@ export const getBuiltinSlashMenuItems = (protyle: IProtyle): IHintData[] => {
 
 export const hintSlash = registerBuiltinSlashHint((key: string, protyle: IProtyle,
                                                  sourceOrHideConfiguredCreate: THintSource | boolean = false,
-                                                 options: {visibilityRoot?: string} = {}) => {
+                                                 options: {visibilityRoot?: string; allowCreateRef?: boolean} = {}) => {
     // 加号面板由用户主动打开，复用插入项配置但不受输入斜杠的提示开关影响。
     const visibilityRoot = options.visibilityRoot ||
         (protyle.hint.element.closest("#keyboardToolbar") ? SLASH_MENU_ROOT_PATH : undefined);
@@ -607,6 +609,7 @@ export const hintSlash = registerBuiltinSlashHint((key: string, protyle: IProtyl
         allList.pop();
     }
     refreshSlashMenuCatalog(areProtylePluginExtensionsEnabled(protyle) ? protyle.app.plugins : []);
+    const inTitle = isTitleSlashContext(protyle);
     const selection = getSelection();
     const focus = selection?.focusNode;
     const focusElement = focus instanceof Element ? focus : focus?.parentElement;
@@ -614,13 +617,15 @@ export const hintSlash = registerBuiltinSlashHint((key: string, protyle: IProtyl
     const inTableCell = cell && cell.closest(".protyle-wysiwyg") === protyle.wysiwyg.element;
     return resolveSlashMenuItems(allList.filter((item) => {
         const builtinStyleID = slashBuiltinStyleIDs[item.entryKey];
-        return (!inTableCell || TABLE_CELL_SLASH_IDS.has(item.id)) &&
+        return (!inTitle || (item.entryKey === item.id && TITLE_INLINE_SLASH_IDS.has(item.id))) &&
+            (!inTableCell || TABLE_CELL_SLASH_IDS.has(item.id)) &&
             getEntryCatalogNode(getSlashMenuEntryPath(item.entryKey)) &&
             (!builtinStyleID || isBuiltinInlineStyleVisible("style1", builtinStyleID));
     }), {
         enabled,
         hideConfiguredCreate,
         lite: protyle.lite,
+        allowCreateRef: options.allowCreateRef,
         canUpload: !!(protyle.options.upload.handler || (protyle.options.upload.url && protyle.upload)),
         key,
         order: getEntryOrder(SLASH_MENU_ROOT_PATH),
@@ -870,14 +875,33 @@ export const hintEmbed = (key: string, protyle: IProtyle): IHintData[] => {
     return [];
 };
 
-export const hintRenderTemplate = (value: string, protyle: IProtyle, nodeElement: Element) => {
+const templateInsertRequests = new WeakMap<IProtyle, ReturnType<typeof guardTemplateHTTPRequest>>();
+
+export const hintRenderTemplate = (value: string, protyle: IProtyle, nodeElement: Element, httpConfirmToken?: string) => {
+    templateInsertRequests.get(protyle)?.cancel();
+    templateInsertRequests.get(protyle)?.dispose();
+    const rootID = protyle.block.rootID;
+    const parentID = protyle.block.parentID;
+    const range = protyle.toolbar.range.cloneRange();
+    const isCurrent = () => !request.signal.aborted && nodeElement.isConnected && range.startContainer.isConnected &&
+        protyle.wysiwyg.element.isConnected && !protyle.wysiwyg.element.closest(".fn__none") && protyle.block.rootID === rootID &&
+        protyle.block.parentID === parentID && templateInsertRequests.get(protyle) === request;
+    const request = guardTemplateHTTPRequest(isCurrent);
+    templateInsertRequests.set(protyle, request);
     fetchPost("/api/template/render", {
         id: protyle.block.parentID,
         path: value,
-        mode: "editorInsert"
+        mode: "editorInsert",
+        ...(httpConfirmToken ? {httpConfirmToken} : {})
     }, (response) => {
+        if (!isCurrent()) {
+            return;
+        }
         const insertTemplate = (templateDocTreePlanID?: string) => {
-            focusByRange(protyle.toolbar.range);
+            if (!isCurrent()) {
+                return;
+            }
+            focusByRange(range);
             const editElement = getContenteditableElement(nodeElement);
             if (templateDocTreePlanID || (editElement && editElement.textContent.trim() === "")) {
                 insertHTML(response.data.content, protyle, true, false, false, undefined, undefined,
@@ -897,15 +921,17 @@ export const hintRenderTemplate = (value: string, protyle: IProtyle, nodeElement
         const docTreePlan = response.data.docTreePlan;
         if (docTreePlan?.id) {
             hideElements(["util"], protyle);
-            confirmDialog(window.siyuan.languages.template, genTemplateDocTreePlanHTML(docTreePlan, window.siyuan.languages.newSubDoc), () => {
+            mobileConfirmDialog(window.siyuan.languages.template, genTemplateDocTreePlanHTML(docTreePlan, window.siyuan.languages.newSubDoc), () => {
                 insertTemplate(docTreePlan.id);
             }, () => {
-                focusByRange(protyle.toolbar.range);
+                if (isCurrent()) {
+                    focusByRange(range);
+                }
             });
         } else {
             insertTemplate();
         }
-    });
+    }, undefined, undefined, request.signal).finally(request.dispose);
 };
 
 export const hintRenderWidget = (value: string, protyle: IProtyle) => {

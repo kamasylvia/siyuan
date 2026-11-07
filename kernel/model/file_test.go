@@ -38,6 +38,7 @@ func setupFileOperationTest(t testing.TB) *fileOperationTestFixture {
 	originalDataDir := util.DataDir
 	originalBlockTreeDBPath := util.BlockTreeDBPath
 	originalQueueDir := util.QueueDir
+	originalConfDir := util.ConfDir
 	const testLang = "file-operation-test"
 	originalTimeLang, hadTimeLang := util.TimeLangs[testLang]
 	util.TimeLangs[testLang] = map[string]any{
@@ -50,6 +51,7 @@ func setupFileOperationTest(t testing.TB) *fileOperationTestFixture {
 	util.DataDir = filepath.Join(tempDir, "data")
 	util.BlockTreeDBPath = filepath.Join(tempDir, "blocktree.db")
 	util.QueueDir = t.TempDir()
+	util.ConfDir = t.TempDir()
 	Conf = NewAppConf()
 	Conf.Lang = testLang
 	Conf.FileTree.Store(conf.NewFileTree())
@@ -95,6 +97,7 @@ func setupFileOperationTest(t testing.TB) *fileOperationTestFixture {
 		util.DataDir = originalDataDir
 		util.BlockTreeDBPath = originalBlockTreeDBPath
 		util.QueueDir = originalQueueDir
+		util.ConfDir = originalConfDir
 		if "" != originalBlockTreeDBPath {
 			treenode.InitBlockTree(false)
 		}
@@ -157,7 +160,7 @@ func TestListDocTreeUsesPathIDForInvalidPropertiesID(t *testing.T) {
 				cache.RemoveDocIALInBox(fixture.sourcePath, fixture.box.ID)
 			})
 
-			files, _, err := ListDocTree(fixture.box.ID, "/", util.SortModeNameASC, false, false, 128, 0)
+			files, _, err := ListDocTree(fixture.box.ID, "/", util.SortModeNameASC, false, false, 128)
 			if nil != err {
 				t.Fatalf("list documents failed: %v", err)
 			}
@@ -271,7 +274,7 @@ func TestResolveDocTreeSortModeInheritance(t *testing.T) {
 		t.Fatalf("global fallback was not resolved: mode=%d, err=%v", mode, err)
 	}
 
-	files, _, err := ListDocTree(fixture.box.ID, "/", util.SortModeNameASC, false, false, 128, 0)
+	files, _, err := ListDocTree(fixture.box.ID, "/", util.SortModeNameASC, false, false, 128)
 	if nil != err {
 		t.Fatalf("list root documents failed: %v", err)
 	}

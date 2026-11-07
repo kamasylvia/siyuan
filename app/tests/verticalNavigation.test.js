@@ -120,6 +120,7 @@ const rendererModules = () => {
     }
     modules["../constants"] = "const SIYUAN_VERSION = 'test', NODE_ENV = 'test';\n" +
         readFileSync(path.join(root, "../constants.ts"), "utf8");
+    modules["../util/dockKeymap"] = "export const createDockKeymapDefaults = () => ({});";
     modules["render/av/richText"] = "export const renderAVRichTextElements = () => {};";
     modules["render/av/row"] = `export const updateAVSelectionStatus = () => {};
         export const getRowHTML = ({row, rowIndex}) =>

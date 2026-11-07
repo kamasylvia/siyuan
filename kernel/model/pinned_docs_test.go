@@ -18,7 +18,7 @@ import (
 
 func TestPinnedDocsOrderIsIndependent(t *testing.T) {
 	f := setupFileOperationTest(t)
-	before, _, err := ListDocTree(f.box.ID, "/", util.SortModeNameASC, false, true, 100, 0)
+	before, _, err := ListDocTree(f.box.ID, "/", util.SortModeNameASC, false, true, 100)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -45,7 +45,7 @@ func TestPinnedDocsOrderIsIndependent(t *testing.T) {
 	if len(stored.Docs) != 1 || stored.Docs[0].ID != f.sourceID {
 		t.Fatal("unpin removed another entry")
 	}
-	after, _, err := ListDocTree(f.box.ID, "/", util.SortModeNameASC, false, true, 100, 0)
+	after, _, err := ListDocTree(f.box.ID, "/", util.SortModeNameASC, false, true, 100)
 	if err != nil || !reflect.DeepEqual(before, after) {
 		t.Fatalf("pinning changed source tree: %v", err)
 	}
@@ -146,7 +146,7 @@ func TestPinnedDocsTooltipMetadata(t *testing.T) {
 				t.Fatalf("incomplete pinned metadata for %s: %+v", id, doc)
 			}
 			if id == f.sourceID {
-				files, _, err := ListDocTree(f.box.ID, "/", util.SortModeNameASC, false, false, 100, 0)
+				files, _, err := ListDocTree(f.box.ID, "/", util.SortModeNameASC, false, false, 100)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -258,7 +258,7 @@ func TestPinnedDocsHiddenVisibilityAndCounts(t *testing.T) {
 		}
 		writeChild()
 		docs, err := GetPinnedDocs()
-		children, _, listErr := ListDocTree(f.box.ID, "/"+parent.ID, util.SortModeNameASC, false, false, 100, 0)
+		children, _, listErr := ListDocTree(f.box.ID, "/"+parent.ID, util.SortModeNameASC, false, false, 100)
 		want := 1
 		if hidden {
 			want = 0
@@ -269,7 +269,7 @@ func TestPinnedDocsHiddenVisibilityAndCounts(t *testing.T) {
 		if err != nil || listErr != nil || len(docs) != 1 || docs[0].SubFileCount != len(children) {
 			t.Fatalf("pin count differs from visible children: %+v, %v, %v", docs, err, listErr)
 		}
-		top, _, err := ListDocTree(f.box.ID, "/", util.SortModeNameASC, false, false, 100, 0)
+		top, _, err := ListDocTree(f.box.ID, "/", util.SortModeNameASC, false, false, 100)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -298,7 +298,7 @@ func TestPinnedDocsHiddenVisibilityAndCounts(t *testing.T) {
 		if hidden && UpdatePinnedDocs([]string{parent.ID}, "pin", "", false) == nil {
 			t.Fatal("hidden document accepted for pinning")
 		}
-		top, _, err := ListDocTree(f.box.ID, "/", util.SortModeNameASC, false, false, 100, 0)
+		top, _, err := ListDocTree(f.box.ID, "/", util.SortModeNameASC, false, false, 100)
 		if err != nil || BoxDocSubFileCount(f.box.ID) != len(top) {
 			t.Fatalf("notebook count differs: %v", err)
 		}

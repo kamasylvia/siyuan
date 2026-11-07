@@ -164,6 +164,7 @@ interface Window {
     webkit: {
         nativeCallbacks: { [key: string]: (id: number) => void },
         messageHandlers: {
+            openMarkdownEditor?: { postMessage: (data: string) => void }
             finishKeyboardComposition?: { postMessage: (data: string) => Promise<boolean> }
             showTextMenu?: { postMessage: (data: string) => Promise<boolean> }
             pickPhotos?: { postMessage: (data: string) => Promise<Array<{
@@ -201,6 +202,7 @@ interface Window {
     };
     siyuan: ISiyuan;
     JSAndroid: {
+        openMarkdownEditor?(): void
         openAuthURL(url: string): void
         returnDesktop(): void
         openExternal(url: string): void
@@ -229,6 +231,7 @@ interface Window {
         logInputEvent?(details: string): void
     };
     JSHarmony: {
+        openMarkdownEditor?(): void
         getSystemFonts?(): Promise<string>
         openAuthURL(url: string): void
         showKeyboard(): void
@@ -392,7 +395,10 @@ interface IRefDefs {
 
 interface IFilesPath {
     notebookId: string,
-    openPaths: string[]
+    openPaths: string[],
+    version?: 2,
+    expandedIDs?: {id: string, kind: "document" | "notebook"}[],
+    scrollAnchor?: {id: string, offset: number},
 }
 
 interface IPosition {
@@ -778,6 +784,7 @@ interface ICommand {
     execute?: (context: ICommandContext) => void | Promise<void>
     callback?: (context?: ICommandContext) => void   // 其余回调存在时将不会触发
     globalCallback?: (context?: ICommandContext) => void // 焦点不在应用内时执行的回调
+    /** 文档树命令接收 Files 实例；通过 getSelectedItems() 获取完整选择，避免通过可视区 DOM 枚举。 */
     fileTreeCallback?: (
         file: import("../layout/dock/Files").Files,
         context?: ICommandContext
@@ -922,6 +929,8 @@ interface IFile {
     path: string;
     name: string;
     titleEmpty?: boolean;
+    titleFormat?: "plain" | "inline-ast";
+    titleRevision?: string;
     hMtime: string;
     hCtime: string;
     hSize: string;
@@ -1136,7 +1145,32 @@ interface IAVCustomColor extends IAVColor {
     hidden?: boolean;
 }
 
+interface IAVSubItemsConfig {
+    enabled: boolean;
+    parentKeyID: string;
+    childrenKeyID: string;
+}
+
+interface IAVNestedResult {
+    page: number;
+    pageSize: number;
+    rootCount: number;
+    rootLoaded: number;
+    matchedCount: number;
+    childPaging: Record<string, {page: number; pageSize: number; total: number; loaded: number}>;
+}
+
+interface IAVItemHierarchy {
+    parentID?: string;
+    depth: number;
+    childCount: number;
+    context: boolean;
+    expanded: boolean;
+}
+
 interface IAV {
+    pendingHTTPTemplates?: string[];
+    subItems?: IAVSubItemsConfig;
     id: string;
     name: string;
     view: IAVTable | IAVGallery;
@@ -1170,6 +1204,7 @@ interface IAVContextFilterField {
 }
 
 interface IAVRenderTarget {
+    ancestorIDs?: string[];
     status: "visible" | "filtered" | "itemNotFound" | "groupHidden";
     itemID: string;
     groupID?: string;
@@ -1202,8 +1237,10 @@ interface IAVNewItemTemplate {
     saveLocation?: IAVNewItemSaveLocation;
     contentTemplatePath?: string;
     hideInFileTree?: boolean;
-    /** 创建后分屏打开条目；省略时保留旧行为（仅日历自动打开），false 表示不打开。 */
+    /** 创建后打开条目；省略时仅日历自动打开，false 表示不打开。 */
     openAfterCreate?: boolean;
+    /** 自动打开时使用当前分屏；省略或 false 时向右分屏打开。 */
+    openInCurrentTab?: boolean;
 }
 
 /** 单字段条件颜色规则按顺序匹配，默认背景同样占据优先级。 */
@@ -1222,6 +1259,8 @@ interface IAVItemConditionalColors {
 }
 
 interface IAVView {
+    subItemsDisplay?: "flat" | "nested";
+    nested?: IAVNestedResult;
     conditionalColors?: IAVConditionalColorRule[];
     name?: string;
     desc?: string;
@@ -1435,6 +1474,7 @@ interface IAVColumn {
 }
 
 interface IAVRow {
+    hierarchy?: IAVItemHierarchy;
     conditionalColors?: IAVItemConditionalColors;
     id: string,
     cells: IAVCell[]
@@ -1560,6 +1600,11 @@ interface IAVCellAssetValue {
 }
 
 interface IAVColumnRelation {
+    detailView?: {
+        spec: number;
+        enabled: boolean;
+        viewID: string;
+    };
     avID?: string;
     backKeyID?: string;
     isTwoWay?: boolean;

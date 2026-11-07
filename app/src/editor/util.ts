@@ -54,13 +54,16 @@ import {confirmDialog} from "../dialog/confirmDialog";
 import {shouldCheckOtherWindows} from "./openFileWindow";
 import {getContenteditableElement} from "../protyle/wysiwyg/getBlock";
 import type {Outline} from "../layout/dock/Outline";
+import {isSameDatabaseRowDomain} from "../protyle/render/av/databaseRowIdentity";
 
 const isSameCustomTab = (type: string, data: any, options: IOpenFileOptions) => {
     if (!options.custom || (options.custom.id && options.custom.id !== type)) {
         return false;
     }
     if (type === "siyuan-database-row") {
-        return data?.avID === options.custom.data?.avID && data?.itemID === options.custom.data?.itemID;
+        return data?.avID === options.custom.data?.avID && data?.itemID === options.custom.data?.itemID &&
+            isSameDatabaseRowDomain(data?.notebookId || data?.notebookID,
+                options.custom.data?.notebookId || options.custom.data?.notebookID);
     }
     return objEquals(data, options.custom.data);
 };
@@ -764,9 +767,9 @@ export const updatePanelByEditor = (options: {
         if (window.siyuan.config.fileTree.alwaysSelectOpenedFile && options.protyle) {
             const fileModel = getDockByType("file")?.data.file;
             if (fileModel instanceof Files) {
-                const target = fileModel.element.querySelector(`li[data-path="${options.protyle.path}"]`);
-                if (!target || (target && !target.classList.contains("b3-list-item--focus"))) {
-                    fileModel.selectItem(options.protyle.notebookId, options.protyle.path);
+                const selected = fileModel.docTree.getSelectedItems();
+                if (!selected.some(item => item.notebookId === options.protyle.notebookId && item.path === options.protyle.path)) {
+                    void fileModel.selectItem(options.protyle.notebookId, options.protyle.path, undefined, true, true, true);
                 }
             }
         }

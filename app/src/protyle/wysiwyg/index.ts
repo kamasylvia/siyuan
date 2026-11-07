@@ -1,6 +1,6 @@
 import {toggleMenu} from "../../menus/menuToggle";
 import {bindEditorFocusMemory} from "../util/editorFocusMemory";
-import {recordReplacementUndo} from "./replacementInput";
+import {recordNativeInputUndo} from "./nativeInputUndo";
 import {expandAndroidWordSelection, isAndroidWordSelectionPending} from "../../mobile/util/wordSelection";
 import {bindBoundedBlockDragSelect} from "./boundedBlockDragSelect";
 import {bindEmbedToolbarVisibility} from "./embedToolbarVisibility";
@@ -221,12 +221,14 @@ import {shouldRunAVKeyupFallback} from "../render/av/verticalNavigation";
 import {applyAVDragSelection, clearAVDragSelection, isAVDragSelectSupported} from "../render/av/dragSelect";
 import {
     selectAVCellRange,
+    selectAVDragFillRange,
     selectAVItemRange,
     setAVCellAnchor,
     setAVDragItemAnchor,
     setAVItemAnchor,
 } from "../render/av/rangeSelect";
 import {getAVColumnResizeWidth} from "../render/av/columnWidth";
+import {prepareAVColumnWindow} from "../render/av/columnWindow";
 import {
     clampBlockDragSelectY,
     getBlockDragSelectBlock,
@@ -409,6 +411,7 @@ export class WYSIWYG {
     private preventInput: boolean;
     private copyAsRichText = false;
     private mouseDownTarget: EventTarget | null = null;
+    private mouseDownWithMeta = false;
     private inputTimeout: number;
     private pendingInputTimeouts = new Map<number, {
         callback: () => void | Promise<void>;
@@ -1142,7 +1145,6 @@ export class WYSIWYG {
                         .map(item => getPlainText(item as HTMLElement).trimEnd())
                         .filter(Boolean).join("\n") : undefined;
                     const textWithoutAttr = this.clearAttrContent(tempElement);
-                    this.emojiToMd(tempElement);
                     const inlineMathElement = hasClosestByAttribute(range.commonAncestorContainer, "data-type", "inline-math");
                     if (inlineMathElement) {
                         // 表格内复制数学公式 https://ld246.com/article/1631708573504
@@ -1150,6 +1152,8 @@ export class WYSIWYG {
                     } else {
                         html = tempElement.innerHTML;
                     }
+                    // 内部剪贴板保留表情节点，仅在提取纯文本时转为别名；跨块粘贴不会重新解析 Markdown。
+                    this.emojiToMd(tempElement);
                     // 不能使用 commonAncestorContainer https://ld246.com/article/1643282894693
                     textPlain = crossBlockTextPlain ?? getTextWithoutSemanticMarkers(tempElement);
                     if (hasClosestByAttribute(range.startContainer, "data-type", "NodeCodeBlock")) {
@@ -1264,6 +1268,7 @@ export class WYSIWYG {
         });
 
         this.element.addEventListener("mousedown", (event: MouseEvent) => {
+            this.mouseDownWithMeta = event.button === 0 && isOnlyMeta(event);
             if (this.tableControl?.hasTouchSelection() && (event.target as Element).closest("td, th")) {
                 event.preventDefault();
                 event.stopPropagation();
@@ -1315,6 +1320,9 @@ export class WYSIWYG {
             const customElement = hasClosestByClassName(target, "protyle-custom");
             // 富文本预览以 b3-typography 作为渲染边界，先回到单元格再查找数据库块。
             let nodeElement = hasClosestBlock(avCellElement || target) as HTMLElement;
+            if (nodeElement?.classList.contains("av")) {
+                prepareAVColumnWindow(nodeElement);
+            }
             let clickedTableNode = !customElement && nodeElement && nodeElement.dataset.type === "NodeTable" ?
                 nodeElement : undefined;
             if (!nodeElement && !customElement) {
@@ -1869,6 +1877,8 @@ export class WYSIWYG {
                 let lastOriginCellElement: HTMLElement;
                 const originCellIds: string[] = [];
                 const stableOriginCells = getAVSelectedCells(nodeElement);
+                const dragFillViewID = nodeElement.getAttribute(Constants.CUSTOM_SY_AV_VIEW);
+                const dragFillAVID = nodeElement.dataset.avId;
                 if (stableOriginCells.length > 0) {
                     stableOriginCells.forEach(item => {
                         if (!originData[item.rowID]) {
@@ -1892,8 +1902,9 @@ export class WYSIWYG {
                         }
                     });
                 }
-                const dragFillCellIndex = getPositionByCellElement(lastOriginCellElement);
-                const firstCellIndex = getPositionByCellElement(bodyElement.querySelector(".av__cell--active"));
+                const dragFillCellIndex = stableOriginCells.length === 0 ? getPositionByCellElement(lastOriginCellElement) : undefined;
+                const firstCellIndex = stableOriginCells.length === 0 ?
+                    getPositionByCellElement(bodyElement.querySelector(".av__cell--active")) : undefined;
                 let moveAVCellElement: HTMLElement;
                 let lastCellElement: HTMLElement;
                 documentSelf.onmousemove = (moveEvent: MouseEvent) => {
@@ -1903,6 +1914,11 @@ export class WYSIWYG {
                     }
                     moveAVCellElement = tempCellElement;
                     if (moveAVCellElement && moveAVCellElement.dataset.id) {
+                        if (stableOriginCells.length > 0) {
+                            lastCellElement = selectAVDragFillRange(nodeElement, stableOriginCells, moveAVCellElement) ?
+                                moveAVCellElement : undefined;
+                            return;
+                        }
                         const newIndex = getPositionByCellElement(moveAVCellElement);
                         bodyElement.querySelectorAll(".av__cell--active").forEach((item: HTMLElement) => {
                             if (!originCellIds.includes(item.dataset.id)) {
@@ -1935,8 +1951,10 @@ export class WYSIWYG {
                     documentSelf.ondragstart = null;
                     documentSelf.onselectstart = null;
                     documentSelf.onselect = null;
-                    if (lastCellElement) {
-                        selectAVCellRange(nodeElement, lastCellElement);
+                    if (lastCellElement && nodeElement.isConnected && nodeElement.dataset.avId === dragFillAVID &&
+                        nodeElement.getAttribute(Constants.CUSTOM_SY_AV_VIEW) === dragFillViewID &&
+                        (stableOriginCells.length > 0 ? selectAVDragFillRange(nodeElement, stableOriginCells, lastCellElement) :
+                            selectAVCellRange(nodeElement, lastCellElement))) {
                         dragFillCellsValue(protyle, nodeElement, originData, originCellIds, lastOriginCellElement);
                         addDragFill(lastCellElement);
                     }
@@ -2175,54 +2193,11 @@ export class WYSIWYG {
                 if (!nodeElement) {
                     return;
                 }
-                const html = nodeElement.outerHTML;
-                // https://github.com/siyuan-note/siyuan/issues/4455
-                if (getSelection().rangeCount > 0) {
-                    getSelection().getRangeAt(0).collapse(false);
-                }
-                // @ts-ignore
-                nodeElement.firstElementChild.style.webkitUserModify = "read-only";
-                nodeElement.style.cursor = "col-resize";
-                protyle.wysiwyg.element.classList.add("protyle-wysiwyg--hiderange");
-                this.tableControl?.setHidden(true);
-                target.removeAttribute("style");
-                const x = event.clientX;
                 const colIndex = parseInt(target.getAttribute("data-col-index"));
-                const colElement = nodeElement.querySelectorAll("table col")[colIndex] as HTMLElement;
-                // 清空初始化 table 时的最小宽度
-                if (colElement.style.minWidth) {
-                    colElement.style.width = (nodeElement.querySelectorAll("table td, table th")[colIndex] as HTMLElement).offsetWidth + "px";
-                    colElement.style.minWidth = "";
-                }
-                // 移除 cell 上的宽度限制 https://github.com/siyuan-note/siyuan/issues/7795
-                nodeElement.querySelectorAll("tr").forEach((trItem: HTMLTableRowElement) => {
-                    trItem.cells[colIndex].style.width = "";
-                });
-                const oldWidth = colElement.clientWidth;
-                const hasScroll = nodeElement.firstElementChild.clientWidth < nodeElement.firstElementChild.scrollWidth;
-                documentSelf.onmousemove = (moveEvent: MouseEvent) => {
-                    if (nodeElement.style.textAlign === "center" && !hasScroll) {
-                        colElement.style.width = (oldWidth + (moveEvent.clientX - x) * 2) + "px";
-                    } else {
-                        colElement.style.width = (oldWidth + (moveEvent.clientX - x)) + "px";
-                    }
-                };
-
-                documentSelf.onmouseup = () => {
-                    // @ts-ignore
-                    nodeElement.firstElementChild.style.webkitUserModify = "";
-                    nodeElement.style.cursor = "";
-                    protyle.wysiwyg.element.classList.remove("protyle-wysiwyg--hiderange");
-                    this.tableControl?.setHidden(false);
-                    documentSelf.onmousemove = null;
-                    documentSelf.onmouseup = null;
-                    documentSelf.ondragstart = null;
-                    documentSelf.onselectstart = null;
-                    documentSelf.onselect = null;
-                    if (nodeElement) {
-                        updateTransaction(protyle, nodeElement, html);
-                    }
-                };
+                const table = nodeElement.querySelector("table");
+                const cell = table.querySelector<HTMLElement>(".table__cell-editor")?.closest<HTMLTableCellElement>("td, th") ||
+                    table.querySelector<HTMLTableCellElement>("td, th");
+                this.tableControl?.startColumnResize(event, cell, colIndex);
                 return;
             }
 
@@ -3783,6 +3758,10 @@ export class WYSIWYG {
             }
             event.stopPropagation();
             const target = event.detail.target || event.target as HTMLElement;
+            if (target.closest('[data-document-title="true"]')) {
+                event.preventDefault();
+                return;
+            }
             const selectElements = protyle.wysiwyg.element.querySelectorAll(".protyle-wysiwyg--select");
             /// #if MOBILE
             if (isIOSDevice() && selectElements.length === 0 && !isInEmbedBlock(target) &&
@@ -4463,7 +4442,7 @@ export class WYSIWYG {
         });
 
         this.element.addEventListener("beforeinput", async (event: InputEvent) => {
-            recordReplacementUndo(event, this.element, this.lastHTMLs);
+            recordNativeInputUndo(event, this.element, this.lastHTMLs, isComposition);
             if (!event.isComposing && !isComposition &&
                 (event.inputType.startsWith("insert") || event.inputType.startsWith("delete")) &&
                 getSelection().rangeCount > 0) {
@@ -4798,6 +4777,10 @@ export class WYSIWYG {
         });
 
         this.element.addEventListener("dblclick", (event: MouseEvent) => {
+            if ((event.target as HTMLElement).closest('[data-document-title="true"]')) {
+                event.stopPropagation();
+                return;
+            }
             if (protyle.toolbar.isMultiSelectMode()) {
                 event.preventDefault();
                 event.stopPropagation();
@@ -4885,6 +4868,8 @@ export class WYSIWYG {
         });
         let mobileBlur = false;
         this.element.addEventListener("click", (event: MouseEvent & { target: HTMLElement }) => {
+            const mouseDownWithMeta = this.mouseDownWithMeta;
+            this.mouseDownWithMeta = false;
             if (protyle.toolbar.isMultiSelectMode()) {
                 event.preventDefault();
                 event.stopPropagation();
@@ -5271,7 +5256,8 @@ export class WYSIWYG {
 
             const embedItemElement = hasClosestByClassName(event.target, "protyle-wysiwyg__embed");
             if (embedItemElement) {
-                if (event.shiftKey || event.altKey || ctrlIsPressed) {
+                // Ctrl 或 Command 须在鼠标按下时已按住，避免划选文字后准备复制时触发跳转。
+                if (event.shiftKey || event.altKey || ctrlIsPressed && mouseDownWithMeta && event.detail > 0) {
                     const embedId = embedItemElement.getAttribute("data-id");
                     checkFold(embedId, (zoomIn, action) => {
                         /// #if MOBILE
@@ -5622,8 +5608,14 @@ export class WYSIWYG {
                 // https://github.com/siyuan-note/siyuan/issues/14481
                 const inlineMathElement = hasClosestByAttribute(newRange.startContainer, "data-type", "inline-math");
                 if (newRange.collapsed && inlineMathElement) {
-                    newRange.setEndAfter(inlineMathElement);
-                    newRange.collapse(false);
+                    // 点击公式左侧空白时，浏览器可能将光标落在公式内部。
+                    if (event.detail > 0 && event.clientX < inlineMathElement.getBoundingClientRect().left) {
+                        newRange.setStartBefore(inlineMathElement);
+                        newRange.collapse(true);
+                    } else {
+                        newRange.setEndAfter(inlineMathElement);
+                        newRange.collapse(false);
+                    }
                     focusByRange(newRange);
                 } else if (!newRange.collapsed) {
                     // 划选停在公式内部时补齐边界，保留完整公式及原有选区方向。

@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/88250/gulu"
@@ -657,7 +658,7 @@ func createDocContract(c *gin.Context, request apicontract.FileTreeCreateRequest
 	title := request.Title
 	md := request.MD
 	sorts := append([]string(nil), request.Sorts...)
-	tree, err := model.CreateDocByMd(notebook, p, title, md, sorts, fileTreeCreateContext(request.FileTreeCreateOptions))
+	tree, err := model.CreateDocByMdSync(notebook, p, title, md, sorts, fileTreeCreateContext(request.FileTreeCreateOptions))
 	if err != nil {
 		return apicontract.FailureWithTimeout[apicontract.FileTreeCreateData](-1, err.Error(), 7000)
 	}
@@ -667,30 +668,49 @@ func createDocContract(c *gin.Context, request apicontract.FileTreeCreateRequest
 
 var createDailyNote = contractHandler(apicontract.CreateDailyNote, createDailyNoteContract)
 
-func createDailyNoteContract(c *gin.Context, request apicontract.FileTreeDailyNoteRequest) apicontract.Response[apicontract.FileTreeCreateData] {
+func createDailyNoteContract(c *gin.Context, request apicontract.FileTreeDailyNoteRequest) apicontract.Response[apicontract.DailyNoteCreateResult] {
 
 	notebook := request.Notebook
 	if err := holdEncryptedBoxRequest(c, notebook); err != nil {
-		return apicontract.Failure[apicontract.FileTreeCreateData](-1, model.Conf.Language(314))
+		return apicontract.Failure[apicontract.DailyNoteCreateResult](-1, model.Conf.Language(314))
 	}
+	execution, executionErr := startTemplateHTTP(c, "daily-note:"+notebook)
+	if executionErr != nil {
+		return apicontract.Failure[apicontract.DailyNoteCreateResult](-1, executionErr.Error())
+	}
+	defer execution.Close()
 	var p string
 	var existed bool
-	var err error
+	selection, err := documentSelectionModel(request.Selection)
+	if err != nil {
+		return apicontract.Failure[apicontract.DailyNoteCreateResult](-1, err.Error())
+	}
+	create := func(date *time.Time) (string, bool, error) {
+		if execution != nil {
+			return model.CreateDailyNoteWithSelection(notebook, date, execution.Runtime, selection)
+		}
+		return model.CreateDailyNoteWithSelection(notebook, date, nil, selection)
+	}
 	if request.Date == "" {
-		p, existed, err = model.CreateDailyNote(notebook)
+		p, existed, err = create(nil)
 	} else {
 		date, dateErr := parseDailyNoteDate(request.Date)
 		err = dateErr
 		if err == nil {
-			p, existed, err = model.CreateDailyNoteAt(notebook, date)
+			p, existed, err = create(&date)
 		}
 	}
 	if err != nil {
+		if failure, leaseErr := documentSelectionFailure(c, err); leaseErr != nil {
+			return apicontract.Failure[apicontract.DailyNoteCreateResult](-1, leaseErr.Error())
+		} else if failure != nil {
+			return apicontract.CreateDailyNote.FailureWithData(-1, err.Error(), apicontract.NewDailyNoteSelectionFailure(*failure))
+		}
 		code := -1
 		if errors.Is(err, model.ErrBoxNotFound) {
 			code = 1
 		}
-		return apicontract.Failure[apicontract.FileTreeCreateData](code, err.Error())
+		return apicontract.Failure[apicontract.DailyNoteCreateResult](code, err.Error())
 	}
 
 	model.FlushTxQueue()
@@ -698,7 +718,7 @@ func createDailyNoteContract(c *gin.Context, request apicontract.FileTreeDailyNo
 	luteEngine := util.NewLute()
 	tree, err := filesys.LoadTree(box.ID, p, luteEngine)
 	if err != nil {
-		return apicontract.Failure[apicontract.FileTreeCreateData](-1, err.Error())
+		return apicontract.Failure[apicontract.DailyNoteCreateResult](-1, err.Error())
 	}
 
 	if !existed {
@@ -706,7 +726,7 @@ func createDailyNoteContract(c *gin.Context, request apicontract.FileTreeDailyNo
 		// Creating a dailynote existed no longer expands the doc tree https://github.com/siyuan-note/siyuan/issues/9959
 		app, decodeErr := request.AppID()
 		if decodeErr != nil {
-			return apicontract.Failure[apicontract.FileTreeCreateData](-1, decodeErr.Error())
+			return apicontract.Failure[apicontract.DailyNoteCreateResult](-1, decodeErr.Error())
 		}
 		evt := util.NewCmdResult("createdailynote", 0, util.PushModeBroadcast)
 		evt.AppId = app
@@ -717,7 +737,7 @@ func createDailyNoteContract(c *gin.Context, request apicontract.FileTreeDailyNo
 		util.PushEvent(evt)
 	}
 
-	return apicontract.Success(apicontract.FileTreeCreateData{ID: tree.Root.ID})
+	return apicontract.Success(apicontract.NewDailyNoteCreateResult(tree.Root.ID))
 }
 
 var createDocWithMd = contractHandler(apicontract.CreateDocWithMd, createDocWithMdContract)
@@ -1090,13 +1110,8 @@ func listDocsByPathContract(c *gin.Context, request apicontract.FileTreeListRequ
 		}
 	}
 	showHidden := options.ShowHidden
-	// 文档树分页 https://github.com/siyuan-note/siyuan/issues/12164
-	page := 1
-	if nil != options.Page && *options.Page > 1 {
-		page = int(*options.Page)
-	}
 
-	files, totals, err := model.ListDocTree(notebook, p, effectiveSortMode, flashcard, showHidden, maxListCount, page)
+	files, totals, err := model.ListDocTree(notebook, p, effectiveSortMode, flashcard, showHidden, maxListCount)
 	if err != nil {
 		return apicontract.Failure[apicontract.FileTreeListData](-1, err.Error())
 	}
@@ -1124,23 +1139,14 @@ func listDocsByPathContract(c *gin.Context, request apicontract.FileTreeListRequ
 		if hintErr != nil {
 			return apicontract.Failure[apicontract.FileTreeListData](-1, hintErr.Error())
 		}
-		// 翻页请求不再重复提示截断
-		if page <= 1 && !ignoreHint {
+		if !ignoreHint {
 			if nil == util.NotificationsCfg.Load() || util.NotificationsCfg.Load().DocTreeMaxList {
 				util.PushMsgWithApp(app, fmt.Sprintf(model.Conf.Language(48), len(files)), 7000)
 			}
 		}
 	}
 
-	pageCount := 1
-	if maxListCount < totals {
-		pageCount = (totals + maxListCount - 1) / maxListCount
-	}
-	if page < 1 {
-		page = 1
-	}
-
-	return apicontract.Success(apicontract.FileTreeListData{Box: notebook, Path: p, Files: fileTreeFileContracts(files), EffectiveSortMode: effectiveSortMode, Page: page, Totals: totals, PageCount: pageCount})
+	return apicontract.Success(apicontract.FileTreeListData{Box: notebook, Path: p, Files: fileTreeFileContracts(files), EffectiveSortMode: effectiveSortMode})
 }
 
 var getDoc = contractHandler(apicontract.GetDoc, getDocContract)

@@ -24,16 +24,40 @@ import (
 
 func importedPreferencesFixture(t *testing.T) {
 	t.Helper()
-	previous := model.Conf
+	previous, previousMarkdown := model.Conf, util.MarkdownSettings.Load()
 	home, workspace, confDir, temp, readOnly := util.HomeDir, util.WorkspaceDir, util.ConfDir, util.TempDir, util.ReadOnly
 	t.Cleanup(func() {
 		model.Conf = previous
 		util.HomeDir, util.WorkspaceDir, util.ConfDir, util.TempDir, util.ReadOnly = home, workspace, confDir, temp, readOnly
 		model.ApplyConfRuntime()
+		util.MarkdownSettings.Store(previousMarkdown)
 	})
 	util.HomeDir, util.WorkspaceDir, util.ConfDir, util.TempDir, util.ReadOnly = t.TempDir(), t.TempDir(), t.TempDir(), t.TempDir(), false
 	model.Conf = model.NewAppConf()
 	model.NormalizeAppConf(model.Conf)
+}
+
+func TestImportedPreferencesFixtureRestoresMarkdownSettings(t *testing.T) {
+	previousConf, previousMarkdown := model.Conf, util.MarkdownSettings.Load()
+	t.Cleanup(func() {
+		model.Conf = previousConf
+		util.MarkdownSettings.Store(previousMarkdown)
+	})
+	model.Conf = nil
+	markdown := util.NewMarkdown()
+	util.MarkdownSettings.Store(markdown)
+	t.Run("import without Markdown settings", func(t *testing.T) {
+		importedPreferencesFixture(t)
+		if code := importPreferencesRequest(t, "old.json", []byte(`{"editor":{"fontSize":18}}`)); code != 0 {
+			t.Fatal("import failed", code)
+		}
+		if util.MarkdownSettings.Load().InlineMath {
+			t.Fatal("legacy import did not replace the runtime Markdown settings")
+		}
+	})
+	if model.Conf != nil || util.MarkdownSettings.Load() != markdown {
+		t.Fatal("import fixture did not restore the original configuration and runtime Markdown settings")
+	}
 }
 
 func importPreferencesRequest(t *testing.T, name string, data []byte) int {
@@ -77,6 +101,7 @@ func TestAPIContractImportedPortablePreferences(t *testing.T) {
 	appearance.CompactMode = true
 	appearance.LockScreenWallpaper = true
 	appearance.MenuMouseScroll = true
+	appearance.ShowFloatingDockBar = new(false)
 	appearance.OutlineKeepCurrentExpand = true
 	appearance.PDFTheme = &conf.PDFTheme{Light: "dark", Dark: "light", AnnoColor: "red"}
 	appearance.MobileBars = &conf.MobileBars{AutoHide: new(false), SidebarSwipe: new(false), SidebarButtons: new(true)}
@@ -135,7 +160,7 @@ func TestAPIContractImportedPortablePreferences(t *testing.T) {
 			if actualAppearance.LockScreenWallpaper {
 				t.Fatal("workspace wallpaper was included in portable preferences")
 			}
-			if !actualAppearance.CompactMode || !actualAppearance.MenuMouseScroll || !actualAppearance.OutlineKeepCurrentExpand ||
+			if actualAppearance.ShowFloatingDockBar == nil || *actualAppearance.ShowFloatingDockBar || !actualAppearance.CompactMode || !actualAppearance.MenuMouseScroll || !actualAppearance.OutlineKeepCurrentExpand ||
 				!reflect.DeepEqual(actualAppearance.PDFTheme, source.Appearance.Load().PDFTheme) ||
 				!reflect.DeepEqual(actualAppearance.MobileBars, source.Appearance.Load().MobileBars) ||
 				target.FileTree.Load().RecentDocsSort != "updated" || !target.AI.Load().Agent.StreamingMarkdown {
@@ -172,6 +197,7 @@ func TestAPIContractImportedPortablePreferences(t *testing.T) {
 			}
 			if !reflect.DeepEqual(saved.Appearance.Load().PDFTheme, source.Appearance.Load().PDFTheme) ||
 				!reflect.DeepEqual(saved.Appearance.Load().MobileBars, source.Appearance.Load().MobileBars) ||
+				saved.Appearance.Load().ShowFloatingDockBar == nil || *saved.Appearance.Load().ShowFloatingDockBar ||
 				!saved.Appearance.Load().CompactMode || !saved.Appearance.Load().MenuMouseScroll ||
 				!saved.Appearance.Load().OutlineKeepCurrentExpand || saved.FileTree.Load().RecentDocsSort != "updated" ||
 				!saved.AI.Load().Agent.StreamingMarkdown {

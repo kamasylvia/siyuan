@@ -24,6 +24,11 @@ func NormalizeFileTree(fileTree *FileTree) *FileTree {
 		fileTree.MaxListCount = 512
 	}
 	fileTree.MaxListCount = min(10240, fileTree.MaxListCount)
+	if fileTree.DocTreeBatchSize == nil || *fileTree.DocTreeBatchSize < 1 {
+		fileTree.DocTreeBatchSize = new(512)
+	} else {
+		fileTree.DocTreeBatchSize = new(min(10240, *fileTree.DocTreeBatchSize))
+	}
 	if fileTree.MaxOpenTabCount < 1 {
 		fileTree.MaxOpenTabCount = 8
 	}
@@ -283,6 +288,9 @@ func NormalizeAppearance(appearance *Appearance, mobile bool) *Appearance {
 	}
 	if "" == appearance.CodeBlockThemeLight {
 		appearance.CodeBlockThemeLight = "github"
+	}
+	if appearance.ShowFloatingDockBar == nil {
+		appearance.ShowFloatingDockBar = new(true)
 	}
 	appearance.StatusBar = util.NormalizeStatusBar(appearance.StatusBar, mobile)
 	if appearance.PDFTheme == nil {

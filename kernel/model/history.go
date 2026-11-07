@@ -25,7 +25,6 @@ import (
 	"github.com/88250/lute/ast"
 	"github.com/88250/lute/parse"
 	"github.com/88250/lute/render"
-	"github.com/siyuan-note/dataparser"
 	"github.com/siyuan-note/eventbus"
 	"github.com/siyuan-note/filelock"
 	"github.com/siyuan-note/logging"
@@ -200,7 +199,7 @@ func GetDocHistoryContent(historyPath, keyword string, highlight bool) (id, root
 	if err = treenode.CheckSpecJSON(data); nil != err {
 		return
 	}
-	historyTree, err := dataparser.ParseJSONWithoutFix(data, luteEngine.ParseOptions)
+	historyTree, err := treenode.ParseJSONWithoutFix(data, luteEngine.ParseOptions)
 	if err != nil {
 		logging.LogErrorf("parse tree from file [%s] failed: %s", historyPath, err)
 		return
@@ -212,6 +211,15 @@ func GetDocHistoryContent(historyPath, keyword string, highlight bool) (id, root
 	rootID = historyTree.Root.ID
 	if ciphertext && rootID+".sy" != filepath.Base(historyPath) {
 		return "", "", "", false, errors.New("encrypted document history root ID does not match its filename")
+	}
+	if historyTree.Root.DocumentTitle != nil {
+		title, titleErr := treenode.DocumentTitleParagraph(historyTree.Root)
+		if titleErr != nil {
+			return "", "", "", false, titleErr
+		}
+		title.Parent = nil
+		title.Type, title.HeadingLevel, title.ID = ast.NodeHeading, 1, rootID
+		historyTree.Root.PrependChild(title)
 	}
 
 	if !isLargeDoc {
@@ -320,8 +328,8 @@ func rollbackDocHistory(historyPath string, removeOldDoc func(string, []byte) er
 	srcPath := historyPath
 	var destPath, parentHPath string
 	rootID := util.GetTreeID(historyPath)
-	workingDoc := treenode.GetBlockTree(rootID)
-	if needResetTree || workingDoc != nil && (workingDoc.Type != "d" || workingDoc.BoxID != boxID) {
+	workingDoc := treenode.GetBlockTreeInExactBox(rootID, boxID)
+	if needResetTree || workingDoc != nil && workingDoc.Type != "d" {
 		workingDoc = nil
 	}
 
@@ -371,12 +379,22 @@ func rollbackDocHistory(historyPath string, removeOldDoc func(string, []byte) er
 	if encrypted && tree.Root.ID+".sy" != filepath.Base(historyPath) {
 		return errors.New("encrypted document history root ID does not match its filename")
 	}
-	boundRecovery := &Transaction{trees: map[string]*parse.Tree{}}
-	defer func() { boundRecovery.finishAttributeViewMutation(err != nil) }()
+	boundRecovery := &Transaction{trees: map[string]*parse.Tree{}, historyRecovery: newAttributeViewHistoryRecovery()}
+	defer boundRecovery.finishHistoryRecovery(&err)
 	if nil != tree {
 		historyDir := filepath.Join(util.HistoryDir, parts[0])
 
 		avNodes := tree.Root.ChildrenByType(ast.NodeAttributeView)
+		for _, avNode := range avNodes {
+			avBoxID := ""
+			if encrypted {
+				avBoxID = boxID
+			}
+			if err = boundRecovery.preflightEmbeddedAttributeViewHistory(
+				boundAttributeViewHistoryPath(historyDir, avBoxID, avNode.AttributeViewID), avBoxID, avNode.AttributeViewID); err != nil {
+				return
+			}
+		}
 		for _, avNode := range avNodes {
 			srcAvPath := filepath.Join(historyDir, "storage", "av", avNode.AttributeViewID+".json")
 			// 加密笔记本的 AV 定义在笔记本级目录
@@ -410,7 +428,9 @@ func rollbackDocHistory(historyPath string, removeOldDoc func(string, []byte) er
 	tree.HPath = parentHPath + "/" + treenode.ReadDocumentTitle(tree.Root).Text
 
 	if needResetTree {
-		resetTree(tree, "", true)
+		if err = resetTree(tree, "", true); err != nil {
+			return
+		}
 	}
 
 	// 重置重复的块 ID https://github.com/siyuan-note/siyuan/issues/14358
@@ -427,13 +447,13 @@ func rollbackDocHistory(historyPath string, removeOldDoc func(string, []byte) er
 	for nodeID := range nodes {
 		ids = append(ids, nodeID)
 	}
-	idMap := treenode.ExistBlockTrees(ids)
+	idMap := treenode.ExistBlockTreesInBox(ids, boxID)
 	var duplicatedIDs []string
 	for nodeID, exist := range idMap {
 		if exist {
 			// 被替换文档自身的块保留 ID，其他文档中的重复块才需要重新分配 ID。
 			if workingDoc != nil && workingDoc.Type == "d" {
-				bt := treenode.GetBlockTree(nodeID)
+				bt := treenode.GetBlockTreeInBox(nodeID, boxID)
 				if bt != nil && bt.BoxID == boxID && bt.RootID == workingDoc.RootID {
 					continue
 				}
@@ -461,7 +481,10 @@ func rollbackDocHistory(historyPath string, removeOldDoc func(string, []byte) er
 			return
 		}
 	}
-	if err = writeHistoryDocument(tree, workingDoc, removeOldDoc); err != nil {
+	if err = writeHistoryDocument(tree, workingDoc, removeOldDoc, boundRecovery.historyRecovery); err != nil {
+		return
+	}
+	if err = boundRecovery.historyRecovery.commit(); err != nil {
 		return
 	}
 	invalidateDocumentHistory(tree.ID)
@@ -487,7 +510,9 @@ func rollbackDocHistory(historyPath string, removeOldDoc func(string, []byte) er
 	}
 
 	restoredID := tree.ID
+	backgroundRefreshWaitGroup.Add(1)
 	go func() {
+		defer backgroundRefreshWaitGroup.Done()
 		sql.FlushQueue()
 
 		tree, _ = LoadTreeByBlockID(restoredID)
@@ -505,7 +530,7 @@ func rollbackDocHistory(historyPath string, removeOldDoc func(string, []byte) er
 			"id":      tree.Root.ID,
 			"path":    tree.Path,
 			"title":   treenode.ReadDocumentTitle(tree.Root).Text,
-			"empty":   "" != tree.Root.IALAttr(NodeAttrTitleEmpty),
+			"empty":   "true" == tree.Root.IALAttr(NodeAttrTitleEmpty),
 			"refText": refText,
 		}
 		util.PushEvent(evt)
@@ -525,7 +550,7 @@ func loadTreeByData0(data []byte) (ret *parse.Tree, err error) {
 	if err = treenode.CheckSpecJSON(data); nil != err {
 		return
 	}
-	ret, err = dataparser.ParseJSONWithoutFix(data, util.NewLute().ParseOptions)
+	ret, err = treenode.ParseJSONWithoutFix(data, util.NewLute().ParseOptions)
 	if nil == err {
 		err = treenode.RefreshTableCellRichProjection(ret.Root)
 	}
@@ -814,9 +839,15 @@ func RollbackAttributeViewHistory(historyPath string) (err error) {
 	FlushTxQueue()
 	flushLock.Lock()
 	defer flushLock.Unlock()
-	recovery := &Transaction{trees: map[string]*parse.Tree{}}
-	defer func() { recovery.finishAttributeViewMutation(err != nil) }()
+	recovery := &Transaction{trees: map[string]*parse.Tree{}, historyRecovery: newAttributeViewHistoryRecovery()}
+	defer recovery.finishHistoryRecovery(&err)
+	if err = recovery.preflightEmbeddedAttributeViewHistory(from, avBoxID, avID); err != nil {
+		return
+	}
 	if err = recovery.restoreEmbeddedAttributeViewHistory(from, avBoxID, avID); err != nil {
+		return
+	}
+	if err = recovery.historyRecovery.commit(); err != nil {
 		return
 	}
 	queueExternalAttributeViewRefIndex(avID, avBoxID)

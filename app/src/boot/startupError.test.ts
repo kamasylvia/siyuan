@@ -2,7 +2,7 @@ import * as assert from "node:assert/strict";
 import {readFileSync, readdirSync} from "node:fs";
 import {test} from "node:test";
 import {runInNewContext} from "node:vm";
-import {completeStartup, guardStartup, installStartupError, resolveStartupLanguage, setStartupLanguage, setStartupStage} from "./startupError";
+import {completeStartup, guardStartup, installStartupError, resolveStartupLanguage, setStartupLanguage, setStartupStage, withStartupErrorSuppressed} from "./startupError";
 import bundledLanguages from "../../appearance/boot/startup-languages.json";
 
 class ElementStub extends EventTarget {
@@ -142,6 +142,66 @@ test("background time does not consume a startup deadline", () => {
         page.document.dispatchEvent(new Event("visibilitychange"));
         assert.equal(page.timers.size, 1);
     } finally { page.dispose(); }
+});
+
+test("desktop and mobile main script failures are diagnosed without treating extension resources as startup failures", () => {
+    for (const frontend of ["app", "desktop", "mobile"]) {
+        const page = createPage();
+        try {
+            const resourceError = (tagName: string, src: string) => {
+                const event = new Event("error");
+                Object.defineProperty(event, "target", {value: {tagName, src}});
+                page.target.dispatchEvent(event);
+            };
+            for (const source of ["/plugins/example/index.js", "/appearance/themes/custom/theme.js",
+                "/outside.js?redirect=/stage/build/app/main.js"]) {
+                resourceError("SCRIPT", source);
+            }
+            resourceError("IMG", `/stage/build/${frontend}/image.png`);
+            assert.equal(page.document.documentElement.attributes.get("data-startup-state"), "loading");
+            resourceError("SCRIPT", `/stage/build/${frontend}/main.missing.js?token=private`);
+            const details = page.find(element => element.tagName === "PRE").textContent;
+            assert.match(details, new RegExp(`/stage/build/${frontend}/main.missing.js`));
+            assert.ok(!details.includes("token=private"));
+        } finally { page.dispose(); }
+    }
+});
+
+test("nested user scripts isolate synchronous global errors and restore diagnostics after exceptions", () => {
+    const page = createPage();
+    const report = () => page.target.dispatchEvent(Object.assign(new Event("error"), {error: new SyntaxError("snippet")}));
+    try {
+        assert.throws(() => withStartupErrorSuppressed(() => {
+            withStartupErrorSuppressed(report);
+            report();
+            assert.equal(page.document.documentElement.attributes.get("data-startup-state"), "loading");
+            throw new Error("append failed");
+        }), /append failed/);
+        report();
+        assert.equal(page.document.documentElement.attributes.get("data-startup-state"), "failed");
+    } finally { page.dispose(); }
+});
+
+test("user script isolation keeps resource, asynchronous, explicit and timeout failures visible", () => {
+    for (const kind of ["resource", "rejection", "explicit", "timeout"]) {
+        const page = createPage();
+        try {
+            withStartupErrorSuppressed(() => {
+                if (kind === "resource") {
+                    const event = new Event("error");
+                    Object.defineProperty(event, "target", {value: {tagName: "SCRIPT", src: "http://localhost/stage/build/mobile/missing.js"}});
+                    page.target.dispatchEvent(event);
+                } else if (kind === "rejection") {
+                    page.target.dispatchEvent(Object.assign(new Event("unhandledrejection"), {reason: new Error("async failure")}));
+                } else if (kind === "explicit") {
+                    page.target.dispatchEvent(new CustomEvent("siyuan-startup-error", {detail: new Error("explicit failure")}));
+                } else {
+                    [...page.timers.values()][0]();
+                }
+            });
+            assert.equal(page.document.documentElement.attributes.get("data-startup-state"), "failed", kind);
+        } finally { page.dispose(); }
+    }
 });
 
 test("normal layout completion preserves a visible startup failure until the application is ready", () => {

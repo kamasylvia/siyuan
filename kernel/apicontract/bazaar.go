@@ -300,6 +300,8 @@ type BazaarPackage struct {
 	Modes                 *[]string `json:"modes,omitempty"`                 // 主题：支持的模式列表
 }
 type BazaarAppearance struct {
+	// ShowFloatingDockBar 控制隐藏停靠栏时是否临时显示左右浮动停靠栏，旧配置缺失时默认开启。
+	ShowFloatingDockBar      *bool                    `json:"showFloatingDockBar"`
 	LockScreenWallpaper      bool                     `json:"lockScreenWallpaper"`
 	CompactMode              bool                     `json:"compactMode"`              // 桌面端紧凑模式，默认关闭
 	MenuMouseScroll          bool                     `json:"menuMouseScroll"`          // 桌面端菜单鼠标滚动，新工作空间默认启用
@@ -325,6 +327,7 @@ type BazaarAppearance struct {
 	CloseButtonBehavior      int                      `json:"closeButtonBehavior"`      // 关闭按钮行为，0：退出，1：最小化到托盘
 	HideToolbar              bool                     `json:"hideToolbar"`              // 是否隐藏顶栏工具栏
 	HideStatusBar            bool                     `json:"hideStatusBar"`            // 是否隐藏底部状态栏
+	ShowFloatingStatusBar    bool                     `json:"showFloatingStatusBar"`    // 隐藏状态栏时在右下角悬停显示
 	StatusBar                *BazaarStatusBar         `json:"statusBar"`                // 底部状态栏配置
 	Notifications            *BazaarNotifications     `json:"notifications"`            // 外观通知开关配置
 	EntryVisibility          *BazaarEntryVisibility   `json:"entryVisibility"`          // 桌面端入口可见性配置

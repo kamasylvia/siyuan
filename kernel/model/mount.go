@@ -162,9 +162,9 @@ func RenameBox(boxID, name string) (err error) {
 }
 
 func normalizeBoxName(name string) string {
-	name = normalizeDocTitle(name)
+	name = normalizeTitleText(name)
 	if "" == name {
-		name = normalizeDocTitle(Conf.language(105))
+		name = normalizeTitleText(Conf.language(105))
 	}
 	return name
 }
@@ -617,7 +617,7 @@ func mountBox(boxID string) (alreadyMount bool, err error) {
 	}
 
 	// 缓存根一级的文档树展开
-	ListDocTree(box.ID, "/", util.SortModeUnassigned, false, false, confFileTreeSnapshot.MaxListCount, 0)
+	ListDocTree(box.ID, "/", util.SortModeUnassigned, false, false, confFileTreeSnapshot.MaxListCount)
 	box = Conf.Box(boxID)
 	// 空笔记本也须完成索引初始化，否则结构化创建接口会一直等待元数据就绪。
 	if nil != box {

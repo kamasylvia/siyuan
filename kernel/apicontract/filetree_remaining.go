@@ -87,8 +87,9 @@ type FileTreeCreateRequest struct {
 	FileTreeCreateOptions
 }
 type FileTreeDailyNoteRequest struct {
-	Notebook string `json:"notebook"`
-	App      string `json:"app" api:"optional,nullable"`
+	Selection *DocumentSelection `json:"selection,omitempty" api:"optional,nonnullable"`
+	Notebook  string             `json:"notebook"`
+	App       string             `json:"app" api:"optional,nullable"`
 	// Date 为本地公历日期 YYYY-MM-DD；省略、空串或 null 时按当天的命名及路径模板复用或创建，不按日期属性查找。
 	// 指定日期时复用同笔记本的日记日期属性，路径和正文模板中的 now 使用目标日期。
 	// 日期无效返回 -1；多个匹配优先选择模板路径对应的文档，否则按文档 ID 升序选择。
@@ -143,7 +144,6 @@ type FileTreeListOptions struct {
 	MaxListCount      *float64 `json:"maxListCount" api:"optional"`
 	ShowHidden        bool     `json:"showHidden" api:"optional,nullable"`
 	IgnoreMaxListHint bool     `json:"ignoreMaxListHint" api:"optional,nullable"`
-	Page              *float64 `json:"page" api:"optional"` // 文档树分页页码，从 1 开始
 	App               string   `json:"app" api:"optional,nullable"`
 }
 type FileTreeListRequest struct {
@@ -252,9 +252,12 @@ type FileTreeSearchDoc struct {
 	FlashcardCount    *string `json:"flashcardCount,omitempty"`
 }
 type FileTreeFile struct {
-	Path              string `json:"path"`
-	Name              string `json:"name"`
-	TitleEmpty        bool   `json:"titleEmpty,omitempty"`
+	Path       string `json:"path"`
+	Name       string `json:"name"`
+	TitleEmpty bool   `json:"titleEmpty,omitempty"`
+	// 标题格式和语义源版本来自笔记本内的派生索引；索引尚未就绪时省略，完整源按 ID 单独读取。
+	TitleFormat       string `json:"titleFormat,omitempty" api:"enum=plain|inline-ast"`
+	TitleRevision     string `json:"titleRevision,omitempty"`
 	Icon              string `json:"icon"`
 	Name1             string `json:"name1"`
 	Alias             string `json:"alias"`
@@ -271,7 +274,6 @@ type FileTreeFile struct {
 	Sort              int    `json:"sort"`
 	SubFileCount      int    `json:"subFileCount"`
 	ChildrenSortMode  *int   `json:"childrenSortMode"`
-	IsAsset           bool   `json:"isAsset,omitempty"` // 文档树中混入的 assets 资产条目（目录或文件）
 	NewFlashcardCount int    `json:"newFlashcardCount"`
 	DueFlashcardCount int    `json:"dueFlashcardCount"`
 	FlashcardCount    int    `json:"flashcardCount"`
@@ -281,9 +283,6 @@ type FileTreeListData struct {
 	Path              string          `json:"path"`
 	Files             []*FileTreeFile `json:"files"`
 	EffectiveSortMode int             `json:"effectiveSortMode"`
-	Page              int             `json:"page"`      // 当前页码，从 1 开始
-	Totals            int             `json:"totals"`    // 截断前的完整文档数
-	PageCount         int             `json:"pageCount"` // 按 maxListCount 计算的总页数
 }
 type FileTreeGetDocData struct {
 	ID                    string            `json:"id"`

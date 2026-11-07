@@ -78,6 +78,17 @@ func appendToIndexQueue(op *dbQueueOperation) error {
 	}
 	data = append(data, '\n')
 
+	// 未初始化索引队列的调用方（主要是只建块树的测试）按需补一次初始化，避免空锁。
+	indexMu.Lock()
+	if nil == indexFlock {
+		if "" == util.QueueDir {
+			indexMu.Unlock()
+			return nil
+		}
+		initIndexQueue()
+	}
+	indexMu.Unlock()
+
 	if err = indexFlock.Lock(); err != nil {
 		return fmt.Errorf("lock index queue: %w", err)
 	}

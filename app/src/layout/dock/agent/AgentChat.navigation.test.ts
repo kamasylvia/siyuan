@@ -79,7 +79,7 @@ const browserCases = async (sources: Record<string, string>, css: string, mobile
     const first = markers[0].getBoundingClientRect();
     check.ok(first.height >= 8, "markers have a usable click height");
     await move(first.left + first.width / 2, first.top + first.height / 2);
-    await new Promise(resolve => setTimeout(resolve, 500));
+    check.equal(getComputedStyle(tip).animationName, "none", "navigation previews appear without a delayed animation");
     check.equal(rail.getBoundingClientRect().width, initialWidth, "hover never expands the clickable rail");
     check.ok(initialWidth <= 24);
     check.equal(chat.messagesContainer.scrollTop, 0, "hover never jumps");
@@ -87,6 +87,14 @@ const browserCases = async (sources: Record<string, string>, css: string, mobile
     check.equal(tip.textContent, chat.entries[0].content, "preview preserves literal HTML, quotes and percent sequences");
     check.equal(tip.children.length, 0, "message content cannot create interactive preview elements");
     check.equal(getComputedStyle(tip).pointerEvents, "none", "preview cannot intercept clicks");
+    const next = markers[1].getBoundingClientRect();
+    check.ok(Math.abs(first.bottom - next.top) < 0.1, "adjacent hit targets have no gap");
+    for (let y = first.top + first.height / 2; y < next.bottom; y++) {
+        await move(first.left + first.width / 2, y);
+        check.equal(tip.classList.contains("fn__none"), false, "preview stays visible between lines");
+        check.equal(tip.textContent, y < next.top ? chat.entries[0].content : "Second question");
+    }
+    await move(first.left + first.width / 2, first.top + first.height / 2);
     const preview = tip.getBoundingClientRect();
     const copy = document.getElementById("copy");
     copy.style.left = `${preview.left - wrap.getBoundingClientRect().left + 5}px`;
@@ -103,7 +111,7 @@ const browserCases = async (sources: Record<string, string>, css: string, mobile
     const second = markers[1].getBoundingClientRect();
     await move(second.left + 10, second.top + 4);
     check.equal(tip.textContent, "Second question", "hover updates only the selected message preview");
-    await click(second.left + 10, second.top + 4);
+    await click(second.left + 10, second.top + 0.5);
     await new Promise(resolve => setTimeout(resolve, 800));
     check.ok(chat.messagesContainer.scrollTop > 0, "clicking a marker scrolls to its message");
     check.ok(chat.messagesContainer.querySelector('[data-message-id="second"]').classList.contains("agent-chat__msg--jumped"));
@@ -130,7 +138,38 @@ const browserCases = async (sources: Record<string, string>, css: string, mobile
     return "Navigation cases passed";
 };
 
-test("agent navigation keeps previews outside its click targets on desktop and stays hidden on mobile", {
+const markerPaintFixture = async (css: string) => {
+    document.head.innerHTML = `<style>${css}</style>`;
+    document.body.style.cssText = "margin:0;background:#fff";
+    document.documentElement.style.setProperty("--b3-theme-on-surface", "#202020");
+    document.documentElement.style.setProperty("--b3-theme-primary", "#0044cc");
+    document.body.innerHTML = ["", " agent-chat__nav-rail-marker--active"].map((active, index) =>
+        `<div class="agent-chat__nav-rail-marker${active}" style="position:absolute;left:40px;top:${40 + index * 40}px"></div>`).join("");
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    return {
+        width: innerWidth,
+        height: innerHeight,
+        markers: Array.from(document.body.children).map(element => {
+            const rect = element.getBoundingClientRect();
+            const style = getComputedStyle(element);
+            return {x: rect.x, y: rect.y, width: rect.width, height: rect.height,
+                left: parseFloat(style.paddingLeft), top: parseFloat(style.paddingTop),
+                contentWidth: parseFloat(style.width), contentHeight: parseFloat(style.height)};
+        }),
+    };
+};
+
+test("agent navigation fills marker gaps and shows previews immediately", () => {
+    const css = compile(path.resolve(__dirname, "../../../assets/scss/business/_ai_agent.scss"), {
+        logger: Logger.silent,
+    }).css;
+    const rule = (selector: string) => css.match(new RegExp(`${selector} \\{([^}]+)\\}`))?.[1] || "";
+    assert.doesNotMatch(rule("\\.agent-chat__nav-rail"), /\bgap\s*:/);
+    assert.match(rule("\\.agent-chat__nav-rail-marker"), /padding: calc\(3px \+ var\(--nav-gap, 0px\) \/ 2\) 5px/);
+    assert.match(rule("\\.tooltip--agent-nav"), /animation: none/);
+});
+
+test("agent navigation keeps previews outside its click targets, paints short lines at every zoom and stays hidden on mobile", {
     skip: process.platform === "linux" && !process.env.DISPLAY && !process.env.WAYLAND_DISPLAY,
     timeout: 60000,
 }, async () => {
@@ -172,6 +211,43 @@ app.whenReady().then(async () => {
                 console.log(await win.webContents.executeJavaScript("const __name = value => value; (" +
                     ${JSON.stringify(browserCases.toString())} + ")(" + JSON.stringify(${JSON.stringify(sources)}) + "," +
                     JSON.stringify(css) + "," + (sheet.name === "mobile") + ")"));
+                if (sheet.name === "base") {
+                    for (const zoom of [0.67, 0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3]) {
+                        win.webContents.setZoomFactor(zoom);
+                        const fixture = await win.webContents.executeJavaScript("(" +
+                            ${JSON.stringify(markerPaintFixture.toString())} + ")(" + JSON.stringify(css) + ")");
+                        const image = await win.webContents.capturePage();
+                        const size = image.getSize();
+                        const bitmap = image.toBitmap();
+                        const scaleX = size.width / fixture.width;
+                        const scaleY = size.height / fixture.height;
+                        const check = require("node:assert/strict");
+                        for (const [index, marker] of fixture.markers.entries()) {
+                            const context = theme + " zoom=" + zoom + " active=" + Boolean(index);
+                            check.ok(Math.abs(marker.width - 20) < 0.1, context + ": click width is preserved");
+                            check.ok(Math.abs(marker.height - 8) < 0.1, context + ": click height is preserved");
+                            check.ok(Math.abs(marker.contentWidth - 10) < 0.1, context + ": line width is preserved");
+                            check.ok(Math.abs(marker.contentHeight - 2) < 0.1, context + ": line height is preserved");
+                            let painted = 0;
+                            for (let y = Math.floor(marker.y * scaleY); y < Math.ceil((marker.y + marker.height) * scaleY); y++) {
+                                for (let x = Math.floor(marker.x * scaleX); x < Math.ceil((marker.x + marker.width) * scaleX); x++) {
+                                    const offset = (y * size.width + x) * 4;
+                                    if (Math.min(bitmap[offset], bitmap[offset + 1], bitmap[offset + 2]) >= 235) continue;
+                                    painted++;
+                                    // Allow one raster pixel for fractional positioning and antialiasing.
+                                    check.ok(x >= Math.floor((marker.x + marker.left) * scaleX) - 1 &&
+                                        x < Math.ceil((marker.x + marker.left + marker.contentWidth) * scaleX) + 1 &&
+                                        y >= Math.floor((marker.y + marker.top) * scaleY) - 1 &&
+                                        y < Math.ceil((marker.y + marker.top + marker.contentHeight) * scaleY) + 1,
+                                        context + ": marker paint must stay inside the short line, outside the click padding");
+                                }
+                            }
+                            check.ok(painted > 0, context + ": marker remains visible");
+                        }
+                    }
+                    win.webContents.setZoomFactor(1);
+                    console.log("Marker paint cases passed");
+                }
             }
         }
         win.destroy();app.exit(0);
@@ -182,6 +258,7 @@ app.whenReady().then(async () => {
     try {
         const result = await promisify(execFile)(require("electron"), [script], {env, windowsHide: true, timeout: 50000});
         assert.equal(result.stdout.match(/Navigation cases passed/g)?.length, 4);
+        assert.equal(result.stdout.match(/Marker paint cases passed/g)?.length, 2);
     } finally {
         assert.equal(path.dirname(path.resolve(temporary)), path.resolve(tmpdir()));
         assert.ok(path.basename(temporary).startsWith("siyuan-agent-navigation-"));
