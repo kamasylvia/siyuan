@@ -56,6 +56,9 @@ const typeLabel = (type: BackupType): string => {
     }
 };
 
+const newTargetID = (): string =>
+    "backup-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+
 const defaultTarget = (): BackupTarget => ({
     id: "",
     name: "",
@@ -75,6 +78,7 @@ const defaultConfig = (): BackupConfig => ({
 let currentConfig: BackupConfig = defaultConfig();
 let currentState: BackupState = {targets: {}};
 let editingID: string | null = null;
+let draftID = "";
 let draft: BackupTarget = defaultTarget();
 let panelRoot: HTMLElement | null = null;
 
@@ -157,8 +161,7 @@ const render = () => {
     <div id="backupForm" class="fn__none" style="margin-top:12px;border-top:1px solid var(--b3-border-color);padding-top:10px">
         <div class="b3-label__text" id="backupFormTitle"></div>
         <div style="margin-top:8px">
-            ${field("backupTargetID", "ID", "")}
-            ${field("backupTargetName", text("backupTarget", "Backup target"), "")}
+            ${field("backupTargetName", window.siyuan.languages.name || "Name", "")}
             ${selectType("local")}
             ${checkbox("backupTargetEnabled", text("backupEnabled", "Enabled"), true)}
             ${field("backupKeepLast", text("backupKeepLast", "Keep last"), "30", "number")}
@@ -180,7 +183,7 @@ const targetRowHTML = (target: BackupTarget): string => {
     const status = state ? `${state.lastOk ? "OK" : "FAIL"} ${state.lastSnapshot || ""} ${state.lastError || ""}` : "";
     return `<div class="fn__flex" data-id="${escapeHtmlTextAndAttr(target.id)}" style="align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--b3-border-color)">
         <span class="fn__flex-1"><b>${escapeHtmlTextAndAttr(target.name || target.id)}</b>
-            <span class="ft__on-surface">${escapeHtmlTextAndAttr(target.id)} · ${typeLabel(target.type)} · ${target.enabled ? "enabled" : "disabled"}</span>
+            <span class="ft__on-surface">${typeLabel(target.type)} · ${target.enabled ? "enabled" : "disabled"}</span>
             ${status ? `<div class="ft__on-surface">${escapeHtmlTextAndAttr(status)}</div>` : ""}
         </span>
         <button class="b3-button b3-button--outline" data-action="edit">${escapeHtmlTextAndAttr(window.siyuan.languages.edit)}</button>
@@ -245,6 +248,7 @@ const bind = () => {
 const openForm = (target: BackupTarget) => {
     draft = target;
     editingID = target.id || null;
+    draftID = target.id || newTargetID();
     const form = panelRoot?.querySelector("#backupForm") as HTMLElement;
     if (!form) {
         return;
@@ -254,8 +258,6 @@ const openForm = (target: BackupTarget) => {
     if (title) {
         title.textContent = text(editingID ? "backupEditTarget" : "backupAddTarget", editingID ? "Edit target" : "Add target");
     }
-    (panelRoot?.querySelector("#backupTargetID") as HTMLInputElement).value = target.id || "";
-    (panelRoot?.querySelector("#backupTargetID") as HTMLInputElement).disabled = Boolean(editingID);
     (panelRoot?.querySelector("#backupTargetName") as HTMLInputElement).value = target.name || "";
     (panelRoot?.querySelector("#backupTargetType") as HTMLSelectElement).value = target.type;
     (panelRoot?.querySelector("#backupTargetEnabled") as HTMLInputElement).checked = target.enabled;
@@ -269,6 +271,7 @@ const openForm = (target: BackupTarget) => {
 
 const closeForm = () => {
     editingID = null;
+    draftID = "";
     draft = defaultTarget();
     panelRoot?.querySelector("#backupForm")?.classList.add("fn__none");
 };
@@ -277,7 +280,7 @@ const readForm = (): BackupTarget => {
     const value = (id: string): string => (panelRoot?.querySelector(`#${id}`) as HTMLInputElement)?.value || "";
     const checked = (id: string): boolean => (panelRoot?.querySelector(`#${id}`) as HTMLInputElement)?.checked === true;
     const target: BackupTarget = {
-        id: editingID || value("backupTargetID").trim(),
+        id: editingID || draftID,
         name: value("backupTargetName").trim(),
         type: (panelRoot?.querySelector("#backupTargetType") as HTMLSelectElement)?.value as BackupType || "local",
         enabled: checked("backupTargetEnabled"),
@@ -363,8 +366,8 @@ const saveInclude = async () => {
 
 const saveForm = async () => {
     const target = readForm();
-    if (!target.id) {
-        showMessage("ID is required", 5000, "error");
+    if (!target.name) {
+        showMessage("Name is required", 5000, "error");
         return;
     }
     currentConfig.enabled = true;
