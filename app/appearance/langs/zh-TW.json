@@ -1,4 +1,5 @@
 {
+	"backupTargetNote": "備註（可選）",
 	"backupEnableGlobal": "備份總開關",
 	"backupEnableTarget": "啟用此目標",
 	"backupTargetName": "目標名稱",

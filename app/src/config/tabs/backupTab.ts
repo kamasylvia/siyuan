@@ -146,7 +146,6 @@ const render = () => {
     <div class="fn__flex" style="align-items:center;gap:8px;margin-bottom:10px">
         <button class="b3-button b3-button--outline" id="backupAdd">${escapeHtmlTextAndAttr(text("backupAddTarget", "Add target"))}</button>
         <button class="b3-button b3-button--outline" id="backupRun">${escapeHtmlTextAndAttr(text("backupRunNow", "Back up now"))}</button>
-        <label class="fn__flex" style="align-items:center;gap:4px"><input id="backupEnabled" type="checkbox" class="b3-switch" ${currentConfig.enabled ? "checked" : ""}>${escapeHtmlTextAndAttr(text("backupEnableGlobal", "Backup master switch"))}</label>
         <span class="fn__space"></span>
         <label class="fn__flex" style="align-items:center;gap:4px"><input id="backupIncludeData" type="checkbox" class="b3-switch" ${currentConfig.include?.data ? "checked" : ""}>${escapeHtmlTextAndAttr(text("backupIncludeData", "Data"))}</label>
         <label class="fn__flex" style="align-items:center;gap:4px"><input id="backupIncludeConf" type="checkbox" class="b3-switch" ${currentConfig.include?.conf ? "checked" : ""}>${escapeHtmlTextAndAttr(text("backupIncludeConf", "Configuration"))}</label>
@@ -161,9 +160,8 @@ const render = () => {
     <div id="backupForm" class="fn__none" style="margin-top:12px;border-top:1px solid var(--b3-border-color);padding-top:10px">
         <div class="b3-label__text" id="backupFormTitle"></div>
         <div style="margin-top:8px">
-            ${field("backupTargetName", text("backupTargetName", "Target name"), "")}
+            ${field("backupTargetNote", text("backupTargetNote", "Note (optional)"), "")}
             ${selectType("local")}
-            ${checkbox("backupTargetEnabled", text("backupEnableTarget", "Enable this target"), true)}
             ${field("backupKeepLast", text("backupKeepLast", "Keep last"), "30", "number")}
             ${field("backupMaxAgeDays", text("backupMaxAgeDays", "Max age (days)"), "90", "number", 'placeholder="0 = unlimited"')}
             <div id="backupTypeFields"></div>
@@ -178,12 +176,28 @@ const render = () => {
     bind();
 };
 
+const targetLabel = (target: BackupTarget): string => {
+    if (target.name) {
+        return target.name;
+    }
+    switch (target.type) {
+        case "local":
+            return `Local · ${(target.local?.path || "").split("/").filter(Boolean).pop() || "/"}`;
+        case "pg":
+            return `PostgreSQL · ${target.pg?.host || ""}/${target.pg?.database || ""}`;
+        case "s3":
+            return `S3 · ${target.s3?.bucket || ""}`;
+        case "webdav":
+            return `WebDAV · ${target.webdav?.endpoint || ""}`;
+    }
+};
+
 const targetRowHTML = (target: BackupTarget): string => {
     const state = currentState.targets?.[target.id];
     const status = state ? `${state.lastOk ? "OK" : "FAIL"} ${state.lastSnapshot || ""} ${state.lastError || ""}` : "";
     return `<div class="fn__flex" data-id="${escapeHtmlTextAndAttr(target.id)}" style="align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--b3-border-color)">
-        <span class="fn__flex-1"><b>${escapeHtmlTextAndAttr(target.name || target.id)}</b>
-            <span class="ft__on-surface">${typeLabel(target.type)} · ${target.enabled ? "enabled" : "disabled"}</span>
+        <span class="fn__flex-1"><b>${escapeHtmlTextAndAttr(targetLabel(target))}</b>
+            <span class="ft__on-surface">${typeLabel(target.type)}</span>
             ${status ? `<div class="ft__on-surface">${escapeHtmlTextAndAttr(status)}</div>` : ""}
         </span>
         <button class="b3-button b3-button--outline" data-action="edit">${escapeHtmlTextAndAttr(window.siyuan.languages.edit)}</button>
@@ -198,10 +212,6 @@ const bind = () => {
     }
     panelRoot.querySelector("#backupAdd")?.addEventListener("click", () => openForm(defaultTarget()));
     panelRoot.querySelector("#backupRun")?.addEventListener("click", () => void runBackup());
-    panelRoot.querySelector("#backupEnabled")?.addEventListener("change", () => {
-        currentConfig.enabled = (panelRoot?.querySelector("#backupEnabled") as HTMLInputElement)?.checked === true;
-        void saveConfig();
-    });
     for (const id of ["backupIncludeData", "backupIncludeConf", "backupIncludeHistory"]) {
         panelRoot.querySelector(`#${id}`)?.addEventListener("change", () => void saveInclude());
     }
@@ -258,9 +268,8 @@ const openForm = (target: BackupTarget) => {
     if (title) {
         title.textContent = text(editingID ? "backupEditTarget" : "backupAddTarget", editingID ? "Edit target" : "Add target");
     }
-    (panelRoot?.querySelector("#backupTargetName") as HTMLInputElement).value = target.name || "";
+    (panelRoot?.querySelector("#backupTargetNote") as HTMLInputElement).value = target.name || "";
     (panelRoot?.querySelector("#backupTargetType") as HTMLSelectElement).value = target.type;
-    (panelRoot?.querySelector("#backupTargetEnabled") as HTMLInputElement).checked = target.enabled;
     (panelRoot?.querySelector("#backupKeepLast") as HTMLInputElement).value = String(target.retention?.keepLast ?? 30);
     (panelRoot?.querySelector("#backupMaxAgeDays") as HTMLInputElement).value = String(target.retention?.maxAgeDays ?? 90);
     const fields = panelRoot?.querySelector("#backupTypeFields");
@@ -281,9 +290,9 @@ const readForm = (): BackupTarget => {
     const checked = (id: string): boolean => (panelRoot?.querySelector(`#${id}`) as HTMLInputElement)?.checked === true;
     const target: BackupTarget = {
         id: editingID || draftID,
-        name: value("backupTargetName").trim(),
+        name: value("backupTargetNote").trim(),
         type: (panelRoot?.querySelector("#backupTargetType") as HTMLSelectElement)?.value as BackupType || "local",
-        enabled: checked("backupTargetEnabled"),
+        enabled: true,
         retention: {
             keepLast: Number(value("backupKeepLast")) || 0,
             maxAgeDays: Number(value("backupMaxAgeDays")) || 0,
@@ -333,6 +342,8 @@ const loadPanel = async () => {
 };
 
 const saveConfig = async () => {
+    currentConfig.enabled = currentConfig.targets.length > 0;
+    currentConfig.targets.forEach(target => { target.enabled = true; });
     const response = await fetchSyncPost("/api/backup/setConfig", {config: currentConfig});
     if (response.code !== 0) {
         showMessage(response.msg, 7000, "error");
@@ -366,10 +377,6 @@ const saveInclude = async () => {
 
 const saveForm = async () => {
     const target = readForm();
-    if (!target.name) {
-        showMessage("Name is required", 5000, "error");
-        return;
-    }
     currentConfig.enabled = true;
     const index = currentConfig.targets.findIndex(item => item.id === target.id);
     if (index >= 0) {
@@ -401,6 +408,12 @@ const testTarget = async (target: BackupTarget) => {
 };
 
 const runBackup = async () => {
+    if (currentConfig.targets.length > 0 && !currentConfig.enabled) {
+        currentConfig.enabled = true;
+        if (!await saveConfig()) {
+            return;
+        }
+    }
     const response = await fetchSyncPost("/api/backup/run", {targets: []});
     if (response.code !== 0) {
         showMessage(`${text("backupRunFailed", "Backup failed")}: ${response.msg}`, 7000, "error");
