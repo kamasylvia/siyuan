@@ -139,6 +139,10 @@ var backupRestoreCmd = &cobra.Command{
 		snapshot, _ := cmd.Flags().GetString("snapshot")
 		dest, _ := cmd.Flags().GetString("dest")
 		force, _ := cmd.Flags().GetBool("force")
+		passphrase, _ := cmd.Flags().GetString("passphrase")
+		if passphrase == "" && cfg.Encryption != nil {
+			passphrase = cfg.Encryption.Passphrase
+		}
 		if targetID == "" || snapshot == "" || dest == "" {
 			return fmt.Errorf("--target, --snapshot and --dest are required")
 		}
@@ -156,7 +160,7 @@ var backupRestoreCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		result, err := backup.Restore(context.Background(), target, snapshot, dest, force)
+		result, err := backup.Restore(context.Background(), target, snapshot, dest, force, passphrase)
 		if err != nil {
 			return err
 		}
@@ -213,4 +217,5 @@ func init() {
 	backupRestoreCmd.Flags().String("snapshot", "", "snapshot ID")
 	backupRestoreCmd.Flags().String("dest", "", "restore destination workspace")
 	backupRestoreCmd.Flags().Bool("force", false, "overwrite existing files in destination")
+	backupRestoreCmd.Flags().String("passphrase", "", "backup encryption passphrase")
 }

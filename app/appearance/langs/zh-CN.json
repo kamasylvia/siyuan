@@ -1,4 +1,6 @@
 {
+	"backupEncryption": "加密",
+	"backupPassphrase": "加密口令",
 	"backupTargets": "备份目标",
 	"backupTarget": "备份目标",
 	"backupAddTarget": "添加目标",

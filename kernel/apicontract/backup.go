@@ -56,10 +56,16 @@ type BackupTarget struct {
 	Retention *BackupRetention `json:"retention,omitempty" api:"optional,nullable"`
 }
 
+type BackupEncryption struct {
+	Enabled    bool   `json:"enabled"`
+	Passphrase string `json:"passphrase,omitempty" api:"optional"`
+}
+
 type BackupConfig struct {
-	Enabled bool            `json:"enabled"`
-	Include BackupInclude   `json:"include"`
-	Targets []*BackupTarget `json:"targets"`
+	Enabled    bool              `json:"enabled"`
+	Include    BackupInclude     `json:"include"`
+	Targets    []*BackupTarget   `json:"targets"`
+	Encryption *BackupEncryption `json:"encryption,omitempty" api:"optional,nullable"`
 }
 
 type BackupTargetState struct {

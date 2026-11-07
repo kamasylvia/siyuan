@@ -25,7 +25,7 @@ type RestoreResult struct {
 
 // Restore materializes one manifest into dest. dest is expected to be an empty
 // workspace; existing files are overwritten only when force is true.
-func Restore(ctx context.Context, target Store, snapshotID, dest string, force bool) (*RestoreResult, error) {
+func Restore(ctx context.Context, target Store, snapshotID, dest string, force bool, passphrase string) (*RestoreResult, error) {
 	if strings.TrimSpace(snapshotID) == "" {
 		return nil, errors.New("snapshot id is required")
 	}
@@ -44,6 +44,18 @@ func Restore(ctx context.Context, target Store, snapshotID, dest string, force b
 	if err = json.Unmarshal(data, manifest); err != nil {
 		return nil, fmt.Errorf("parse backup manifest [%s]: %w", snapshotID, err)
 	}
+	var encryptionKey []byte
+	blobPrefix := BlobPrefix
+	if manifest.Encryption != nil {
+		if passphrase == "" {
+			return nil, errors.New("backup is encrypted; passphrase is required")
+		}
+		encryptionKey, err = deriveEncryptionKey(passphrase, manifest.Encryption)
+		if err != nil {
+			return nil, err
+		}
+		blobPrefix = EncryptedBlobPrefix
+	}
 	result := &RestoreResult{Snapshot: snapshotID}
 	for _, entry := range manifest.Files {
 		if err = ctx.Err(); err != nil {
@@ -58,9 +70,15 @@ func Restore(ctx context.Context, target Store, snapshotID, dest string, force b
 				return nil, fmt.Errorf("restore destination already contains [%s]; use force to overwrite", entry.Path)
 			}
 		}
-		blob, getErr := target.Get(ctx, BlobPrefix+entry.Hash)
+		blob, getErr := target.Get(ctx, blobPrefix+entry.Hash)
 		if getErr != nil {
 			return nil, fmt.Errorf("read backup blob for [%s]: %w", entry.Path, getErr)
+		}
+		if encryptionKey != nil {
+			blob, getErr = openBlob(encryptionKey, blob)
+			if getErr != nil {
+				return nil, fmt.Errorf("decrypt backup blob for [%s]: %w", entry.Path, getErr)
+			}
 		}
 		sum := sha256.Sum256(blob)
 		if hex.EncodeToString(sum[:]) != entry.Hash {

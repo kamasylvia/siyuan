@@ -752,9 +752,13 @@ export type BacklinkSourceFilterInput = { "dailyNote"?: string | null; "database
 
 export type BackmentionDocumentRequestInput = { "containChildren"?: boolean | null; "defID": string; "highlight"?: boolean | null; "keyword": string; "knownRevision"?: string | null; "notebook"?: string; "refTreeID": string; };
 
-export type BackupConfig = { "enabled": boolean; "include": BackupInclude; "targets": Array<BackupTarget | null> | null; };
+export type BackupConfig = { "enabled": boolean; "encryption"?: BackupEncryption; "include": BackupInclude; "targets": Array<BackupTarget | null> | null; };
 
-export type BackupConfigInput = { "enabled": boolean; "include": BackupIncludeInput; "targets": Array<BackupTargetInput | null>; };
+export type BackupConfigInput = { "enabled": boolean; "encryption"?: BackupEncryptionInput | null; "include": BackupIncludeInput; "targets": Array<BackupTargetInput | null>; };
+
+export type BackupEncryption = { "enabled": boolean; "passphrase"?: string; };
+
+export type BackupEncryptionInput = { "enabled": boolean; "passphrase"?: string; };
 
 export type BackupGetConfigData = { "config": BackupConfig | null; "state"?: BackupState; };
 

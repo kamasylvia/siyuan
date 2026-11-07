@@ -47,3 +47,17 @@ func TestUnmaskBackupConfigKeepsMaskedSecrets(t *testing.T) {
 		t.Fatalf("pg dsn not preserved: %q", got.Targets[2].PG.DSN)
 	}
 }
+
+func TestUnmaskBackupEncryptionKeepsPassphrase(t *testing.T) {
+	old := &backup.Config{Encryption: &backup.Encryption{Enabled: true, Passphrase: "secret"}}
+	next := &apicontract.BackupConfig{Encryption: &apicontract.BackupEncryption{Enabled: true, Passphrase: "***"}}
+	got := unmaskBackupConfig(next, old)
+	if got.Encryption == nil || got.Encryption.Passphrase != "secret" {
+		t.Fatalf("passphrase not preserved: %+v", got.Encryption)
+	}
+	next.Encryption.Passphrase = "***"
+	got = unmaskBackupConfig(next, nil)
+	if got.Encryption.Passphrase != "" {
+		t.Fatalf("masked passphrase without previous config must clear: %q", got.Encryption.Passphrase)
+	}
+}

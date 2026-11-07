@@ -24,9 +24,10 @@ import (
 )
 
 const (
-	BlobPrefix     = "blobs/"
-	ManifestPrefix = "manifests/"
-	LatestRef      = "refs/latest.json"
+	BlobPrefix          = "blobs/"
+	EncryptedBlobPrefix = "blobs-e2e/"
+	ManifestPrefix      = "manifests/"
+	LatestRef           = "refs/latest.json"
 )
 
 type Entry struct {
@@ -38,11 +39,12 @@ type Entry struct {
 }
 
 type Manifest struct {
-	ID         string    `json:"id"`
-	CreatedAt  time.Time `json:"createdAt"`
-	Roots      []string  `json:"roots"`
-	Files      []Entry   `json:"files"`
-	TotalBytes int64     `json:"totalBytes"`
+	ID         string              `json:"id"`
+	CreatedAt  time.Time           `json:"createdAt"`
+	Roots      []string            `json:"roots"`
+	Files      []Entry             `json:"files"`
+	TotalBytes int64               `json:"totalBytes"`
+	Encryption *ManifestEncryption `json:"encryption,omitempty"`
 }
 
 type Engine struct {
@@ -143,13 +145,17 @@ func (engine *Engine) Run(ctx context.Context, onlyTargets ...string) (*RunResul
 		return nil, errors.New("no enabled backup targets")
 	}
 
+	key, encryptionInfo, err := engine.encryption()
+	if err != nil {
+		return nil, err
+	}
 	entries, roots, err := engine.collect()
 	if err != nil {
 		return nil, err
 	}
 	now := engine.now()
 	snapshotID := now.UTC().Format("20060102T150405Z") + "-" + randomSuffix()
-	manifest := Manifest{ID: snapshotID, CreatedAt: now.UTC(), Roots: roots, Files: entries}
+	manifest := Manifest{ID: snapshotID, CreatedAt: now.UTC(), Roots: roots, Files: entries, Encryption: encryptionInfo}
 	for _, entry := range entries {
 		manifest.TotalBytes += entry.Size
 	}
@@ -158,7 +164,7 @@ func (engine *Engine) Run(ctx context.Context, onlyTargets ...string) (*RunResul
 	}
 	result.Targets = append(result.Targets, initFailures...)
 	for _, target := range targets {
-		targetResult := engine.upload(ctx, target, snapshotID, manifest, entries)
+		targetResult := engine.upload(ctx, target, snapshotID, manifest, entries, key)
 		result.Targets = append(result.Targets, targetResult)
 	}
 	result.FinishedAt = engine.now()
@@ -285,15 +291,26 @@ func shouldSkipFile(name string) bool {
 		strings.HasSuffix(lower, ".pid") || strings.HasPrefix(name, ".backup-")
 }
 
+func (engine *Engine) encryption() ([]byte, *ManifestEncryption, error) {
+	if engine.Config.Encryption == nil || !engine.Config.Encryption.Enabled {
+		return nil, nil, nil
+	}
+	info, key, err := newEncryptionInfo(engine.Config.Encryption.Passphrase)
+	return key, info, err
+}
+
 func (engine *Engine) upload(ctx context.Context, target Store, snapshotID string, manifest Manifest,
-	entries []Entry) TargetResult {
+	entries []Entry, key []byte) TargetResult {
 	result := TargetResult{ID: target.ID()}
 	for _, entry := range entries {
 		if result.Error != "" {
 			break
 		}
-		key := BlobPrefix + entry.Hash
-		exists, err := target.Has(ctx, key)
+		blobKey := BlobPrefix + entry.Hash
+		if len(key) > 0 {
+			blobKey = EncryptedBlobPrefix + entry.Hash
+		}
+		exists, err := target.Has(ctx, blobKey)
 		if err != nil {
 			result.Error = err.Error()
 			break
@@ -312,12 +329,20 @@ func (engine *Engine) upload(ctx context.Context, target Store, snapshotID strin
 			result.Error = fmt.Sprintf("file changed during backup: %s", entry.Path)
 			break
 		}
-		if err = target.Put(ctx, key, data); err != nil {
+		payload := data
+		if len(key) > 0 {
+			payload, err = sealBlob(key, data)
+			if err != nil {
+				result.Error = err.Error()
+				break
+			}
+		}
+		if err = target.Put(ctx, blobKey, payload); err != nil {
 			result.Error = err.Error()
 			break
 		}
 		result.UploadedBlobs++
-		result.UploadedBytes += int64(len(data))
+		result.UploadedBytes += int64(len(payload))
 	}
 	if result.Error != "" {
 		return result

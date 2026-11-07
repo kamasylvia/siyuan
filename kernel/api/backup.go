@@ -52,6 +52,11 @@ func maskBackupConfig(cfg *backup.Config) *apicontract.BackupConfig {
 		},
 		Targets: make([]*apicontract.BackupTarget, 0, len(cfg.Targets)),
 	}
+	if cfg.Encryption != nil {
+		out.Encryption = &apicontract.BackupEncryption{
+			Enabled: cfg.Encryption.Enabled, Passphrase: maskSecret(cfg.Encryption.Passphrase),
+		}
+	}
 	for _, target := range cfg.Targets {
 		item := &apicontract.BackupTarget{
 			ID: target.ID, Name: target.Name, Type: target.Type, Enabled: target.Enabled,
@@ -107,6 +112,17 @@ func unmaskBackupConfig(cfg *apicontract.BackupConfig, old *backup.Config) *back
 			History: cfg.Include.History, LocalStorage: cfg.Include.LocalStorage,
 		},
 	}
+	if cfg.Encryption != nil {
+		passphrase := cfg.Encryption.Passphrase
+		if passphrase == "" || passphrase == backupMasked {
+			if old != nil && old.Encryption != nil {
+				passphrase = old.Encryption.Passphrase
+			} else if passphrase == backupMasked {
+				passphrase = ""
+			}
+		}
+		out.Encryption = &backup.Encryption{Enabled: cfg.Encryption.Enabled, Passphrase: passphrase}
+	}
 	oldByID := map[string]*backup.Target{}
 	if old != nil {
 		for _, target := range old.Targets {
@@ -124,15 +140,23 @@ func unmaskBackupConfig(cfg *apicontract.BackupConfig, old *backup.Config) *back
 		}
 		if item.PG != nil {
 			dsn := item.PG.DSN
-			if strings.Contains(dsn, backupMasked) && previous != nil && previous.PG != nil {
-				dsn = previous.PG.DSN
+			if strings.Contains(dsn, backupMasked) {
+				if previous != nil && previous.PG != nil {
+					dsn = previous.PG.DSN
+				} else {
+					dsn = ""
+				}
 			}
 			target.PG = &backup.PG{DSN: dsn, Schema: item.PG.Schema}
 		}
 		if item.S3 != nil {
 			secret := item.S3.SecretKey
-			if (secret == "" || secret == backupMasked) && previous != nil && previous.S3 != nil {
-				secret = previous.S3.SecretKey
+			if secret == "" || secret == backupMasked {
+				if previous != nil && previous.S3 != nil {
+					secret = previous.S3.SecretKey
+				} else if secret == backupMasked {
+					secret = ""
+				}
 			}
 			target.S3 = &backup.S3{
 				Endpoint: item.S3.Endpoint, AccessKey: item.S3.AccessKey, SecretKey: secret,
@@ -142,8 +166,12 @@ func unmaskBackupConfig(cfg *apicontract.BackupConfig, old *backup.Config) *back
 		}
 		if item.WebDAV != nil {
 			password := item.WebDAV.Password
-			if (password == "" || password == backupMasked) && previous != nil && previous.WebDAV != nil {
-				password = previous.WebDAV.Password
+			if password == "" || password == backupMasked {
+				if previous != nil && previous.WebDAV != nil {
+					password = previous.WebDAV.Password
+				} else if password == backupMasked {
+					password = ""
+				}
 			}
 			target.WebDAV = &backup.WebDAV{
 				Endpoint: item.WebDAV.Endpoint, Username: item.WebDAV.Username, Password: password,

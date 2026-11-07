@@ -199,14 +199,19 @@ const isRemoteExtensionPath = (pathname: string): boolean => !pathname.split("/"
     (pathname.startsWith("/plugins/") || (/^\/appearance\/(themes|icons)\//.test(pathname) &&
         !/^\/appearance\/(themes\/(daylight|midnight)|icons\/litheness)(\/|$)/.test(pathname)));
 
+const isRemoteFrontendPath = (pathname: string): boolean =>
+    pathname === "/stage" || pathname.startsWith("/stage/") ||
+    pathname === "/appearance" || pathname.startsWith("/appearance/");
+
 const getRemoteKernelRequestPolicy = ({method, pathname, destination, localResourceAvailable, isTargetOrigin = true,
-    trustRemoteExtensions = false}: {
+    trustRemoteExtensions = false, remoteFrontend = false}: {
         method: string;
         pathname: string;
         destination: string;
         localResourceAvailable: boolean;
         isTargetOrigin?: boolean;
         trustRemoteExtensions?: boolean;
+        remoteFrontend?: boolean;
     }): RemoteRequestPolicy => {
     const requestedPathname = pathname;
     const normalizedPathnames = normalizeRequestPathname(pathname);
@@ -218,11 +223,17 @@ const getRemoteKernelRequestPolicy = ({method, pathname, destination, localResou
     const remoteExtension = trustRemoteExtensions && isTargetOrigin && safeMethod &&
         normalizedPathnames.every(isRemoteExtensionPath);
     if (documentDestinations.has(destination)) {
+        if (remoteFrontend && isTargetOrigin && safeMethod && isRemoteFrontendPath(requestedPathname)) {
+            return "remote";
+        }
         return isTargetOrigin && safeMethod && localResourceAvailable && localDocumentPaths.has(requestedPathname)
             ? "local"
             : "deny-active-content";
     }
     if (executableDestinations.has(destination)) {
+        if (remoteFrontend && isTargetOrigin && safeMethod && isRemoteFrontendPath(pathname)) {
+            return "remote";
+        }
         if (remoteExtension && localExecutableDestinations.has(destination)) {
             return "remote";
         }
@@ -237,6 +248,9 @@ const getRemoteKernelRequestPolicy = ({method, pathname, destination, localResou
         return "remote";
     }
     if (remoteExtension) {
+        return "remote";
+    }
+    if (remoteFrontend && isTargetOrigin && isRemoteFrontendPath(pathname)) {
         return "remote";
     }
     if (localResourceAvailable) {

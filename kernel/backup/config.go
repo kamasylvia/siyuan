@@ -29,9 +29,15 @@ const (
 // conf.json so enabling backup never changes sync settings or paid-provider
 // gates.
 type Config struct {
-	Enabled bool      `json:"enabled"`
-	Include Include   `json:"include"`
-	Targets []*Target `json:"targets"`
+	Enabled    bool        `json:"enabled"`
+	Include    Include     `json:"include"`
+	Targets    []*Target   `json:"targets"`
+	Encryption *Encryption `json:"encryption,omitempty"`
+}
+
+type Encryption struct {
+	Enabled    bool   `json:"enabled"`
+	Passphrase string `json:"passphrase,omitempty"`
 }
 
 type Include struct {
@@ -116,6 +122,9 @@ func (cfg *Config) Normalize() error {
 	}
 	if !cfg.Include.Data && !cfg.Include.Conf && !cfg.Include.History {
 		return fmt.Errorf("backup config includes no roots")
+	}
+	if cfg.Encryption != nil && cfg.Encryption.Enabled && strings.TrimSpace(cfg.Encryption.Passphrase) == "" {
+		return fmt.Errorf("backup encryption is enabled but the passphrase is empty")
 	}
 	seen := map[string]bool{}
 	for i, target := range cfg.Targets {

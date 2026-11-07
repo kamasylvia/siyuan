@@ -44,7 +44,7 @@ const NO_STORE_TEXT_HEADERS = {"Cache-Control": "no-store", "Content-Type": "tex
 let installedOrigin: string | undefined;
 
 // 只映射本机的 stage 与 appearance 资源，其余一律拒绝，避免路径穿越读到任意文件。
-const getLocalRemoteResource = (pathname: string): string | undefined => {
+const getLocalRemoteResource = (pathname: string, remoteFrontend = false): string | undefined => {
     let decodedPath: string;
     try {
         decodedPath = decodeURIComponent(pathname);
@@ -61,6 +61,9 @@ const getLocalRemoteResource = (pathname: string): string | undefined => {
 
     let resourceRoot: string;
     let relativePath: string;
+    if (remoteFrontend && (decodedPath.startsWith("/stage/") || decodedPath.startsWith("/appearance/"))) {
+        return;
+    }
     if (decodedPath.startsWith("/stage/")) {
         resourceRoot = path.join(paths.appDir, "stage");
         relativePath = decodedPath.slice("/stage/".length);
@@ -134,6 +137,7 @@ const installRemoteFrontendProtocol = (target: KernelTarget): void => {
         }
         return;
     }
+    const remoteFrontend = target.trustRemoteExtensions === true;
     const scheme = new URL(target.origin).protocol.slice(0, -1);
     const remoteSession = getRemoteSession(target) as unknown as RemoteSession;
     remoteSession.webRequest.onBeforeRequest((details, callback) => {
@@ -143,7 +147,7 @@ const installRemoteFrontendProtocol = (target: KernelTarget): void => {
             try {
                 const requestURL = new URL(details.url);
                 const isTargetOrigin = requestURL.origin === target.origin;
-                const localResource = isTargetOrigin ? getLocalRemoteResource(requestURL.pathname) : undefined;
+                const localResource = isTargetOrigin ? getLocalRemoteResource(requestURL.pathname, remoteFrontend) : undefined;
                 requestPolicy = getRemoteKernelRequestPolicy({
                     method: details.method,
                     pathname: requestURL.pathname,
@@ -151,6 +155,7 @@ const installRemoteFrontendProtocol = (target: KernelTarget): void => {
                     localResourceAvailable: Boolean(localResource),
                     isTargetOrigin,
                     trustRemoteExtensions: target.trustRemoteExtensions,
+                    remoteFrontend,
                 });
             } catch (error) {
                 requestPolicy = "deny-active-content";
@@ -180,7 +185,7 @@ const installRemoteFrontendProtocol = (target: KernelTarget): void => {
             (request.method === "GET" || request.method === "HEAD") &&
             [CHECK_AUTH_PAGE, APP_PAGE, WINDOW_PAGE, SETTINGS_PAGE].includes(requestURL.pathname));
         const localResource = isTargetOrigin && requestURL && (request.method === "GET" || request.method === "HEAD")
-            ? getLocalRemoteResource(requestURL.pathname)
+            ? getLocalRemoteResource(requestURL.pathname, remoteFrontend)
             : undefined;
         const requestDestination = request.headers.get("sec-fetch-dest") || request.destination;
         const requestPolicy = getRemoteKernelRequestPolicy({
@@ -190,6 +195,7 @@ const installRemoteFrontendProtocol = (target: KernelTarget): void => {
             localResourceAvailable: Boolean(localResource),
             isTargetOrigin: Boolean(isTargetOrigin),
             trustRemoteExtensions: target.trustRemoteExtensions,
+            remoteFrontend,
         });
         if (requestPolicy === "deny-api") {
             writeLog("blocked remote kernel lifecycle request [path=" + requestPathname + "]");
@@ -305,7 +311,7 @@ const installRemoteFrontendProtocol = (target: KernelTarget): void => {
             });
         }
         const redirectLocalResource = redirectDecision.method === "GET" || redirectDecision.method === "HEAD"
-            ? getLocalRemoteResource(redirectDecision.url.pathname)
+            ? getLocalRemoteResource(redirectDecision.url.pathname, remoteFrontend)
             : undefined;
         const redirectPolicy = getRemoteKernelRequestPolicy({
             method: redirectDecision.method,
@@ -314,6 +320,7 @@ const installRemoteFrontendProtocol = (target: KernelTarget): void => {
             localResourceAvailable: Boolean(redirectLocalResource),
             isTargetOrigin: true,
             trustRemoteExtensions: target.trustRemoteExtensions,
+            remoteFrontend,
         });
         if (redirectPolicy === "deny-api" || redirectPolicy === "deny-active-content" ||
             redirectPolicy === "not-found") {

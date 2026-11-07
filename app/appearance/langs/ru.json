@@ -1,4 +1,6 @@
 {
+	"backupEncryption": "Encryption",
+	"backupPassphrase": "Passphrase",
 	"backupTargets": "Backup targets",
 	"backupTarget": "Backup target",
 	"backupAddTarget": "Add target",

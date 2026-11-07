@@ -8,6 +8,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -92,7 +93,7 @@ func TestLocalBackupIsIncrementalAndRestorable(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	restored, err := Restore(context.Background(), target, third.Snapshot, restoreDir, false)
+	restored, err := Restore(context.Background(), target, third.Snapshot, restoreDir, false, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -186,5 +187,52 @@ func TestRetentionKeepsConfiguredSnapshots(t *testing.T) {
 	}
 	if len(blobs) != 2 {
 		t.Fatalf("expected 2 referenced blobs, got %v", blobs)
+	}
+}
+
+func TestEncryptedBackupRequiresPassphrase(t *testing.T) {
+	workspace := t.TempDir()
+	targetDir := t.TempDir()
+	writeTestFile(t, workspace, "conf/conf.json", `{"api":{"token":"secret-token"}}`)
+	cfg := newLocalTestConfig(t, workspace, targetDir)
+	cfg.Encryption = &Encryption{Enabled: true, Passphrase: "correct horse battery staple"}
+	engine := NewEngine(workspace, cfg)
+	result, err := engine.Run(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	blobs, err := os.ReadDir(filepath.Join(targetDir, EncryptedBlobPrefix))
+	if err != nil || len(blobs) == 0 {
+		t.Fatalf("expected encrypted blobs: %v", err)
+	}
+	raw, err := os.ReadFile(filepath.Join(targetDir, EncryptedBlobPrefix, blobs[0].Name()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(raw), "secret-token") {
+		t.Fatal("encrypted blob contains plaintext")
+	}
+	target, err := NewLocalTarget("local-1", targetDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	restoreDir := t.TempDir()
+	if _, err = Restore(context.Background(), target, result.Snapshot, restoreDir, false, ""); err == nil {
+		t.Fatal("expected missing passphrase error")
+	}
+	if _, err = Restore(context.Background(), target, result.Snapshot, restoreDir, false, "wrong"); err == nil {
+		t.Fatal("expected wrong passphrase error")
+	}
+	restored, err := Restore(context.Background(), target, result.Snapshot, restoreDir, false,
+		"correct horse battery staple")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if restored.Files != 1 {
+		t.Fatalf("expected 1 restored file, got %d", restored.Files)
+	}
+	got, err := os.ReadFile(filepath.Join(restoreDir, "conf", "conf.json"))
+	if err != nil || !strings.Contains(string(got), "secret-token") {
+		t.Fatalf("restored content mismatch: %v", err)
 	}
 }

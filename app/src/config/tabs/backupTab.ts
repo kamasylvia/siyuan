@@ -28,6 +28,7 @@ type BackupConfig = {
     enabled: boolean;
     include: {data: boolean; conf: boolean; history: boolean; localStorage: boolean};
     targets: BackupTarget[];
+    encryption?: {enabled: boolean; passphrase?: string};
 };
 
 type TargetState = {
@@ -68,6 +69,7 @@ const defaultConfig = (): BackupConfig => ({
     enabled: true,
     include: {data: true, conf: true, history: false, localStorage: false},
     targets: [],
+    encryption: {enabled: false, passphrase: ""},
 });
 
 let currentConfig: BackupConfig = defaultConfig();
@@ -137,6 +139,10 @@ const render = () => {
         <label class="fn__flex" style="align-items:center;gap:4px"><input id="backupIncludeConf" type="checkbox" class="b3-switch" ${currentConfig.include?.conf ? "checked" : ""}>${escapeHtmlTextAndAttr(text("backupIncludeConf", "Configuration"))}</label>
         <label class="fn__flex" style="align-items:center;gap:4px"><input id="backupIncludeHistory" type="checkbox" class="b3-switch" ${currentConfig.include?.history ? "checked" : ""}>${escapeHtmlTextAndAttr(text("backupIncludeHistory", "History"))}</label>
     </div>
+    <div class="fn__flex" style="align-items:center;gap:8px;margin-bottom:10px">
+        <label class="fn__flex" style="align-items:center;gap:4px"><input id="backupEncryptionEnabled" type="checkbox" class="b3-switch" ${currentConfig.encryption?.enabled ? "checked" : ""}>${escapeHtmlTextAndAttr(text("backupEncryption", "Encryption"))}</label>
+        <input id="backupEncryptionPassphrase" class="b3-text-field fn__flex-1" type="password" placeholder="${escapeHtmlTextAndAttr(text("backupPassphrase", "Passphrase"))}" value="${escapeHtmlTextAndAttr(currentConfig.encryption?.passphrase || "")}">
+    </div>
     <div id="backupTargetList">${targets.length ? targets.map(targetRowHTML).join("") :
         `<div class="b3-label__text">${escapeHtmlTextAndAttr(text("backupNoTargets", "No backup targets configured"))}</div>`}</div>
     <div id="backupForm" class="fn__none" style="margin-top:12px;border-top:1px solid var(--b3-border-color);padding-top:10px">
@@ -187,6 +193,8 @@ const bind = () => {
     for (const id of ["backupIncludeData", "backupIncludeConf", "backupIncludeHistory"]) {
         panelRoot.querySelector(`#${id}`)?.addEventListener("change", () => void saveInclude());
     }
+    panelRoot.querySelector("#backupEncryptionEnabled")?.addEventListener("change", () => void saveEncryption());
+    panelRoot.querySelector("#backupEncryptionPassphrase")?.addEventListener("change", () => void saveEncryption());
     panelRoot.querySelectorAll("#backupTargetList [data-action]").forEach(button => {
         button.addEventListener("click", (event) => {
             const row = (event.currentTarget as HTMLElement).closest("[data-id]") as HTMLElement;
@@ -319,6 +327,14 @@ const saveConfig = async () => {
     render();
     showMessage(text("backupConfigSaved", "Backup configuration saved"), 3000);
     return true;
+};
+
+const saveEncryption = async () => {
+    currentConfig.encryption = {
+        enabled: (panelRoot?.querySelector("#backupEncryptionEnabled") as HTMLInputElement)?.checked === true,
+        passphrase: (panelRoot?.querySelector("#backupEncryptionPassphrase") as HTMLInputElement)?.value || "",
+    };
+    await saveConfig();
 };
 
 const saveInclude = async () => {

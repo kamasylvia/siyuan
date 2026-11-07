@@ -68,17 +68,19 @@ func (engine *Engine) prune(ctx context.Context, target Store, retention Retenti
 			referenced[entry.Hash] = true
 		}
 	}
-	blobs, err := target.List(ctx, BlobPrefix)
-	if err != nil {
-		return err
-	}
-	for _, blob := range blobs {
-		hash := path.Base(blob)
-		if referenced[hash] {
-			continue
-		}
-		if err = target.Delete(ctx, blob); err != nil {
+	for _, prefix := range []string{BlobPrefix, EncryptedBlobPrefix} {
+		blobs, err := target.List(ctx, prefix)
+		if err != nil {
 			return err
+		}
+		for _, blob := range blobs {
+			hash := path.Base(blob)
+			if referenced[hash] {
+				continue
+			}
+			if err = target.Delete(ctx, blob); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

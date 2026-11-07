@@ -408,3 +408,26 @@ test("remote deep links only reach the matching active remote target", () => {
         localTargetRequested: false,
     }), false);
 });
+
+test("trusted remote frontend assets come from the remote kernel", () => {
+    const request = {
+        method: "GET", destination: "script", localResourceAvailable: true,
+        trustRemoteExtensions: true, remoteFrontend: true,
+    };
+    for (const pathname of ["/stage/build/app/main.js", "/stage/build/app/index.html",
+        "/appearance/langs/zh-CN.json", "/appearance/themes/daylight/theme.css"]) {
+        assert.equal(getRemoteKernelRequestPolicy({...request, pathname}), "remote");
+    }
+    assert.equal(getRemoteKernelRequestPolicy({
+        ...request, pathname: "/stage/build/app/", destination: "document",
+    }), "remote");
+    assert.equal(getRemoteKernelRequestPolicy({
+        ...request, pathname: "/check-auth", destination: "document",
+    }), "local");
+    assert.equal(getRemoteKernelRequestPolicy({
+        ...request, pathname: "/stage/build/app/main.js", remoteFrontend: false,
+    }), "local");
+    assert.equal(getRemoteKernelRequestPolicy({
+        ...request, pathname: "/stage/build/app/main.js", trustRemoteExtensions: false, remoteFrontend: false,
+    }), "local");
+});
