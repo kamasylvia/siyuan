@@ -159,6 +159,10 @@ const resolveRemoteKernel = (launchArguments: string[]): {
             if (history.lastMode === "remote" && history.lastRemoteOrigin) {
                 arg = history.lastRemoteOrigin;
                 launchArguments.push("--remote=" + arg, "--auto-reconnect");
+                // 自动回到上次的远程连接时沿用该地址已授予的扩展信任，否则插件/外观会被能力门控关闭。
+                if (history.trustedOrigins.includes(arg)) {
+                    launchArguments.push("--trust-remote-extensions");
+                }
             }
         } catch (error) {
             writeLog("read last connection failed: " + toError(error));
