@@ -17692,6 +17692,658 @@
       ],
       "additionalProperties": false
     },
+    "BackupConfig": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "include": {
+          "$ref": "#/$defs/BackupInclude"
+        },
+        "targets": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/BackupTarget"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "enabled",
+        "include",
+        "targets"
+      ],
+      "additionalProperties": false
+    },
+    "BackupConfigInput": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "include": {
+          "$ref": "#/$defs/BackupIncludeInput"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/BackupTargetInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "enabled",
+        "include",
+        "targets"
+      ],
+      "additionalProperties": false
+    },
+    "BackupGetConfigData": {
+      "type": "object",
+      "properties": {
+        "config": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BackupConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "$ref": "#/$defs/BackupState"
+        }
+      },
+      "required": [
+        "config"
+      ],
+      "additionalProperties": false
+    },
+    "BackupInclude": {
+      "type": "object",
+      "properties": {
+        "conf": {
+          "type": "boolean"
+        },
+        "data": {
+          "type": "boolean"
+        },
+        "history": {
+          "type": "boolean"
+        },
+        "localStorage": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "conf",
+        "data",
+        "history",
+        "localStorage"
+      ],
+      "additionalProperties": false
+    },
+    "BackupIncludeInput": {
+      "type": "object",
+      "properties": {
+        "conf": {
+          "type": "boolean"
+        },
+        "data": {
+          "type": "boolean"
+        },
+        "history": {
+          "type": "boolean"
+        },
+        "localStorage": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "conf",
+        "data",
+        "history",
+        "localStorage"
+      ],
+      "additionalProperties": false
+    },
+    "BackupLocal": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "BackupLocalInput": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "BackupPG": {
+      "type": "object",
+      "properties": {
+        "dsn": {
+          "type": "string"
+        },
+        "schema": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "dsn"
+      ],
+      "additionalProperties": false
+    },
+    "BackupPGInput": {
+      "type": "object",
+      "properties": {
+        "dsn": {
+          "type": "string"
+        },
+        "schema": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "dsn"
+      ],
+      "additionalProperties": false
+    },
+    "BackupRetention": {
+      "type": "object",
+      "properties": {
+        "keepLast": {
+          "type": "integer"
+        },
+        "maxAgeDays": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false
+    },
+    "BackupRetentionInput": {
+      "type": "object",
+      "properties": {
+        "keepLast": {
+          "type": "integer"
+        },
+        "maxAgeDays": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false
+    },
+    "BackupRunData": {
+      "type": "object",
+      "properties": {
+        "files": {
+          "type": "integer"
+        },
+        "finishedAt": {
+          "type": "string"
+        },
+        "snapshot": {
+          "type": "string"
+        },
+        "startedAt": {
+          "type": "string"
+        },
+        "targets": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/BackupRunTarget"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "totalBytes": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "files",
+        "finishedAt",
+        "snapshot",
+        "startedAt",
+        "targets",
+        "totalBytes"
+      ],
+      "additionalProperties": false
+    },
+    "BackupRunRequestInput": {
+      "type": "object",
+      "properties": {
+        "targets": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "BackupRunTarget": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "manifest": {
+          "type": "string"
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "skippedBlobs": {
+          "type": "integer"
+        },
+        "uploadedBlobs": {
+          "type": "integer"
+        },
+        "uploadedBytes": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "ok",
+        "skippedBlobs",
+        "uploadedBlobs",
+        "uploadedBytes"
+      ],
+      "additionalProperties": false
+    },
+    "BackupS3": {
+      "type": "object",
+      "properties": {
+        "accessKey": {
+          "type": "string"
+        },
+        "bucket": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "pathStyle": {
+          "type": "boolean"
+        },
+        "region": {
+          "type": "string"
+        },
+        "secretKey": {
+          "type": "string"
+        },
+        "skipTlsVerify": {
+          "type": "boolean"
+        },
+        "timeout": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "bucket",
+        "endpoint"
+      ],
+      "additionalProperties": false
+    },
+    "BackupS3Input": {
+      "type": "object",
+      "properties": {
+        "accessKey": {
+          "type": "string"
+        },
+        "bucket": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "pathStyle": {
+          "type": "boolean"
+        },
+        "region": {
+          "type": "string"
+        },
+        "secretKey": {
+          "type": "string"
+        },
+        "skipTlsVerify": {
+          "type": "boolean"
+        },
+        "timeout": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "bucket",
+        "endpoint"
+      ],
+      "additionalProperties": false
+    },
+    "BackupSetConfigRequestInput": {
+      "type": "object",
+      "properties": {
+        "config": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BackupConfigInput"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "config"
+      ],
+      "additionalProperties": false
+    },
+    "BackupState": {
+      "type": "object",
+      "properties": {
+        "targets": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/BackupTargetState"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updatedAt": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "targets"
+      ],
+      "additionalProperties": false
+    },
+    "BackupTarget": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "local": {
+          "$ref": "#/$defs/BackupLocal"
+        },
+        "name": {
+          "type": "string"
+        },
+        "pg": {
+          "$ref": "#/$defs/BackupPG"
+        },
+        "retention": {
+          "$ref": "#/$defs/BackupRetention"
+        },
+        "s3": {
+          "$ref": "#/$defs/BackupS3"
+        },
+        "type": {
+          "type": "string"
+        },
+        "webdav": {
+          "$ref": "#/$defs/BackupWebDAV"
+        }
+      },
+      "required": [
+        "enabled",
+        "id",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "BackupTargetInput": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "local": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BackupLocalInput"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "pg": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BackupPGInput"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "retention": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BackupRetentionInput"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "s3": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BackupS3Input"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": {
+          "type": "string"
+        },
+        "webdav": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BackupWebDAVInput"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "enabled",
+        "id",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "BackupTargetState": {
+      "type": "object",
+      "properties": {
+        "lastError": {
+          "type": "string"
+        },
+        "lastOk": {
+          "type": "boolean"
+        },
+        "lastRun": {
+          "type": "string"
+        },
+        "lastSnapshot": {
+          "type": "string"
+        },
+        "uploadedBlobs": {
+          "type": "integer"
+        },
+        "uploadedBytes": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "lastOk",
+        "uploadedBlobs",
+        "uploadedBytes"
+      ],
+      "additionalProperties": false
+    },
+    "BackupTestTargetData": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "ok": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "message",
+        "ok"
+      ],
+      "additionalProperties": false
+    },
+    "BackupTestTargetRequestInput": {
+      "type": "object",
+      "properties": {
+        "target": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BackupTargetInput"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "BackupWebDAV": {
+      "type": "object",
+      "properties": {
+        "endpoint": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "skipTlsVerify": {
+          "type": "boolean"
+        },
+        "timeout": {
+          "type": "integer"
+        },
+        "username": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "endpoint"
+      ],
+      "additionalProperties": false
+    },
+    "BackupWebDAVInput": {
+      "type": "object",
+      "properties": {
+        "endpoint": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "skipTlsVerify": {
+          "type": "boolean"
+        },
+        "timeout": {
+          "type": "integer"
+        },
+        "username": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "endpoint"
+      ],
+      "additionalProperties": false
+    },
     "BatchInsertBlockRequestInput": {
       "type": "object",
       "properties": {
@@ -144662,6 +145314,325 @@
               },
               "data": {
                 "type": "null"
+              },
+              "msg": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "msg",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  -1
+                ]
+              },
+              "data": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "closeTimeout": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "closeTimeout"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "msg": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "msg",
+              "data"
+            ],
+            "additionalProperties": true
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/backup/getConfig",
+      "handler": "getBackupConfig",
+      "authorization": [
+        "authenticated",
+        "admin"
+      ],
+      "body": "json",
+      "request": {
+        "$ref": "#/$defs/EmptyRequestInput"
+      },
+      "response": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  0
+                ]
+              },
+              "data": {
+                "$ref": "#/$defs/BackupGetConfigData"
+              },
+              "msg": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "msg",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  -1
+                ]
+              },
+              "data": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "closeTimeout": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "closeTimeout"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "msg": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "msg",
+              "data"
+            ],
+            "additionalProperties": true
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/backup/run",
+      "handler": "runBackup",
+      "authorization": [
+        "authenticated",
+        "admin",
+        "writable"
+      ],
+      "body": "json",
+      "request": {
+        "$ref": "#/$defs/BackupRunRequestInput"
+      },
+      "response": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  0
+                ]
+              },
+              "data": {
+                "$ref": "#/$defs/BackupRunData"
+              },
+              "msg": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "msg",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  -1
+                ]
+              },
+              "data": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "closeTimeout": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "closeTimeout"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "msg": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "msg",
+              "data"
+            ],
+            "additionalProperties": true
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/backup/setConfig",
+      "handler": "setBackupConfig",
+      "authorization": [
+        "authenticated",
+        "admin",
+        "writable"
+      ],
+      "body": "json",
+      "request": {
+        "$ref": "#/$defs/BackupSetConfigRequestInput"
+      },
+      "response": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  0
+                ]
+              },
+              "data": {
+                "$ref": "#/$defs/BackupGetConfigData"
+              },
+              "msg": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "msg",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  -1
+                ]
+              },
+              "data": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "closeTimeout": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "closeTimeout"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "msg": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "msg",
+              "data"
+            ],
+            "additionalProperties": true
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/backup/testTarget",
+      "handler": "testBackupTarget",
+      "authorization": [
+        "authenticated",
+        "admin",
+        "writable"
+      ],
+      "body": "json",
+      "request": {
+        "$ref": "#/$defs/BackupTestTargetRequestInput"
+      },
+      "response": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  0
+                ]
+              },
+              "data": {
+                "$ref": "#/$defs/BackupTestTargetData"
               },
               "msg": {
                 "type": "string"

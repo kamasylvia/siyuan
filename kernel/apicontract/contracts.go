@@ -2008,3 +2008,9 @@ var AIMemoryCancel = define[AIMemoryTaskRequest, EmptyRequest]("cancelAIMemory",
 // 可用模型使用受支持协议时，efforts 为 none、low、medium、high、xhigh、max；默认空字符串不列入其中。
 // 未选择模型、模型不可用或协议不支持时返回空数组；这些选项不保证供应商接受每个值，实际请求由协议适配器处理。
 var AIMemoryCapabilities = define[EmptyRequest, AIMemoryCapabilitiesData]("capabilitiesAIMemory", "/api/ai/memory/capabilities", AuthenticatedAccess|AdminAccess, NoBody, ResponseOptions{}, "POST")
+
+// 备份配置独立于同步配置；S3/WebDAV/PG 目标不经过同步 provider 或付费门控。
+var GetBackupConfig = define[EmptyRequest, BackupGetConfigData]("getBackupConfig", "/api/backup/getConfig", AuthenticatedAccess|AdminAccess, JSONBody, ResponseOptions{}, "POST")
+var SetBackupConfig = define[BackupSetConfigRequest, BackupGetConfigData]("setBackupConfig", "/api/backup/setConfig", AuthenticatedAccess|AdminAccess|WritableAccess, JSONBody, ResponseOptions{}, "POST")
+var TestBackupTarget = define[BackupTestTargetRequest, BackupTestTargetData]("testBackupTarget", "/api/backup/testTarget", AuthenticatedAccess|AdminAccess|WritableAccess, JSONBody, ResponseOptions{}, "POST")
+var RunBackup = define[BackupRunRequest, BackupRunData]("runBackup", "/api/backup/run", AuthenticatedAccess|AdminAccess|WritableAccess, JSONBody, ResponseOptions{}, "POST")

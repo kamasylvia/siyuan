@@ -26,6 +26,7 @@ import {registerExportTab} from "../tabs/exportTab";
 import {registerSearchTab} from "../tabs/searchTab";
 import {registerAppearanceTab} from "../tabs/appearanceTab";
 import {registerSyncTab} from "../tabs/syncTab";
+import {refreshBackupPanel, registerBackupTab} from "../tabs/backupTab";
 import {registerAccessTab} from "../tabs/accessTab";
 import {registerAppTab} from "../tabs/appTab";
 import {registerAboutTab} from "../tabs/aboutTab";
@@ -124,6 +125,12 @@ const createSettingTabs = () => {
             afterMount: mountSyncTabExtras,
             onShow: (root) => { void refreshCloudUser(false, root); },
         }, registerSyncTab),
+        backup: setting.tab({
+            id: "backup",
+            icon: "iconDatabaseBackup",
+            title: () => window.siyuan.languages.backup || "Backup",
+            onShow: () => { refreshBackupPanel(); },
+        }, registerBackupTab),
         access: setting.tab({
             id: "access",
             icon: "iconLock",

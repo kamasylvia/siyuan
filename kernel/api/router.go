@@ -984,4 +984,9 @@ func registerUiRoutes(ginServer *gin.Engine) {
 	ginServer.Handle("POST", "/api/ui/reloadProtyle", contractRouteHandlers(apicontract.ReloadProtyle, reloadProtyle)...)
 	ginServer.Handle("POST", "/api/ui/reloadFiletree", contractRouteHandlers(apicontract.ReloadFiletree, reloadFiletree)...)
 	ginServer.Handle("POST", "/api/ui/reloadTag", contractRouteHandlers(apicontract.ReloadTag, reloadTag)...)
+
+	ginServer.Handle("POST", "/api/backup/getConfig", contractRouteHandlers(apicontract.GetBackupConfig, getBackupConfig)...)
+	ginServer.Handle("POST", "/api/backup/setConfig", contractRouteHandlers(apicontract.SetBackupConfig, setBackupConfig)...)
+	ginServer.Handle("POST", "/api/backup/testTarget", contractRouteHandlers(apicontract.TestBackupTarget, testBackupTarget)...)
+	ginServer.Handle("POST", "/api/backup/run", contractRouteHandlers(apicontract.RunBackup, runBackup)...)
 }

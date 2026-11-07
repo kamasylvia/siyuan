@@ -752,6 +752,56 @@ export type BacklinkSourceFilterInput = { "dailyNote"?: string | null; "database
 
 export type BackmentionDocumentRequestInput = { "containChildren"?: boolean | null; "defID": string; "highlight"?: boolean | null; "keyword": string; "knownRevision"?: string | null; "notebook"?: string; "refTreeID": string; };
 
+export type BackupConfig = { "enabled": boolean; "include": BackupInclude; "targets": Array<BackupTarget | null> | null; };
+
+export type BackupConfigInput = { "enabled": boolean; "include": BackupIncludeInput; "targets": Array<BackupTargetInput | null>; };
+
+export type BackupGetConfigData = { "config": BackupConfig | null; "state"?: BackupState; };
+
+export type BackupInclude = { "conf": boolean; "data": boolean; "history": boolean; "localStorage": boolean; };
+
+export type BackupIncludeInput = { "conf": boolean; "data": boolean; "history": boolean; "localStorage": boolean; };
+
+export type BackupLocal = { "path": string; };
+
+export type BackupLocalInput = { "path": string; };
+
+export type BackupPG = { "dsn": string; "schema"?: string; };
+
+export type BackupPGInput = { "dsn": string; "schema"?: string; };
+
+export type BackupRetention = { "keepLast"?: number; "maxAgeDays"?: number; };
+
+export type BackupRetentionInput = { "keepLast"?: number; "maxAgeDays"?: number; };
+
+export type BackupRunData = { "files": number; "finishedAt": string; "snapshot": string; "startedAt": string; "targets": Array<BackupRunTarget> | null; "totalBytes": number; };
+
+export type BackupRunRequestInput = { "targets"?: Array<string> | null; };
+
+export type BackupRunTarget = { "error"?: string; "id": string; "manifest"?: string; "ok": boolean; "skippedBlobs": number; "uploadedBlobs": number; "uploadedBytes": number; };
+
+export type BackupS3 = { "accessKey"?: string; "bucket": string; "endpoint": string; "pathStyle"?: boolean; "region"?: string; "secretKey"?: string; "skipTlsVerify"?: boolean; "timeout"?: number; };
+
+export type BackupS3Input = { "accessKey"?: string; "bucket": string; "endpoint": string; "pathStyle"?: boolean; "region"?: string; "secretKey"?: string; "skipTlsVerify"?: boolean; "timeout"?: number; };
+
+export type BackupSetConfigRequestInput = { "config": BackupConfigInput | null; };
+
+export type BackupState = { "targets": Record<string, BackupTargetState | null> | null; "updatedAt"?: string; };
+
+export type BackupTarget = { "enabled": boolean; "id": string; "local"?: BackupLocal; "name"?: string; "pg"?: BackupPG; "retention"?: BackupRetention; "s3"?: BackupS3; "type": string; "webdav"?: BackupWebDAV; };
+
+export type BackupTargetInput = { "enabled": boolean; "id": string; "local"?: BackupLocalInput | null; "name"?: string; "pg"?: BackupPGInput | null; "retention"?: BackupRetentionInput | null; "s3"?: BackupS3Input | null; "type": string; "webdav"?: BackupWebDAVInput | null; };
+
+export type BackupTargetState = { "lastError"?: string; "lastOk": boolean; "lastRun"?: string; "lastSnapshot"?: string; "uploadedBlobs": number; "uploadedBytes": number; };
+
+export type BackupTestTargetData = { "message": string; "ok": boolean; };
+
+export type BackupTestTargetRequestInput = { "target": BackupTargetInput | null; };
+
+export type BackupWebDAV = { "endpoint": string; "password"?: string; "skipTlsVerify"?: boolean; "timeout"?: number; "username"?: string; };
+
+export type BackupWebDAVInput = { "endpoint": string; "password"?: string; "skipTlsVerify"?: boolean; "timeout"?: number; "username"?: string; };
+
 export type BatchInsertBlockRequestInput = { "blocks": Array<BlockInsertInputInput>; };
 
 export type BatchParentBlockRequestInput = { "blocks": Array<PrependBlockRequestInput>; };
@@ -4507,6 +4557,37 @@ export interface APIPOSTRoutes {
     "/api/av/sortAttributeViewViewKey": {
         request: SortAttributeViewViewKeyRequestInput;
         response: { "code": 0; "data": null; "msg": string; } | { "code": -1; "data": { "closeTimeout": number; } | null; "msg": string; };
+        body: "json";
+        /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
+        authorization?: readonly ["authenticated","admin","writable"];
+    };
+    /**
+     * 备份配置独立于同步配置；S3/WebDAV/PG 目标不经过同步 provider 或付费门控。
+     */
+    "/api/backup/getConfig": {
+        request: EmptyRequestInput;
+        response: { "code": 0; "data": BackupGetConfigData; "msg": string; } | { "code": -1; "data": { "closeTimeout": number; } | null; "msg": string; };
+        body: "json";
+        /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
+        authorization?: readonly ["authenticated","admin"];
+    };
+    "/api/backup/run": {
+        request: BackupRunRequestInput;
+        response: { "code": 0; "data": BackupRunData; "msg": string; } | { "code": -1; "data": { "closeTimeout": number; } | null; "msg": string; };
+        body: "json";
+        /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
+        authorization?: readonly ["authenticated","admin","writable"];
+    };
+    "/api/backup/setConfig": {
+        request: BackupSetConfigRequestInput;
+        response: { "code": 0; "data": BackupGetConfigData; "msg": string; } | { "code": -1; "data": { "closeTimeout": number; } | null; "msg": string; };
+        body: "json";
+        /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
+        authorization?: readonly ["authenticated","admin","writable"];
+    };
+    "/api/backup/testTarget": {
+        request: BackupTestTargetRequestInput;
+        response: { "code": 0; "data": BackupTestTargetData; "msg": string; } | { "code": -1; "data": { "closeTimeout": number; } | null; "msg": string; };
         body: "json";
         /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
         authorization?: readonly ["authenticated","admin","writable"];

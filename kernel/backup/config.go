@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -198,4 +199,40 @@ func (cfg *Config) RetentionFor(id string) Retention {
 		}
 	}
 	return Retention{KeepLast: DefaultKeepLast}
+}
+
+// SaveConfig writes conf/backup.json atomically with owner-only permissions.
+func SaveConfig(path string, cfg *Config) error {
+	if err := cfg.Normalize(); err != nil {
+		return err
+	}
+	data, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		return err
+	}
+	data = append(data, '\n')
+	if err = os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+		return err
+	}
+	tmp, err := os.CreateTemp(filepath.Dir(path), ".backup-config-*")
+	if err != nil {
+		return err
+	}
+	name := tmp.Name()
+	defer os.Remove(name)
+	if _, err = tmp.Write(data); err != nil {
+		tmp.Close()
+		return err
+	}
+	if err = tmp.Sync(); err != nil {
+		tmp.Close()
+		return err
+	}
+	if err = tmp.Close(); err != nil {
+		return err
+	}
+	if err = os.Chmod(name, 0600); err != nil {
+		return err
+	}
+	return os.Rename(name, path)
 }
