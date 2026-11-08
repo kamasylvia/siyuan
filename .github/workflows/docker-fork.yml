@@ -47,7 +47,7 @@ jobs:
           persist-credentials: false
 
       # 镜像版本前三段必须与 package.json 一致，防止 fork 未同步到该官方版本时打出错标镜像；
-      # 第四段允许纯数字的 fork 构建号（如 3.8.8.2），fork 自己的小版本只进第四位
+      # tag 版本必须以 package.json 版本为前缀（上游 alpha/beta 期自动跟随），后缀至多一段纯数字 fork 构建号
       - name: Validate requested version matches source
         env:
           REQUESTED: ${{ github.event_name == 'push' && github.ref_name || inputs.version }}
@@ -55,17 +55,23 @@ jobs:
           if [ -n "$REQUESTED" ]; then
             version="${REQUESTED#v}"
             package_version=$(jq -er .version app/package.json)
-            base="$(echo "$version" | cut -d. -f1-3)"
-            fork_build="$(echo "$version" | cut -d. -f4)"
-            if [ "$base" != "$package_version" ]; then
-              echo "Requested version ($version) does not match package.json ($package_version); sync the fork to that official version first"
-              exit 1
-            fi
-            if [ -n "$fork_build" ] && [ "$(echo "$version" | cut -d. -f5-)" != "" ]; then
+            # 版本对齐规则:tag 必须以 package.json 版本为前缀(上游 alpha/beta 期自动跟随其后缀),
+            # 后缀至多一段纯数字 fork 构建号
+            case "$version" in
+              "$package_version") ;;
+              "$package_version".[0-9]*) ;;
+              *) echo "Requested version ($version) does not match package.json ($package_version); sync the fork to that official version first"; exit 1 ;;
+            esac
+            # 后缀只允许一段 fork 构建号:总段数 = package 段数 + 0 或 1
+            pkg_segments=$(echo "$package_version" | awk -F. '{print NF}')
+            req_segments=$(echo "$version" | awk -F. '{print NF}')
+            if [ "$req_segments" -gt "$((pkg_segments + 1))" ]; then
               echo "Requested version ($version) carries too many segments; only one fork build number is allowed"
               exit 1
             fi
-            if [ -n "$fork_build" ] && ! printf '%s' "$fork_build" | grep -Eq '^[0-9]+$'; then
+            # 附加段必须是纯数字 fork 构建号
+            fork_build="${version#"$package_version".}"
+            if [ "$fork_build" != "$version" ] && ! printf '%s' "$fork_build" | grep -Eq '^[0-9]+$'; then
               echo "Fork build number ($fork_build) must be numeric"
               exit 1
             fi
