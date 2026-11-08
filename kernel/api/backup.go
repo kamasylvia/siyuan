@@ -304,3 +304,122 @@ var runBackup = contractHandler(apicontract.RunBackup, func(c *gin.Context,
 	}
 	return apicontract.Success(out)
 })
+
+func backupTargetByID(cfg *backup.Config, id string) (*backup.Target, error) {
+	for _, cfgTarget := range cfg.Targets {
+		if cfgTarget.ID == id {
+			return cfgTarget, nil
+		}
+	}
+	return nil, fmt.Errorf("backup target [%s] not found", id)
+}
+
+var listBackupSnapshots = contractHandler(apicontract.BackupListSnapshots, func(c *gin.Context,
+	req apicontract.BackupListSnapshotsRequest) apicontract.Response[apicontract.BackupListSnapshotsData] {
+	if strings.TrimSpace(req.Target) == "" {
+		return apicontract.Failure[apicontract.BackupListSnapshotsData](-1, "backup target id is required")
+	}
+	cfg, err := loadBackupConfigForAPI()
+	if err != nil {
+		return apicontract.Failure[apicontract.BackupListSnapshotsData](-1, err.Error())
+	}
+	targetConfig, err := backupTargetByID(cfg, req.Target)
+	if err != nil {
+		return apicontract.Failure[apicontract.BackupListSnapshotsData](-1, err.Error())
+	}
+	store, err := backup.NewTarget(unmaskBackupTarget(cfg, targetConfig))
+	if err != nil {
+		return apicontract.Failure[apicontract.BackupListSnapshotsData](-1, err.Error())
+	}
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+	manifests, err := backup.ListSnapshots(ctx, store)
+	if err != nil {
+		return apicontract.Failure[apicontract.BackupListSnapshotsData](-1, err.Error())
+	}
+	out := apicontract.BackupListSnapshotsData{Target: req.Target}
+	for _, manifest := range manifests {
+		out.Snapshots = append(out.Snapshots, apicontract.BackupSnapshotSummary{
+			ID: manifest.ID, CreatedAt: manifest.CreatedAt.Format(time.RFC3339), Roots: manifest.Roots,
+			Files: len(manifest.Files), TotalBytes: manifest.TotalBytes, Encrypted: manifest.Encryption != nil,
+		})
+	}
+	return apicontract.Success(out)
+})
+
+var restoreBackupDryRun = contractHandler(apicontract.BackupRestoreDryRun, func(c *gin.Context,
+	req apicontract.BackupRestoreDryRunRequest) apicontract.Response[apicontract.BackupRestoreDryRunData] {
+	cfg, err := loadBackupConfigForAPI()
+	if err != nil {
+		return apicontract.Failure[apicontract.BackupRestoreDryRunData](-1, err.Error())
+	}
+	targetConfig, err := backupTargetByID(cfg, req.Target)
+	if err != nil {
+		return apicontract.Failure[apicontract.BackupRestoreDryRunData](-1, err.Error())
+	}
+	store, err := backup.NewTarget(unmaskBackupTarget(cfg, targetConfig))
+	if err != nil {
+		return apicontract.Failure[apicontract.BackupRestoreDryRunData](-1, err.Error())
+	}
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+	plan, err := backup.RestoreDryRun(ctx, store, req.Snapshot, req.Passphrase)
+	if err != nil {
+		return apicontract.Failure[apicontract.BackupRestoreDryRunData](-1, err.Error())
+	}
+	return apicontract.Success(apicontract.BackupRestoreDryRunData{
+		Snapshot: plan.Snapshot, CreatedAt: plan.CreatedAt, Roots: plan.Roots,
+		Files: plan.Files, TotalBytes: plan.TotalBytes, Encrypted: plan.Encrypted,
+	})
+})
+
+var restoreBackup = contractHandler(apicontract.BackupRestore, func(c *gin.Context,
+	req apicontract.BackupRestoreRequest) apicontract.Response[apicontract.BackupRestoreData] {
+	cfg, err := loadBackupConfigForAPI()
+	if err != nil {
+		return apicontract.Failure[apicontract.BackupRestoreData](-1, err.Error())
+	}
+	targetConfig, err := backupTargetByID(cfg, req.Target)
+	if err != nil {
+		return apicontract.Failure[apicontract.BackupRestoreData](-1, err.Error())
+	}
+	store, err := backup.NewTarget(unmaskBackupTarget(cfg, targetConfig))
+	if err != nil {
+		return apicontract.Failure[apicontract.BackupRestoreData](-1, err.Error())
+	}
+	// 还原写入当前工作空间:先做 dry-run 校验快照与口令,再落盘
+	planCtx, planCancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	if _, err = backup.RestoreDryRun(planCtx, store, req.Snapshot, req.Passphrase); err != nil {
+		planCancel()
+		return apicontract.Failure[apicontract.BackupRestoreData](-1, err.Error())
+	}
+	planCancel()
+	dest := util.WorkspaceDir
+	result, err := backup.Restore(c.Request.Context(), store, req.Snapshot, dest, req.Force, req.Passphrase)
+	if err != nil {
+		return apicontract.Failure[apicontract.BackupRestoreData](-1, err.Error())
+	}
+	return apicontract.Success(apicontract.BackupRestoreData{
+		Snapshot: result.Snapshot, Files: result.Files, Bytes: result.Bytes, Dest: dest,
+	})
+})
+
+// unmaskBackupTarget resolves credential masking in an API-supplied target
+// config against the stored config, so masked secrets resolve to real values.
+func unmaskBackupTarget(cfg *backup.Config, targetConfig *backup.Target) *backup.Target {
+	for _, stored := range cfg.Targets {
+		if stored.ID == targetConfig.ID {
+			if targetConfig.PG != nil && stored.PG != nil && targetConfig.PG.Password == backupMasked {
+				targetConfig.PG.Password = stored.PG.Password
+			}
+			if targetConfig.S3 != nil && stored.S3 != nil && targetConfig.S3.SecretKey == backupMasked {
+				targetConfig.S3.SecretKey = stored.S3.SecretKey
+			}
+			if targetConfig.WebDAV != nil && stored.WebDAV != nil && targetConfig.WebDAV.Password == backupMasked {
+				targetConfig.WebDAV.Password = stored.WebDAV.Password
+			}
+			return targetConfig
+		}
+	}
+	return targetConfig
+}

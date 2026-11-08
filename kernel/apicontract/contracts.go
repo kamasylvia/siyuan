@@ -2014,3 +2014,9 @@ var GetBackupConfig = define[EmptyRequest, BackupGetConfigData]("getBackupConfig
 var SetBackupConfig = define[BackupSetConfigRequest, BackupGetConfigData]("setBackupConfig", "/api/backup/setConfig", AuthenticatedAccess|AdminAccess|WritableAccess, JSONBody, ResponseOptions{}, "POST")
 var TestBackupTarget = define[BackupTestTargetRequest, BackupTestTargetData]("testBackupTarget", "/api/backup/testTarget", AuthenticatedAccess|AdminAccess|WritableAccess, JSONBody, ResponseOptions{}, "POST")
 var RunBackup = define[BackupRunRequest, BackupRunData]("runBackup", "/api/backup/run", AuthenticatedAccess|AdminAccess|WritableAccess, JSONBody, ResponseOptions{}, "POST")
+
+// 备份还原:列出目标上的快照(manifest),dry-run 校验快照与口令,再执行还原写入当前工作空间。
+// 还原写入 data/ + conf/,默认拒绝非空目标(force 显式覆盖);加密备份必须携带口令。
+var BackupListSnapshots = define[BackupListSnapshotsRequest, BackupListSnapshotsData]("listBackupSnapshots", "/api/backup/listSnapshots", AuthenticatedAccess|AdminAccess, JSONBody, ResponseOptions{}, "POST")
+var BackupRestoreDryRun = define[BackupRestoreDryRunRequest, BackupRestoreDryRunData]("restoreBackupDryRun", "/api/backup/restoreDryRun", AuthenticatedAccess|AdminAccess, JSONBody, ResponseOptions{}, "POST")
+var BackupRestore = define[BackupRestoreRequest, BackupRestoreData]("restoreBackup", "/api/backup/restore", AuthenticatedAccess|AdminAccess|WritableAccess, JSONBody, ResponseOptions{}, "POST")

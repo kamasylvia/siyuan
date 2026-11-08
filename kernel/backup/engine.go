@@ -407,3 +407,45 @@ func LoadState(workspaceDir string) (*State, error) {
 	}
 	return state, nil
 }
+
+// ListSnapshots returns manifests stored on the target, newest first.
+// Broken manifests (unreadable/unparseable) are skipped rather than failing
+// the whole listing so one damaged object cannot hide healthy snapshots.
+func ListSnapshots(ctx context.Context, target Store) ([]*Manifest, error) {
+	ids, err := target.List(ctx, ManifestPrefix)
+	if err != nil {
+		return nil, err
+	}
+	var manifests []*Manifest
+	for _, id := range ids {
+		if !strings.HasSuffix(id, ".json") {
+			continue
+		}
+		data, err := target.Get(ctx, id)
+		if err != nil {
+			continue
+		}
+		manifest := &Manifest{}
+		if err = json.Unmarshal(data, manifest); err != nil {
+			continue
+		}
+		if manifest.ID == "" {
+			continue
+		}
+		manifests = append(manifests, manifest)
+	}
+	sort.Slice(manifests, func(i, j int) bool {
+		return manifests[i].CreatedAt.After(manifests[j].CreatedAt)
+	})
+	return manifests, nil
+}
+
+// RestorePlan is a dry-run summary of a restore: what would be written, where.
+type RestorePlan struct {
+	Snapshot   string   `json:"snapshot"`
+	CreatedAt  string   `json:"createdAt"`
+	Roots      []string `json:"roots"`
+	Files      int      `json:"files"`
+	TotalBytes int64    `json:"totalBytes"`
+	Encrypted  bool     `json:"encrypted"`
+}

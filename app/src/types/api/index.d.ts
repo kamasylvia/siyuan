@@ -766,6 +766,10 @@ export type BackupInclude = { "conf": boolean; "data": boolean; "history": boole
 
 export type BackupIncludeInput = { "conf": boolean; "data": boolean; "history": boolean; "localStorage": boolean; };
 
+export type BackupListSnapshotsData = { "snapshots": Array<BackupSnapshotSummary> | null; "target": string; };
+
+export type BackupListSnapshotsRequestInput = { "target": string; };
+
 export type BackupLocal = { "path": string; };
 
 export type BackupLocalInput = { "path": string; };
@@ -773,6 +777,14 @@ export type BackupLocalInput = { "path": string; };
 export type BackupPG = { "concurrentReqs"?: number; "database"?: string; "dsn"?: string; "host"?: string; "password"?: string; "port"?: number; "schema"?: string; "sslMode"?: string; "timeout"?: number; "user"?: string; };
 
 export type BackupPGInput = { "concurrentReqs"?: number; "database"?: string; "dsn"?: string; "host"?: string; "password"?: string; "port"?: number; "schema"?: string; "sslMode"?: string; "timeout"?: number; "user"?: string; };
+
+export type BackupRestoreData = { "bytes": number; "dest": string; "files": number; "snapshot": string; };
+
+export type BackupRestoreDryRunData = { "createdAt": string; "encrypted": boolean; "files": number; "roots": Array<string> | null; "snapshot": string; "totalBytes": number; };
+
+export type BackupRestoreDryRunRequestInput = { "passphrase"?: string; "snapshot": string; "target": string; };
+
+export type BackupRestoreRequestInput = { "force"?: boolean; "passphrase"?: string; "snapshot": string; "target": string; };
 
 export type BackupRetention = { "keepLast"?: number; "maxAgeDays"?: number; };
 
@@ -789,6 +801,8 @@ export type BackupS3 = { "accessKey"?: string; "bucket": string; "endpoint": str
 export type BackupS3Input = { "accessKey"?: string; "bucket": string; "endpoint": string; "pathStyle"?: boolean; "region"?: string; "secretKey"?: string; "skipTlsVerify"?: boolean; "timeout"?: number; };
 
 export type BackupSetConfigRequestInput = { "config": BackupConfigInput | null; };
+
+export type BackupSnapshotSummary = { "createdAt": string; "encrypted": boolean; "files": number; "id": string; "roots": Array<string> | null; "totalBytes": number; };
 
 export type BackupState = { "targets": Record<string, BackupTargetState | null> | null; "updatedAt"?: string; };
 
@@ -4571,6 +4585,31 @@ export interface APIPOSTRoutes {
     "/api/backup/getConfig": {
         request: EmptyRequestInput;
         response: { "code": 0; "data": BackupGetConfigData; "msg": string; } | { "code": -1; "data": { "closeTimeout": number; } | null; "msg": string; };
+        body: "json";
+        /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
+        authorization?: readonly ["authenticated","admin"];
+    };
+    /**
+     * 备份还原:列出目标上的快照(manifest),dry-run 校验快照与口令,再执行还原写入当前工作空间。
+     * 还原写入 data/ + conf/,默认拒绝非空目标(force 显式覆盖);加密备份必须携带口令。
+     */
+    "/api/backup/listSnapshots": {
+        request: BackupListSnapshotsRequestInput;
+        response: { "code": 0; "data": BackupListSnapshotsData; "msg": string; } | { "code": -1; "data": { "closeTimeout": number; } | null; "msg": string; };
+        body: "json";
+        /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
+        authorization?: readonly ["authenticated","admin"];
+    };
+    "/api/backup/restore": {
+        request: BackupRestoreRequestInput;
+        response: { "code": 0; "data": BackupRestoreData; "msg": string; } | { "code": -1; "data": { "closeTimeout": number; } | null; "msg": string; };
+        body: "json";
+        /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
+        authorization?: readonly ["authenticated","admin","writable"];
+    };
+    "/api/backup/restoreDryRun": {
+        request: BackupRestoreDryRunRequestInput;
+        response: { "code": 0; "data": BackupRestoreDryRunData; "msg": string; } | { "code": -1; "data": { "closeTimeout": number; } | null; "msg": string; };
         body: "json";
         /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
         authorization?: readonly ["authenticated","admin"];

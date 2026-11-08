@@ -17872,6 +17872,44 @@
       ],
       "additionalProperties": false
     },
+    "BackupListSnapshotsData": {
+      "type": "object",
+      "properties": {
+        "snapshots": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/BackupSnapshotSummary"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "snapshots",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "BackupListSnapshotsRequestInput": {
+      "type": "object",
+      "properties": {
+        "target": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "target"
+      ],
+      "additionalProperties": false
+    },
     "BackupLocal": {
       "type": "object",
       "properties": {
@@ -17966,6 +18004,113 @@
           "type": "string"
         }
       },
+      "additionalProperties": false
+    },
+    "BackupRestoreData": {
+      "type": "object",
+      "properties": {
+        "bytes": {
+          "type": "integer"
+        },
+        "dest": {
+          "type": "string"
+        },
+        "files": {
+          "type": "integer"
+        },
+        "snapshot": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "bytes",
+        "dest",
+        "files",
+        "snapshot"
+      ],
+      "additionalProperties": false
+    },
+    "BackupRestoreDryRunData": {
+      "type": "object",
+      "properties": {
+        "createdAt": {
+          "type": "string"
+        },
+        "encrypted": {
+          "type": "boolean"
+        },
+        "files": {
+          "type": "integer"
+        },
+        "roots": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "snapshot": {
+          "type": "string"
+        },
+        "totalBytes": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "createdAt",
+        "encrypted",
+        "files",
+        "roots",
+        "snapshot",
+        "totalBytes"
+      ],
+      "additionalProperties": false
+    },
+    "BackupRestoreDryRunRequestInput": {
+      "type": "object",
+      "properties": {
+        "passphrase": {
+          "type": "string"
+        },
+        "snapshot": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "snapshot",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "BackupRestoreRequestInput": {
+      "type": "object",
+      "properties": {
+        "force": {
+          "type": "boolean"
+        },
+        "passphrase": {
+          "type": "string"
+        },
+        "snapshot": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "snapshot",
+        "target"
+      ],
       "additionalProperties": false
     },
     "BackupRetention": {
@@ -18171,6 +18316,48 @@
       },
       "required": [
         "config"
+      ],
+      "additionalProperties": false
+    },
+    "BackupSnapshotSummary": {
+      "type": "object",
+      "properties": {
+        "createdAt": {
+          "type": "string"
+        },
+        "encrypted": {
+          "type": "boolean"
+        },
+        "files": {
+          "type": "integer"
+        },
+        "id": {
+          "type": "string"
+        },
+        "roots": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "totalBytes": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "createdAt",
+        "encrypted",
+        "files",
+        "id",
+        "roots",
+        "totalBytes"
       ],
       "additionalProperties": false
     },
@@ -145478,6 +145665,244 @@
               },
               "data": {
                 "$ref": "#/$defs/BackupGetConfigData"
+              },
+              "msg": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "msg",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  -1
+                ]
+              },
+              "data": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "closeTimeout": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "closeTimeout"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "msg": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "msg",
+              "data"
+            ],
+            "additionalProperties": true
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/backup/listSnapshots",
+      "handler": "listBackupSnapshots",
+      "authorization": [
+        "authenticated",
+        "admin"
+      ],
+      "body": "json",
+      "request": {
+        "$ref": "#/$defs/BackupListSnapshotsRequestInput"
+      },
+      "response": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  0
+                ]
+              },
+              "data": {
+                "$ref": "#/$defs/BackupListSnapshotsData"
+              },
+              "msg": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "msg",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  -1
+                ]
+              },
+              "data": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "closeTimeout": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "closeTimeout"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "msg": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "msg",
+              "data"
+            ],
+            "additionalProperties": true
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/backup/restore",
+      "handler": "restoreBackup",
+      "authorization": [
+        "authenticated",
+        "admin",
+        "writable"
+      ],
+      "body": "json",
+      "request": {
+        "$ref": "#/$defs/BackupRestoreRequestInput"
+      },
+      "response": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  0
+                ]
+              },
+              "data": {
+                "$ref": "#/$defs/BackupRestoreData"
+              },
+              "msg": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "msg",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  -1
+                ]
+              },
+              "data": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "closeTimeout": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "closeTimeout"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "msg": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "msg",
+              "data"
+            ],
+            "additionalProperties": true
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/backup/restoreDryRun",
+      "handler": "restoreBackupDryRun",
+      "authorization": [
+        "authenticated",
+        "admin"
+      ],
+      "body": "json",
+      "request": {
+        "$ref": "#/$defs/BackupRestoreDryRunRequestInput"
+      },
+      "response": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  0
+                ]
+              },
+              "data": {
+                "$ref": "#/$defs/BackupRestoreDryRunData"
               },
               "msg": {
                 "type": "string"

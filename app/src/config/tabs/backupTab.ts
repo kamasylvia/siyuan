@@ -1,4 +1,5 @@
 import {fetchSyncPost} from "../../util/fetch";
+import {confirmDialog} from "../../dialog/confirmDialog";
 import {showMessage} from "../../dialog/message";
 import {escapeHtmlTextAndAttr} from "../../util/escape";
 import type {SettingTabBuilder} from "../setting/builder";
@@ -146,6 +147,7 @@ const render = () => {
     <div class="fn__flex" style="align-items:center;gap:8px;margin-bottom:10px">
         <button class="b3-button b3-button--outline" id="backupAdd">${escapeHtmlTextAndAttr(text("backupAddTarget", "Add target"))}</button>
         <button class="b3-button b3-button--outline" id="backupRun">${escapeHtmlTextAndAttr(text("backupRunNow", "Back up now"))}</button>
+        <button class="b3-button b3-button--outline" id="backupRestore">${escapeHtmlTextAndAttr(text("backupRestoreTitle", "Restore"))}</button>
         <span class="fn__space"></span>
         <label class="fn__flex" style="align-items:center;gap:4px"><input id="backupIncludeData" type="checkbox" class="b3-switch" ${currentConfig.include?.data ? "checked" : ""}>${escapeHtmlTextAndAttr(text("backupIncludeData", "Data"))}</label>
         <label class="fn__flex" style="align-items:center;gap:4px"><input id="backupIncludeConf" type="checkbox" class="b3-switch" ${currentConfig.include?.conf ? "checked" : ""}>${escapeHtmlTextAndAttr(text("backupIncludeConf", "Configuration"))}</label>
@@ -212,6 +214,7 @@ const bind = () => {
     }
     panelRoot.querySelector("#backupAdd")?.addEventListener("click", () => openForm(defaultTarget()));
     panelRoot.querySelector("#backupRun")?.addEventListener("click", () => void runBackup());
+    panelRoot.querySelector("#backupRestore")?.addEventListener("click", () => void openRestoreDialog());
     for (const id of ["backupIncludeData", "backupIncludeConf", "backupIncludeHistory"]) {
         panelRoot.querySelector(`#${id}`)?.addEventListener("change", () => void saveInclude());
     }
@@ -427,6 +430,53 @@ const runBackup = async () => {
         showMessage(`${text("backupRunOK", "Backup completed")}: ${result.snapshot || ""}`, 4000);
     }
     await loadPanel();
+};
+
+const openRestoreDialog = async () => {
+    const enabledTargets = (currentConfig.targets || []).filter(target => target.enabled);
+    if (!enabledTargets.length) {
+        showMessage(text("backupRestoreNoTargets", "No enabled backup target to restore from"), 6000, "error");
+        return;
+    }
+    const target = enabledTargets[0];
+    const listResponse = await fetchSyncPost("/api/backup/listSnapshots", {target: target.id});
+    if (listResponse.code !== 0) {
+        showMessage(`${text("backupRestoreListFailed", "Could not list snapshots")}: ${listResponse.msg}`, 7000, "error");
+        return;
+    }
+    const snapshots = (listResponse.data as {snapshots?: Array<{id: string; createdAt: string; files: number; encrypted: boolean}>}).snapshots || [];
+    if (!snapshots.length) {
+        showMessage(text("backupRestoreEmpty", "No snapshots on this target"), 6000);
+        return;
+    }
+    const options = snapshots.map(snapshot =>
+        `<option value="${escapeHtmlTextAndAttr(snapshot.id)}">${escapeHtmlTextAndAttr(snapshot.createdAt)} · ${snapshot.files} files${snapshot.encrypted ? " · 🔒" : ""}</option>`).join("");
+    const dialogHTML = `<div class="b3-dialog__content" style="padding:12px">
+    <div class="fn__flex" style="align-items:center;gap:8px;margin-bottom:8px">
+        <span class="fn__flex-center ft__on-surface">${escapeHtmlTextAndAttr(text("backupRestoreTargetLabel", "Target"))}</span>
+        <span>${escapeHtmlTextAndAttr(targetLabel(target))}</span>
+    </div>
+    <select id="backupRestoreSnapshot" class="b3-select" style="width:100%">${options}</select>
+    <input id="backupRestorePassphrase" type="password" class="b3-text-field fn__block" style="margin-top:8px"
+        placeholder="${escapeHtmlTextAndAttr(text("backupRestorePassphrase", "Passphrase (encrypted backups only)"))}">
+    <div class="ft__on-surface" style="margin-top:8px;font-size:12px">${escapeHtmlTextAndAttr(text("backupRestoreWarn", "Restore overwrites data/ and conf/ in the current workspace. Existing files not in the snapshot are kept unless they conflict."))}</div>
+</div>`;
+    confirmDialog(text("backupRestoreTitle", "Restore from backup"), dialogHTML, async () => {
+        const snapshot = (document.querySelector("#backupRestoreSnapshot") as HTMLSelectElement)?.value || "";
+        const passphrase = (document.querySelector("#backupRestorePassphrase") as HTMLInputElement)?.value || "";
+        const dryRun = await fetchSyncPost("/api/backup/restoreDryRun", {target: target.id, snapshot, passphrase});
+        if (dryRun.code !== 0) {
+            showMessage(`${text("backupRestoreFailed", "Restore failed")}: ${dryRun.msg}`, 7000, "error");
+            return;
+        }
+        const response = await fetchSyncPost("/api/backup/restore", {target: target.id, snapshot, passphrase, force: false});
+        const data = response.data as {files?: number; bytes?: number} | undefined;
+        if (response.code !== 0) {
+            showMessage(`${text("backupRestoreFailed", "Restore failed")}: ${response.msg}`, 7000, "error");
+            return;
+        }
+        showMessage(`${text("backupRestoreOK", "Restored")}: ${data?.files || 0} files`, 6000);
+    });
 };
 
 export const refreshBackupPanel = () => {

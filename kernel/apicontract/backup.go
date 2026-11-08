@@ -130,3 +130,50 @@ type BackupRunData struct {
 	TotalBytes int64             `json:"totalBytes"`
 	Targets    []BackupRunTarget `json:"targets"`
 }
+
+type BackupListSnapshotsRequest struct {
+	Target string `json:"target"`
+}
+
+type BackupSnapshotSummary struct {
+	ID         string   `json:"id"`
+	CreatedAt  string   `json:"createdAt"`
+	Roots      []string `json:"roots"`
+	Files      int      `json:"files"`
+	TotalBytes int64    `json:"totalBytes"`
+	Encrypted  bool     `json:"encrypted"`
+}
+
+type BackupListSnapshotsData struct {
+	Target    string                  `json:"target"`
+	Snapshots []BackupSnapshotSummary `json:"snapshots"`
+}
+
+type BackupRestoreDryRunRequest struct {
+	Target     string `json:"target"`
+	Snapshot   string `json:"snapshot"`
+	Passphrase string `json:"passphrase" api:"optional"`
+}
+
+type BackupRestoreDryRunData struct {
+	Snapshot   string   `json:"snapshot"`
+	CreatedAt  string   `json:"createdAt"`
+	Roots      []string `json:"roots"`
+	Files      int      `json:"files"`
+	TotalBytes int64    `json:"totalBytes"`
+	Encrypted  bool     `json:"encrypted"`
+}
+
+type BackupRestoreRequest struct {
+	Target     string `json:"target"`
+	Snapshot   string `json:"snapshot"`
+	Passphrase string `json:"passphrase" api:"optional"`
+	Force      bool   `json:"force" api:"optional"`
+}
+
+type BackupRestoreData struct {
+	Snapshot string `json:"snapshot"`
+	Files    int    `json:"files"`
+	Bytes    int64  `json:"bytes"`
+	Dest     string `json:"dest"`
+}

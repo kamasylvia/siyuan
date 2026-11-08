@@ -143,3 +143,26 @@ func writeRestoredFile(dest string, data []byte, mode os.FileMode) error {
 	}
 	return os.Rename(name, dest)
 }
+
+// RestoreDryRun reports what a restore would write without touching disk:
+// per-root file counts and total bytes from the manifest.
+func RestoreDryRun(ctx context.Context, target Store, snapshotID, passphrase string) (*RestorePlan, error) {
+	if strings.TrimSpace(snapshotID) == "" {
+		return nil, errors.New("snapshot id is required")
+	}
+	data, err := target.Get(ctx, ManifestPrefix+snapshotID+".json")
+	if err != nil {
+		return nil, err
+	}
+	manifest := &Manifest{}
+	if err = json.Unmarshal(data, manifest); err != nil {
+		return nil, fmt.Errorf("parse backup manifest [%s]: %w", snapshotID, err)
+	}
+	if manifest.Encryption != nil && passphrase == "" {
+		return nil, errors.New("backup is encrypted; passphrase is required")
+	}
+	plan := &RestorePlan{Snapshot: snapshotID, CreatedAt: manifest.CreatedAt.Format(time.RFC3339),
+		Roots: manifest.Roots, Files: len(manifest.Files), TotalBytes: manifest.TotalBytes,
+		Encrypted: manifest.Encryption != nil}
+	return plan, nil
+}
