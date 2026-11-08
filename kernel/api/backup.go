@@ -224,6 +224,7 @@ var getBackupConfig = contractHandler(apicontract.GetBackupConfig, func(c *gin.C
 	}
 	return apicontract.Success(apicontract.BackupGetConfigData{
 		Config: maskBackupConfig(cfg), State: backupStateForAPI(),
+		Running: backup.RunStartedAt(),
 	})
 })
 
@@ -242,6 +243,7 @@ var setBackupConfig = contractHandler(apicontract.SetBackupConfig, func(c *gin.C
 	}
 	return apicontract.Success(apicontract.BackupGetConfigData{
 		Config: maskBackupConfig(next), State: backupStateForAPI(),
+		Running: backup.RunStartedAt(),
 	})
 })
 

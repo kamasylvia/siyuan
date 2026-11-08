@@ -1,4 +1,6 @@
 {
+	"backupRunInProgress": "Zálohuje sa · ${x}s",
+	"backupRunStarted": "Záloha spustená; snímka sa odovzdáva",
 	"backupRestoreForceLabel": "Zjednotiť pracovný priestor so snímkou",
 	"backupRestoreNeedForce": "Pracovný priestor už obsahuje údaje; na obnovenie povoľte zjednotenie",
 	"backupRestorePruned": "Odstránených ${x} súborov mimo snímky",

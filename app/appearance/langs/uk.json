@@ -1,4 +1,6 @@
 {
+	"backupRunInProgress": "Триває копіювання · ${x} с",
+	"backupRunStarted": "Резервне копіювання почато; завантаження знімка",
 	"backupRestoreForceLabel": "Звести робочий простір до знімка",
 	"backupRestoreNeedForce": "Робочий простір уже містить дані; увімкніть зведення для відновлення",
 	"backupRestorePruned": "Видалено ${x} сторонніх файлів",

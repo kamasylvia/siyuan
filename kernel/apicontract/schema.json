@@ -17815,12 +17815,16 @@
             }
           ]
         },
+        "running": {
+          "type": "integer"
+        },
         "state": {
           "$ref": "#/$defs/BackupState"
         }
       },
       "required": [
-        "config"
+        "config",
+        "running"
       ],
       "additionalProperties": false
     },

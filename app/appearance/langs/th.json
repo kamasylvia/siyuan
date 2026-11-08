@@ -1,4 +1,6 @@
 {
+	"backupRunInProgress": "กำลังสำรองข้อมูล · ${x} วิ",
+	"backupRunStarted": "เริ่มการสำรองข้อมูลแล้ว กำลังอัปโหลดสแนปชอต",
 	"backupRestoreForceLabel": "ทำให้พื้นที่ทำงานตรงกับสแนปชอต",
 	"backupRestoreNeedForce": "พื้นที่ทำงานมีข้อมูลอยู่แล้ว เปิดใช้การจับคู่ก่อนกู้คืน",
 	"backupRestorePruned": "ลบไฟล์ที่อยู่นอกสแนปชอต ${x} ไฟล์",

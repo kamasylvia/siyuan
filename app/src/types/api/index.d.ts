@@ -760,7 +760,7 @@ export type BackupEncryption = { "enabled": boolean; "passphrase"?: string; };
 
 export type BackupEncryptionInput = { "enabled": boolean; "passphrase"?: string; };
 
-export type BackupGetConfigData = { "config": BackupConfig | null; "state"?: BackupState; };
+export type BackupGetConfigData = { "config": BackupConfig | null; "running": number; "state"?: BackupState; };
 
 export type BackupInclude = { "conf": boolean; "data": boolean; "history": boolean; "localStorage": boolean; };
 

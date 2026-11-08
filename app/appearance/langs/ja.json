@@ -1,4 +1,6 @@
 {
+	"backupRunInProgress": "バックアップ中 · ${x}秒",
+	"backupRunStarted": "バックアップを開始し、スナップショットをアップロード中",
 	"backupRestoreForceLabel": "上書き復元:ワークスペースをスナップショット時点に一致させる",
 	"backupRestoreNeedForce": "ワークスペースに既存データがあります。上書き復元を有効にしてから実行してください",
 	"backupRestorePruned": "スナップショット外のファイル ${x} 件を削除しました",

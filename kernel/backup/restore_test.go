@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/gofrs/flock"
 )
 
 // prepareForceRestoreFixture 备份两个文件(data/box/doc.sy、conf/conf.json)并
@@ -135,5 +137,39 @@ func TestRestoreDryRunOnEmptyDestination(t *testing.T) {
 	}
 	if !strings.Contains(plan.Snapshot, "-") || plan.Files != 2 {
 		t.Fatalf("unexpected plan: %+v", plan)
+	}
+}
+
+func TestRunProgressLifecycle(t *testing.T) {
+	if RunStartedAt() != 0 {
+		t.Fatal("progress should be idle initially")
+	}
+	workspace := t.TempDir()
+	targetDir := t.TempDir()
+	writeTestFile(t, workspace, "data/box/doc.sy", "v1")
+	engine := newLocalTestEngine(t, workspace, targetDir)
+	if _, err := engine.Run(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if RunStartedAt() != 0 {
+		t.Fatal("progress must clear after run returns")
+	}
+	// 锁被占用时不产生运行态
+	engine2 := NewEngine(workspace, engine.Config)
+	engine2.InjectedTargets = engine.InjectedTargets
+	lock := flock.New(filepath.Join(workspace, "backup.lock"))
+	locked, lockErr := lock.TryLock()
+	if lockErr != nil {
+		t.Fatal(lockErr)
+	}
+	if !locked {
+		t.Fatal("failed to acquire backup lock for the conflict test")
+	}
+	defer func() { _ = lock.Unlock() }()
+	if _, runErr := engine2.Run(context.Background()); runErr == nil {
+		t.Fatal("expected lock conflict error")
+	}
+	if RunStartedAt() != 0 {
+		t.Fatal("failed lock attempt must not leave progress running")
 	}
 }

@@ -1,4 +1,6 @@
 {
+	"backupRunInProgress": "백업 중 · ${x}초",
+	"backupRunStarted": "백업이 시작되어 스냅샷을 업로드하는 중입니다",
 	"backupRestoreForceLabel": "덮어쓰기 복원: 작업공간을 스냅샷 시점으로 일치",
 	"backupRestoreNeedForce": "작업공간에 이미 데이터가 있습니다. 덮어쓰기 복원을 활성화한 후 실행하세요",
 	"backupRestorePruned": "스냅샷 외 파일 ${x}개를 정리했습니다",

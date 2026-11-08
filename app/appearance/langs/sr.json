@@ -1,4 +1,6 @@
 {
+	"backupRunInProgress": "Резерва у току · ${x}s",
+	"backupRunStarted": "Резерва је почела; снимак се отпрема",
 	"backupRestoreForceLabel": "Усклади радни простор са снимком",
 	"backupRestoreNeedForce": "Радни простор већ садржи податке; омогући усклађивање за обнављање",
 	"backupRestorePruned": "Уклоњено ${x} датотека ван снимка",

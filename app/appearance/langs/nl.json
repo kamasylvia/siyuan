@@ -1,4 +1,6 @@
 {
+	"backupRunInProgress": "Back-up bezig · ${x}s",
+	"backupRunStarted": "Back-up gestart; momentopname wordt geüpload",
 	"backupRestoreForceLabel": "Werkruimte afstemmen op de momentopname",
 	"backupRestoreNeedForce": "De werkruimte bevat al gegevens; schakel afstemmen in om te herstellen",
 	"backupRestorePruned": "${x} overbodige bestanden verwijderd",

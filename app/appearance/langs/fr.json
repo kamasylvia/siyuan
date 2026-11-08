@@ -1,4 +1,6 @@
 {
+	"backupRunInProgress": "Sauvegarde en cours · ${x}s",
+	"backupRunStarted": "Sauvegarde démarrée ; envoi de l'instantané",
 	"backupRestoreForceLabel": "Converger l'espace de travail vers l'instantané",
 	"backupRestoreNeedForce": "L'espace de travail contient déjà des données ; activez la convergence pour restaurer",
 	"backupRestorePruned": "${x} fichiers obsolètes supprimés",

@@ -1,4 +1,6 @@
 {
+	"backupRunInProgress": "Backup in corso · ${x}s",
+	"backupRunStarted": "Backup avviato; caricamento snapshot in corso",
 	"backupRestoreForceLabel": "Convergi l'area di lavoro allo snapshot",
 	"backupRestoreNeedForce": "L'area di lavoro contiene già dati; attiva la convergenza per ripristinare",
 	"backupRestorePruned": "Rimossi ${x} file estranei",

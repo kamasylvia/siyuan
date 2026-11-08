@@ -41,7 +41,7 @@ type TargetState = {
 
 type BackupState = {updatedAt?: string; targets: Record<string, TargetState>};
 
-type BackupData = {config: BackupConfig; state?: BackupState};
+type BackupData = {config: BackupConfig; state?: BackupState; running?: number};
 
 const text = (key: string, fallback: string): string =>
     (window.siyuan.languages as unknown as Record<string, string>)[key] || fallback;
@@ -151,6 +151,7 @@ const render = () => {
         <label class="fn__flex" style="align-items:center;gap:4px"><input id="backupEncryptionEnabled" type="checkbox" class="b3-switch" ${currentConfig.encryption?.enabled ? "checked" : ""}>${escapeHtmlTextAndAttr(text("backupEncryption", "Encryption"))}</label>
         <input id="backupEncryptionPassphrase" class="b3-text-field fn__flex-1" type="password" placeholder="${escapeHtmlTextAndAttr(text("backupPassphrase", "Passphrase"))}" value="${escapeHtmlTextAndAttr(currentConfig.encryption?.passphrase || "")}">
     </div>
+    <div id="backupRunProgress" class="ft__on-surface fn__none" style="margin-bottom:10px;font-size:12px"></div>
     <div id="backupTargetList">${targets.length ? targets.map(targetRowHTML).join("") :
         `<div class="b3-label__text">${escapeHtmlTextAndAttr(text("backupNoTargets", "No backup targets configured"))}</div>`}</div>
     <div id="backupForm" class="fn__none" style="margin-top:12px;border-top:1px solid var(--b3-border-color);padding-top:10px">
@@ -329,6 +330,16 @@ const loadPanel = async () => {
     currentConfig = data.config || defaultConfig();
     currentState = data.state || {targets: {}};
     render();
+    // 面板打开时备份正在跑:显示运行态(轮询由点击流程接管,这里只展示)
+    if ((data.running || 0) > 0) {
+        const progressEl = panelRoot?.querySelector("#backupRunProgress") as HTMLElement;
+        if (progressEl) {
+            const seconds = Math.max(1, Math.round(Date.now() / 1000) - (data.running || 0));
+            progressEl.classList.remove("fn__none");
+            progressEl.textContent =
+                text("backupRunInProgress", "Backing up · ${x}s").replace("${x}", String(seconds));
+        }
+    }
 };
 
 const saveConfig = async () => {
@@ -404,19 +415,54 @@ const runBackup = async () => {
             return;
         }
     }
-    const response = await fetchSyncPost("/api/backup/run", {targets: []});
-    if (response.code !== 0) {
-        showMessage(`${text("backupRunFailed", "Backup failed")}: ${response.msg}`, 7000, "error");
+    // 备份是同步 HTTP,大工作空间要跑数分钟:点击即进 loading 态并轮询运行态,
+    // 防止重复点击与无反馈
+    const button = panelRoot?.querySelector("#backupRun") as HTMLButtonElement;
+    if (button?.hasAttribute("disabled")) {
         return;
     }
-    const result = response.data as {snapshot?: string; targets?: Array<{ok: boolean; error?: string}>};
-    const failed = (result.targets || []).filter(target => !target.ok);
-    if (failed.length) {
-        showMessage(`${text("backupRunFailed", "Backup failed")}: ${failed.map(target => target.error).join("; ")}`, 7000, "error");
-    } else {
-        showMessage(`${text("backupRunOK", "Backup completed")}: ${result.snapshot || ""}`, 4000);
+    button?.setAttribute("disabled", "disabled");
+    const progressEl = panelRoot?.querySelector("#backupRunProgress") as HTMLElement;
+    const startedTip = text("backupRunStarted", "Backup started; uploading snapshot");
+    if (progressEl) {
+        progressEl.classList.remove("fn__none");
+        progressEl.textContent = startedTip;
     }
-    await loadPanel();
+    showMessage(startedTip, 3000);
+    const poll = window.setInterval(async () => {
+        const response = await fetchSyncPost("/api/backup/getConfig", {});
+        if (response.code !== 0) {
+            return;
+        }
+        const started = (response.data as BackupData)?.running || 0;
+        if (started > 0 && progressEl) {
+            const seconds = Math.max(1, Math.round(Date.now() / 1000) - started);
+            progressEl.textContent =
+                text("backupRunInProgress", "Backing up · ${x}s").replace("${x}", String(seconds));
+        }
+    }, 2000);
+    try {
+        const response = await fetchSyncPost("/api/backup/run", {targets: []});
+        if (response.code !== 0) {
+            showMessage(`${text("backupRunFailed", "Backup failed")}: ${response.msg}`, 7000, "error");
+            return;
+        }
+        const result = response.data as {snapshot?: string; targets?: Array<{ok: boolean; error?: string}>};
+        const failed = (result.targets || []).filter(target => !target.ok);
+        if (failed.length) {
+            showMessage(`${text("backupRunFailed", "Backup failed")}: ${failed.map(target => target.error).join("; ")}`, 7000, "error");
+        } else {
+            showMessage(`${text("backupRunOK", "Backup completed")}: ${result.snapshot || ""}`, 4000);
+        }
+    } finally {
+        window.clearInterval(poll);
+        button?.removeAttribute("disabled");
+        if (progressEl) {
+            progressEl.classList.add("fn__none");
+            progressEl.textContent = "";
+        }
+        await loadPanel();
+    }
 };
 
 const openRestoreDialog = async () => {

@@ -1,4 +1,6 @@
 {
+	"backupRunInProgress": "Sedang mencadangkan · ${x}s",
+	"backupRunStarted": "Pencadangan dimulai; mengunggah snapshot",
 	"backupRestoreForceLabel": "Samakan ruang kerja dengan snapshot",
 	"backupRestoreNeedForce": "Ruang kerja sudah berisi data; aktifkan penyamaan untuk memulihkan",
 	"backupRestorePruned": "${x} file di luar snapshot dihapus",

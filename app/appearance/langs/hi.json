@@ -1,4 +1,6 @@
 {
+	"backupRunInProgress": "बैकअप चल रहा है · ${x}s",
+	"backupRunStarted": "बैकअप शुरू; स्नैपशॉट अपलोड हो रहा है",
 	"backupRestoreForceLabel": "वर्कस्पेस को स्नैपशॉट के अनुसार बदलें",
 	"backupRestoreNeedForce": "वर्कस्पेस में पहले से डेटा है; पुनर्स्थापित करने के लिए बदलाव सक्षम करें",
 	"backupRestorePruned": "${x} बाहरी फ़ाइलें हटाई गईं",

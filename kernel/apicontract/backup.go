@@ -88,6 +88,8 @@ type BackupState struct {
 type BackupGetConfigData struct {
 	Config *BackupConfig `json:"config"`
 	State  *BackupState  `json:"state,omitempty"`
+	// Running 是在飞备份的 Unix 起始秒,0 = 空闲;前端据此显示进度
+	Running int64 `json:"running"`
 }
 
 type BackupSetConfigRequest struct {

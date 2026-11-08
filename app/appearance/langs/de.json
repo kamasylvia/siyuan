@@ -1,4 +1,6 @@
 {
+	"backupRunInProgress": "Sicherung läuft · ${x}s",
+	"backupRunStarted": "Sicherung gestartet; Snapshot wird hochgeladen",
 	"backupRestoreForceLabel": "Arbeitsbereich auf den Snapshot bringen",
 	"backupRestoreNeedForce": "Der Arbeitsbereich enthält bereits Daten; aktiviere das Übernehmen, um wiederherzustellen",
 	"backupRestorePruned": "${x} überflüssige Dateien entfernt",

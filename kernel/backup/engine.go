@@ -113,6 +113,8 @@ func (engine *Engine) Run(ctx context.Context, onlyTargets ...string) (*RunResul
 		return nil, errors.New("another backup is already running")
 	}
 	defer func() { _ = lock.Unlock() }()
+	MarkRunStarted()
+	defer MarkRunFinished()
 	selected := map[string]bool{}
 	for _, id := range onlyTargets {
 		selected[id] = true

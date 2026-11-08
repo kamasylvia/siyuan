@@ -1,4 +1,6 @@
 {
+	"backupRunInProgress": "Yedekleniyor · ${x}sn",
+	"backupRunStarted": "Yedekleme başladı; anlık görüntü yükleniyor",
 	"backupRestoreForceLabel": "Çalışma alanını anlık görüntüye göre eşitle",
 	"backupRestoreNeedForce": "Çalışma alanında zaten veri var; geri yüklemek için eşitlemeyi etkinleştir",
 	"backupRestorePruned": "Anlık görüntü dışındaki ${x} dosya silindi",

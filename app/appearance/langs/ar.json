@@ -1,4 +1,6 @@
 {
+	"backupRunInProgress": "جارٍ النسخ الاحتياطي · ${x} ث",
+	"backupRunStarted": "بدأ النسخ الاحتياطي؛ جارٍ رفع اللقطة",
 	"backupRestoreForceLabel": "مطابقة مساحة العمل مع اللقطة",
 	"backupRestoreNeedForce": "مساحة العمل تحتوي بالفعل على بيانات؛ فعّل المطابقة للاستعادة",
 	"backupRestorePruned": "تم حذف ${x} ملفًا غير تابع للقطة",

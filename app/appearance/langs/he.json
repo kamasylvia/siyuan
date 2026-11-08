@@ -1,4 +1,6 @@
 {
+	"backupRunInProgress": "מתבצע גיבוי · ${x}s",
+	"backupRunStarted": "הגיבוי התחיל; מתבצעת העלאת צילום המצב",
 	"backupRestoreForceLabel": "התאמת סביבת העבודה לצילום המצב",
 	"backupRestoreNeedForce": "סביבת העבודה כבר מכילה נתונים; הפעל התאמה כדי לשחזר",
 	"backupRestorePruned": "הוסרו ${x} קבצים שאינם בצילום המצב",

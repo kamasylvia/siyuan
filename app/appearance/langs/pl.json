@@ -1,4 +1,6 @@
 {
+	"backupRunInProgress": "Wykonywanie kopii · ${x}s",
+	"backupRunStarted": "Kopia zapasowa rozpoczęta; wysyłanie migawki",
 	"backupRestoreForceLabel": "Uzgodnij przestrzeń roboczą z migawką",
 	"backupRestoreNeedForce": "Przestrzeń robocza zawiera już dane; włącz uzgadnianie, aby przywrócić",
 	"backupRestorePruned": "Usunięto ${x} plików spoza migawki",

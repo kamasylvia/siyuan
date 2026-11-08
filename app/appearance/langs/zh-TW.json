@@ -1,4 +1,6 @@
 {
+	"backupRunInProgress": "備份中 · 已執行 ${x} 秒",
+	"backupRunStarted": "備份已開始,正在上傳快照",
 	"backupRestoreForceLabel": "覆蓋還原:工作空間收斂為快照時點",
 	"backupRestoreNeedForce": "工作空間已有資料,請勾選覆蓋還原後再執行",
 	"backupRestorePruned": "已清理 ${x} 個快照外檔案",

@@ -1,4 +1,6 @@
 {
+	"backupRunInProgress": "Copia de seguridad en curso · ${x}s",
+	"backupRunStarted": "Copia de seguridad iniciada; subiendo instantánea",
 	"backupRestoreForceLabel": "Converger el espacio de trabajo con la instantánea",
 	"backupRestoreNeedForce": "El espacio de trabajo ya tiene datos; activa la convergencia para restaurar",
 	"backupRestorePruned": "Se eliminaron ${x} archivos ajenos",
