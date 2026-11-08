@@ -446,23 +446,38 @@ const openRestoreDialog = async () => {
     <select id="backupRestoreSnapshot" class="b3-select" style="width:100%">${options}</select>
     <input id="backupRestorePassphrase" type="password" class="b3-text-field fn__block" style="margin-top:8px"
         placeholder="${escapeHtmlTextAndAttr(text("backupRestorePassphrase", "Passphrase (encrypted backups only)"))}">
-    <div class="ft__on-surface" style="margin-top:8px;font-size:12px">${escapeHtmlTextAndAttr(text("backupRestoreWarn", "Restore overwrites data/ and conf/ in the current workspace. Existing files not in the snapshot are kept unless they conflict."))}</div>
+    <label class="fn__flex" style="align-items:center;gap:6px;margin-top:8px;cursor:pointer">
+        <input id="backupRestoreForce" type="checkbox" checked>
+        <span>${escapeHtmlTextAndAttr(text("backupRestoreForceLabel", "Converge workspace to the snapshot"))}</span>
+    </label>
+    <div class="ft__on-surface" style="margin-top:8px;font-size:12px">${escapeHtmlTextAndAttr(text("backupRestoreWarn", "Restoring overwrites data/ and conf/ in the current workspace. With converge enabled the workspace becomes an exact copy of the snapshot: documents and assets not in the snapshot are deleted; excluded files such as backup credentials are kept"))}</div>
 </div>`;
     confirmDialog(text("backupRestoreTitle", "Restore from backup"), dialogHTML, async () => {
         const snapshot = (document.querySelector("#backupRestoreSnapshot") as HTMLSelectElement)?.value || "";
         const passphrase = (document.querySelector("#backupRestorePassphrase") as HTMLInputElement)?.value || "";
-        const dryRun = await fetchSyncPost("/api/backup/restoreDryRun", {target: target.id, snapshot, passphrase});
+        const force = (document.querySelector("#backupRestoreForce") as HTMLInputElement)?.checked || false;
+        const dryRun = await fetchSyncPost("/api/backup/restoreDryRun", {target: target.id, snapshot, passphrase, force});
         if (dryRun.code !== 0) {
             showMessage(`${text("backupRestoreFailed", "Restore failed")}: ${dryRun.msg}`, 7000, "error");
             return;
         }
-        const response = await fetchSyncPost("/api/backup/restore", {target: target.id, snapshot, passphrase, force: false});
-        const data = response.data as {files?: number; bytes?: number} | undefined;
+        const plan = dryRun.data as {conflicts?: number; removeCount?: number; removeBytes?: number} | undefined;
+        // 未勾选覆盖还原且工作空间已有数据:还原必然被拒绝,提前拦截并提示
+        if (!force && (plan?.conflicts || 0) > 0) {
+            showMessage(text("backupRestoreNeedForce", "The workspace already has data; enable converge to restore"), 7000, "error");
+            return;
+        }
+        const response = await fetchSyncPost("/api/backup/restore", {target: target.id, snapshot, passphrase, force});
+        const data = response.data as {files?: number; bytes?: number; removed?: number} | undefined;
         if (response.code !== 0) {
             showMessage(`${text("backupRestoreFailed", "Restore failed")}: ${response.msg}`, 7000, "error");
             return;
         }
-        showMessage(`${text("backupRestoreOK", "Restored")}: ${data?.files || 0} files`, 6000);
+        let message = `${text("backupRestoreOK", "Restored")}: ${data?.files || 0} files`;
+        if ((data?.removed || 0) > 0) {
+            message += ", " + text("backupRestorePruned", "${x} stale files removed").replace("${x}", String(data?.removed));
+        }
+        showMessage(message, 6000);
     });
 };
 

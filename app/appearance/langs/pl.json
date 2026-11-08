@@ -1,4 +1,7 @@
 {
+	"backupRestoreForceLabel": "Uzgodnij przestrzeń roboczą z migawką",
+	"backupRestoreNeedForce": "Przestrzeń robocza zawiera już dane; włącz uzgadnianie, aby przywrócić",
+	"backupRestorePruned": "Usunięto ${x} plików spoza migawki",
 	"backupRestoreTitle": "Przywróć",
 	"backupRestoreFrom": "Przywróć z kopii zapasowej",
 	"backupRestoreTargetLabel": "Cel",
@@ -6,7 +9,7 @@
 	"backupRestoreEmpty": "Brak migawek na tym celu",
 	"backupRestoreNoTargets": "Cel przywracania",
 	"backupRestorePassphrase": "Fraza hasła (tylko szyfrowane kopie)",
-	"backupRestoreWarn": "Przywracanie nadpisze data/ i conf/ bieżącego obszaru roboczego; pliki poza migawką pozostają, o ile nie kolidują",
+	"backupRestoreWarn": "Przywracanie nadpisuje data/ i conf/ w bieżącej przestrzeni roboczej. Po włączeniu uzgadniania przestrzeń robocza staje się dokładną kopią migawki: dokumenty i załączniki spoza migawki zostaną usunięte; pliki wykluczone, np. dane uwierzytelniające kopii zapasowej, pozostaną",
 	"backupRestoreFailed": "Przywracanie nie powiodło się",
 	"backupRestoreOK": "Przywrócono",
 	"backupTargetNote": "Note (optional)",

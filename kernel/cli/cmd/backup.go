@@ -162,7 +162,12 @@ var backupRestoreCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		fmt.Printf("restored snapshot %s: %d files, %d bytes -> %s\n", result.Snapshot, result.Files, result.Bytes, dest)
+		if result.Removed > 0 {
+			fmt.Printf("restored snapshot %s: %d files, %d bytes -> %s (pruned %d stale files, %d bytes)\n",
+				result.Snapshot, result.Files, result.Bytes, dest, result.Removed, result.RemovedBytes)
+		} else {
+			fmt.Printf("restored snapshot %s: %d files, %d bytes -> %s\n", result.Snapshot, result.Files, result.Bytes, dest)
+		}
 		return nil
 	},
 }
@@ -212,6 +217,6 @@ func init() {
 	backupRestoreCmd.Flags().String("target", "", "backup target ID")
 	backupRestoreCmd.Flags().String("snapshot", "", "snapshot ID")
 	backupRestoreCmd.Flags().String("dest", "", "restore destination workspace")
-	backupRestoreCmd.Flags().Bool("force", false, "overwrite existing files in destination")
+	backupRestoreCmd.Flags().Bool("force", false, "overwrite existing files and prune files outside the snapshot")
 	backupRestoreCmd.Flags().String("passphrase", "", "backup encryption passphrase")
 }

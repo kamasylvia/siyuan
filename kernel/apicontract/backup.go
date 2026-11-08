@@ -148,6 +148,8 @@ type BackupRestoreDryRunRequest struct {
 	Target     string `json:"target"`
 	Snapshot   string `json:"snapshot"`
 	Passphrase string `json:"passphrase" api:"optional"`
+	// Force 与还原请求一致时,dry-run 额外报告将被清理的快照外文件规模
+	Force bool `json:"force" api:"optional"`
 }
 
 type BackupRestoreDryRunData struct {
@@ -157,6 +159,11 @@ type BackupRestoreDryRunData struct {
 	Files      int      `json:"files"`
 	TotalBytes int64    `json:"totalBytes"`
 	Encrypted  bool     `json:"encrypted"`
+	// Conflicts 是目标工作空间中会被快照覆盖的已存在非空文件数;
+	// RemoveCount/RemoveBytes 是 force 还原将清理的快照外文件规模
+	Conflicts   int   `json:"conflicts"`
+	RemoveCount int   `json:"removeCount"`
+	RemoveBytes int64 `json:"removeBytes"`
 }
 
 type BackupRestoreRequest struct {
@@ -171,4 +178,7 @@ type BackupRestoreData struct {
 	Files    int    `json:"files"`
 	Bytes    int64  `json:"bytes"`
 	Dest     string `json:"dest"`
+	// Removed/RemovedBytes 是 force 还原清理掉的快照外文件规模
+	Removed      int   `json:"removed"`
+	RemovedBytes int64 `json:"removedBytes"`
 }

@@ -1,4 +1,7 @@
 {
+	"backupRestoreForceLabel": "Convergi l'area di lavoro allo snapshot",
+	"backupRestoreNeedForce": "L'area di lavoro contiene già dati; attiva la convergenza per ripristinare",
+	"backupRestorePruned": "Rimossi ${x} file estranei",
 	"backupRestoreTitle": "Ripristina",
 	"backupRestoreFrom": "Ripristina dal backup",
 	"backupRestoreTargetLabel": "Destinazione",
@@ -6,7 +9,7 @@
 	"backupRestoreEmpty": "Nessuno snapshot su questa destinazione",
 	"backupRestoreNoTargets": "Destinazione di ripristino",
 	"backupRestorePassphrase": "Passphrase (solo backup cifrati)",
-	"backupRestoreWarn": "Il ripristino sovrascrive data/ e conf/ dello spazio di lavoro corrente. I file esistenti fuori dallo snapshot vengono conservati salvo conflitti.",
+	"backupRestoreWarn": "Il ripristino sovrascrive data/ e conf/ nell'area di lavoro corrente. Con la convergenza attiva, l'area di lavoro diventa una copia esatta dello snapshot: documenti e allegati non presenti nello snapshot vengono eliminati; i file esclusi, come le credenziali di backup, vengono conservati",
 	"backupRestoreFailed": "Ripristino non riuscito",
 	"backupRestoreOK": "Ripristinato",
 	"backupTargetNote": "Note (optional)",

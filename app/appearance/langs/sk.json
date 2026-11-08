@@ -1,4 +1,7 @@
 {
+	"backupRestoreForceLabel": "Zjednotiť pracovný priestor so snímkou",
+	"backupRestoreNeedForce": "Pracovný priestor už obsahuje údaje; na obnovenie povoľte zjednotenie",
+	"backupRestorePruned": "Odstránených ${x} súborov mimo snímky",
 	"backupRestoreTitle": "Obnoviť",
 	"backupRestoreFrom": "Obnoviť zo zálohy",
 	"backupRestoreTargetLabel": "Cieľ",
@@ -6,7 +9,7 @@
 	"backupRestoreEmpty": "Na tomto cieli nie sú snímky",
 	"backupRestoreNoTargets": "Cieľ obnovenia",
 	"backupRestorePassphrase": "Heslová fráza (len šifrované zálohy)",
-	"backupRestoreWarn": "Obnovenie prepíše data/ a conf/ aktuálneho pracovného priestoru; súbory mimo snímky zostávajú, pokiaľ nekolidujú",
+	"backupRestoreWarn": "Obnovenie prepíše data/ a conf/ v aktuálnom pracovnom priestore. So zapnutým zjednotením sa pracovný priestor stane presnou kópiou snímky: dokumenty a prílohy mimo snímky sa odstránia; vylúčené súbory, napr. poverenia zálohy, zostanú zachované",
 	"backupRestoreFailed": "Obnovenie zlyhalo",
 	"backupRestoreOK": "Obnovené",
 	"backupTargetNote": "Note (optional)",

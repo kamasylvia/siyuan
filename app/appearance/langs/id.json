@@ -1,4 +1,7 @@
 {
+	"backupRestoreForceLabel": "Samakan ruang kerja dengan snapshot",
+	"backupRestoreNeedForce": "Ruang kerja sudah berisi data; aktifkan penyamaan untuk memulihkan",
+	"backupRestorePruned": "${x} file di luar snapshot dihapus",
 	"backupRestoreTitle": "Pulihkan",
 	"backupRestoreFrom": "Pulihkan dari cadangan",
 	"backupRestoreTargetLabel": "Target",
@@ -6,7 +9,7 @@
 	"backupRestoreEmpty": "Tidak ada snapshot pada target ini",
 	"backupRestoreNoTargets": "Target pemulihan",
 	"backupRestorePassphrase": "Frasa sandi (hanya cadangan terenkripsi)",
-	"backupRestoreWarn": "Pemulihan menimpa data/ dan conf/ di ruang kerja saat ini; berkas luar snapshot dipertahankan kecuali bertabrakan",
+	"backupRestoreWarn": "Memulihkan akan menimpa data/ dan conf/ di ruang kerja saat ini. Dengan penyamaan aktif, ruang kerja menjadi salinan persis dari snapshot: dokumen dan lampiran yang tidak ada di snapshot dihapus; file yang dikecualikan seperti kredensial cadangan tetap disimpan",
 	"backupRestoreFailed": "Pemulihan gagal",
 	"backupRestoreOK": "Dipulihkan",
 	"backupTargetNote": "Note (optional)",

@@ -1,4 +1,7 @@
 {
+	"backupRestoreForceLabel": "Arbeitsbereich auf den Snapshot bringen",
+	"backupRestoreNeedForce": "Der Arbeitsbereich enthält bereits Daten; aktiviere das Übernehmen, um wiederherzustellen",
+	"backupRestorePruned": "${x} überflüssige Dateien entfernt",
 	"backupRestoreTitle": "Wiederherstellen",
 	"backupRestoreFrom": "Aus Backup wiederherstellen",
 	"backupRestoreTargetLabel": "Ziel",
@@ -6,7 +9,7 @@
 	"backupRestoreEmpty": "Keine Snapshots auf diesem Ziel",
 	"backupRestoreNoTargets": "Wiederherstellungsziel",
 	"backupRestorePassphrase": "Passphrase (nur verschlüsselte Backups)",
-	"backupRestoreWarn": "Die Wiederherstellung überschreibt data/ und conf/ im aktuellen Arbeitsbereich. Vorhandene Dateien außerhalb des Snapshots bleiben erhalten, sofern sie nicht kollidieren.",
+	"backupRestoreWarn": "Die Wiederherstellung überschreibt data/ und conf/ im aktuellen Arbeitsbereich. Mit aktiviertem Übernehmen wird der Arbeitsbereich eine exakte Kopie des Snapshots: Dokumente und Anhänge außerhalb des Snapshots werden gelöscht; ausgeschlossene Dateien wie Backup-Zugangsdaten bleiben erhalten",
 	"backupRestoreFailed": "Wiederherstellung fehlgeschlagen",
 	"backupRestoreOK": "Wiederhergestellt",
 	"backupTargetNote": "Note (optional)",

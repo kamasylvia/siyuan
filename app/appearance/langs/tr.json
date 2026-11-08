@@ -1,4 +1,7 @@
 {
+	"backupRestoreForceLabel": "Çalışma alanını anlık görüntüye göre eşitle",
+	"backupRestoreNeedForce": "Çalışma alanında zaten veri var; geri yüklemek için eşitlemeyi etkinleştir",
+	"backupRestorePruned": "Anlık görüntü dışındaki ${x} dosya silindi",
 	"backupRestoreTitle": "Geri yükle",
 	"backupRestoreFrom": "Yedekten geri yükle",
 	"backupRestoreTargetLabel": "Hedef",
@@ -6,7 +9,7 @@
 	"backupRestoreEmpty": "Bu hedefte anlık görüntü yok",
 	"backupRestoreNoTargets": "Geri yükleme hedefi",
 	"backupRestorePassphrase": "Parola (yalnızca şifreli yedekler)",
-	"backupRestoreWarn": "Geri yükleme, geçerli çalışma alanındaki data/ ve conf/ üzerine yazar; snapshot dışındaki mevcut dosyalar çakışmadıkça korunur",
+	"backupRestoreWarn": "Geri yükleme, geçerli çalışma alanındaki data/ ve conf/ dizinlerinin üzerine yazar. Eşitleme etkinleştirildiğinde çalışma alanı anlık görüntünün tam bir kopyası olur: anlık görüntüde olmayan belgeler ve ekler silinir; yedekleme kimlik bilgileri gibi hariç tutulan dosyalar korunur",
 	"backupRestoreFailed": "Geri yükleme başarısız",
 	"backupRestoreOK": "Geri yüklendi",
 	"backupTargetNote": "Note (optional)",

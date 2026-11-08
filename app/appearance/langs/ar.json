@@ -1,4 +1,7 @@
 {
+	"backupRestoreForceLabel": "مطابقة مساحة العمل مع اللقطة",
+	"backupRestoreNeedForce": "مساحة العمل تحتوي بالفعل على بيانات؛ فعّل المطابقة للاستعادة",
+	"backupRestorePruned": "تم حذف ${x} ملفًا غير تابع للقطة",
 	"backupRestoreTitle": "استعادة",
 	"backupRestoreFrom": "استعادة من النسخة الاحتياطية",
 	"backupRestoreTargetLabel": "الهدف",
@@ -6,7 +9,7 @@
 	"backupRestoreEmpty": "لا توجد لقطات على هذا الهدف",
 	"backupRestoreNoTargets": "هدف الاستعادة",
 	"backupRestorePassphrase": "عبارة المرور (للنسخ المشفرة فقط)",
-	"backupRestoreWarn": "تستبدل الاستعادة data/ و conf/ في مساحة العمل الحالية؛ تُحفظ الملفات الموجودة خارج اللقطة ما لم تتعارض",
+	"backupRestoreWarn": "تستبدل الاستعادة data/ و conf/ في مساحة العمل الحالية. مع تفعيل المطابقة تصبح مساحة العمل نسخة مطابقة من اللقطة: يتم حذف المستندات والمرفقات غير الموجودة في اللقطة؛ تُحتفظ بالملفات المستثناة مثل بيانات اعتماد النسخ الاحتياطي",
 	"backupRestoreFailed": "فشلت الاستعادة",
 	"backupRestoreOK": "تمت الاستعادة",
 	"backupTargetNote": "Note (optional)",

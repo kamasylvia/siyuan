@@ -1,4 +1,7 @@
 {
+	"backupRestoreForceLabel": "Converger l'espace de travail vers l'instantané",
+	"backupRestoreNeedForce": "L'espace de travail contient déjà des données ; activez la convergence pour restaurer",
+	"backupRestorePruned": "${x} fichiers obsolètes supprimés",
 	"backupRestoreTitle": "Restaurer",
 	"backupRestoreFrom": "Restaurer depuis la sauvegarde",
 	"backupRestoreTargetLabel": "Cible",
@@ -6,7 +9,7 @@
 	"backupRestoreEmpty": "Aucun instantané sur cette cible",
 	"backupRestoreNoTargets": "Cible de restauration",
 	"backupRestorePassphrase": "Phrase secrète (sauvegardes chiffrées uniquement)",
-	"backupRestoreWarn": "La restauration écrase data/ et conf/ de l'espace de travail actuel. Les fichiers existants hors de l'instantané sont conservés sauf conflit.",
+	"backupRestoreWarn": "La restauration écrase data/ et conf/ de l'espace de travail actuel. Avec la convergence activée, l'espace de travail devient une copie exacte de l'instantané : les documents et pièces jointes absents de l'instantané sont supprimés ; les fichiers exclus, comme les identifiants de sauvegarde, sont conservés",
 	"backupRestoreFailed": "Échec de la restauration",
 	"backupRestoreOK": "Restauré",
 	"backupTargetNote": "Note (optional)",

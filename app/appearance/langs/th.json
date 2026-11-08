@@ -1,4 +1,7 @@
 {
+	"backupRestoreForceLabel": "ทำให้พื้นที่ทำงานตรงกับสแนปชอต",
+	"backupRestoreNeedForce": "พื้นที่ทำงานมีข้อมูลอยู่แล้ว เปิดใช้การจับคู่ก่อนกู้คืน",
+	"backupRestorePruned": "ลบไฟล์ที่อยู่นอกสแนปชอต ${x} ไฟล์",
 	"backupRestoreTitle": "กู้คืน",
 	"backupRestoreFrom": "กู้คืนจากการสำรองข้อมูล",
 	"backupRestoreTargetLabel": "เป้าหมาย",
@@ -6,7 +9,7 @@
 	"backupRestoreEmpty": "ไม่มีสแนปช็อตในเป้าหมายนี้",
 	"backupRestoreNoTargets": "เป้าหมายการกู้คืน",
 	"backupRestorePassphrase": "วลีรหัสผ่าน (เฉพาะการสำรองที่เข้ารหัส)",
-	"backupRestoreWarn": "การกู้คืนจะเขียนทับ data/ และ conf/ ของพื้นที่ทำงานปัจจุบัน; ไฟล์ที่มีอยู่นอกสแนปช็อตจะถูกเก็บไว้เว้นแต่ขัดแย้ง",
+	"backupRestoreWarn": "การกู้คืนจะเขียนทับ data/ และ conf/ ในพื้นที่ทำงานปัจจุบัน เมื่อเปิดใช้การจับคู่ พื้นที่ทำงานจะกลายเป็นสำเนาที่ตรงกับสแนปชอตทุกประการ: เอกสารและไฟล์แนบที่ไม่อยู่ในสแนปชอตจะถูกลบ; ไฟล์ที่ยกเว้น เช่น ข้อมูลรับรองการสำรองข้อมูล จะถูกเก็บไว้",
 	"backupRestoreFailed": "การกู้คืนล้มเหลว",
 	"backupRestoreOK": "กู้คืนแล้ว",
 	"backupTargetNote": "Note (optional)",

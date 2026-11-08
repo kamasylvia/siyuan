@@ -1,4 +1,7 @@
 {
+	"backupRestoreForceLabel": "Усклади радни простор са снимком",
+	"backupRestoreNeedForce": "Радни простор већ садржи податке; омогући усклађивање за обнављање",
+	"backupRestorePruned": "Уклоњено ${x} датотека ван снимка",
 	"backupRestoreTitle": "Врати",
 	"backupRestoreFrom": "Врати из резервне копије",
 	"backupRestoreTargetLabel": "Циљ",
@@ -6,7 +9,7 @@
 	"backupRestoreEmpty": "Нема снимака на овом циљу",
 	"backupRestoreNoTargets": "Циљ враћања",
 	"backupRestorePassphrase": "Фраза лозинке (само шифроване копије)",
-	"backupRestoreWarn": "Враћање ће преписати data/ и conf/ тренутног радног простора; фајлови ван снимка остају осим сукоба",
+	"backupRestoreWarn": "Обнављање преписује data/ и conf/ у тренутном радном простору. Са укљученим усклађивањем радни простор постаје тачна копија снимка: документи и прилози ван снимка се бришу; искључене датотеке као што су акредитиви резервне копије остају",
 	"backupRestoreFailed": "Враћање није успело",
 	"backupRestoreOK": "Враћено",
 	"backupTargetNote": "Note (optional)",

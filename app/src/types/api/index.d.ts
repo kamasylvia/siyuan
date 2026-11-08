@@ -774,11 +774,11 @@ export type BackupPG = { "concurrentReqs"?: number; "database"?: string; "dsn"?:
 
 export type BackupPGInput = { "concurrentReqs"?: number; "database"?: string; "dsn"?: string; "host"?: string; "password"?: string; "port"?: number; "schema"?: string; "sslMode"?: string; "timeout"?: number; "user"?: string; };
 
-export type BackupRestoreData = { "bytes": number; "dest": string; "files": number; "snapshot": string; };
+export type BackupRestoreData = { "bytes": number; "dest": string; "files": number; "removed": number; "removedBytes": number; "snapshot": string; };
 
-export type BackupRestoreDryRunData = { "createdAt": string; "encrypted": boolean; "files": number; "roots": Array<string> | null; "snapshot": string; "totalBytes": number; };
+export type BackupRestoreDryRunData = { "conflicts": number; "createdAt": string; "encrypted": boolean; "files": number; "removeBytes": number; "removeCount": number; "roots": Array<string> | null; "snapshot": string; "totalBytes": number; };
 
-export type BackupRestoreDryRunRequestInput = { "passphrase"?: string; "snapshot": string; "target": string; };
+export type BackupRestoreDryRunRequestInput = { "force"?: boolean; "passphrase"?: string; "snapshot": string; "target": string; };
 
 export type BackupRestoreRequestInput = { "force"?: boolean; "passphrase"?: string; "snapshot": string; "target": string; };
 

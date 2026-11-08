@@ -1,4 +1,7 @@
 {
+	"backupRestoreForceLabel": "上書き復元:ワークスペースをスナップショット時点に一致させる",
+	"backupRestoreNeedForce": "ワークスペースに既存データがあります。上書き復元を有効にしてから実行してください",
+	"backupRestorePruned": "スナップショット外のファイル ${x} 件を削除しました",
 	"backupRestoreTitle": "復元",
 	"backupRestoreFrom": "バックアップから復元",
 	"backupRestoreTargetLabel": "ターゲット",
@@ -6,7 +9,7 @@
 	"backupRestoreEmpty": "このターゲットにスナップショットはありません",
 	"backupRestoreNoTargets": "復元ターゲット",
 	"backupRestorePassphrase": "パスフレーズ(暗号化バックアップのみ)",
-	"backupRestoreWarn": "復元は現在のワークスペースの data/ と conf/ を上書きします。スナップショットに含まれない既存ファイルは競合しない限り保持されます",
+	"backupRestoreWarn": "復元すると現在のワークスペースの data/ と conf/ が上書きされます。上書き復元を有効にすると、ワークスペースはスナップショットの正確なコピーになり、スナップショットに含まれない文書と添付ファイルは削除されます(バックアップ資格情報などの除外ファイルは保持されます)",
 	"backupRestoreFailed": "復元に失敗しました",
 	"backupRestoreOK": "復元完了",
 	"backupTargetNote": "Note (optional)",

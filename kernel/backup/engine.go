@@ -455,4 +455,9 @@ type RestorePlan struct {
 	Files      int      `json:"files"`
 	TotalBytes int64    `json:"totalBytes"`
 	Encrypted  bool     `json:"encrypted"`
+	// Conflicts 是目标中会被快照覆盖的已存在非空文件数;RemoveCount/RemoveBytes
+	// 是 force 还原将清理的快照外文件规模
+	Conflicts   int   `json:"conflicts"`
+	RemoveCount int   `json:"removeCount"`
+	RemoveBytes int64 `json:"removeBytes"`
 }

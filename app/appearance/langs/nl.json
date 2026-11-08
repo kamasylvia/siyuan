@@ -1,4 +1,7 @@
 {
+	"backupRestoreForceLabel": "Werkruimte afstemmen op de momentopname",
+	"backupRestoreNeedForce": "De werkruimte bevat al gegevens; schakel afstemmen in om te herstellen",
+	"backupRestorePruned": "${x} overbodige bestanden verwijderd",
 	"backupRestoreTitle": "Herstellen",
 	"backupRestoreFrom": "Herstellen vanuit back-up",
 	"backupRestoreTargetLabel": "Doel",
@@ -6,7 +9,7 @@
 	"backupRestoreEmpty": "Geen snapshots op dit doel",
 	"backupRestoreNoTargets": "Hersteldoel",
 	"backupRestorePassphrase": "Wachtzin (alleen versleutelde back-ups)",
-	"backupRestoreWarn": "Herstellen overschrijft data/ en conf/ van de huidige werkruimte; bestaande bestanden buiten de snapshot blijven behouden tenzij ze conflicteren.",
+	"backupRestoreWarn": "Herstellen overschrijft data/ en conf/ in de huidige werkruimte. Met afstemmen ingeschakeld wordt de werkruimte een exacte kopie van de momentopname: documenten en bijlagen die niet in de momentopname staan worden verwijderd; uitgesloten bestanden zoals back-upreferenties blijven behouden",
 	"backupRestoreFailed": "Herstellen mislukt",
 	"backupRestoreOK": "Hersteld",
 	"backupTargetNote": "Note (optional)",

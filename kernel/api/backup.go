@@ -357,13 +357,14 @@ var restoreBackupDryRun = contractHandler(apicontract.BackupRestoreDryRun, func(
 	}
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
 	defer cancel()
-	plan, err := backup.RestoreDryRun(ctx, store, req.Snapshot, req.Passphrase)
+	plan, err := backup.RestoreDryRun(ctx, store, req.Snapshot, req.Passphrase, util.WorkspaceDir, req.Force)
 	if err != nil {
 		return apicontract.Failure[apicontract.BackupRestoreDryRunData](-1, err.Error())
 	}
 	return apicontract.Success(apicontract.BackupRestoreDryRunData{
 		Snapshot: plan.Snapshot, CreatedAt: plan.CreatedAt, Roots: plan.Roots,
 		Files: plan.Files, TotalBytes: plan.TotalBytes, Encrypted: plan.Encrypted,
+		Conflicts: plan.Conflicts, RemoveCount: plan.RemoveCount, RemoveBytes: plan.RemoveBytes,
 	})
 })
 
@@ -381,9 +382,9 @@ var restoreBackup = contractHandler(apicontract.BackupRestore, func(c *gin.Conte
 	if err != nil {
 		return apicontract.Failure[apicontract.BackupRestoreData](-1, err.Error())
 	}
-	// 还原写入当前工作空间:先做 dry-run 校验快照与口令,再落盘
+	// 还原写入当前工作空间:先做 dry-run 校验快照与口令及目标差异,再落盘
 	planCtx, planCancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
-	if _, err = backup.RestoreDryRun(planCtx, store, req.Snapshot, req.Passphrase); err != nil {
+	if _, err = backup.RestoreDryRun(planCtx, store, req.Snapshot, req.Passphrase, util.WorkspaceDir, req.Force); err != nil {
 		planCancel()
 		return apicontract.Failure[apicontract.BackupRestoreData](-1, err.Error())
 	}
@@ -395,6 +396,7 @@ var restoreBackup = contractHandler(apicontract.BackupRestore, func(c *gin.Conte
 	}
 	return apicontract.Success(apicontract.BackupRestoreData{
 		Snapshot: result.Snapshot, Files: result.Files, Bytes: result.Bytes, Dest: dest,
+		Removed: result.Removed, RemovedBytes: result.RemovedBytes,
 	})
 })
 

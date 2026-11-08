@@ -1,4 +1,7 @@
 {
+	"backupRestoreForceLabel": "Convergir o espaço de trabalho para o snapshot",
+	"backupRestoreNeedForce": "O espaço de trabalho já possui dados; ative a convergência para restaurar",
+	"backupRestorePruned": "Removidos ${x} arquivos fora do snapshot",
 	"backupRestoreTitle": "Restaurar",
 	"backupRestoreFrom": "Restaurar do backup",
 	"backupRestoreTargetLabel": "Destino",
@@ -6,7 +9,7 @@
 	"backupRestoreEmpty": "Nenhum snapshot neste destino",
 	"backupRestoreNoTargets": "Destino da restauração",
 	"backupRestorePassphrase": "Frase secreta (apenas backups criptografados)",
-	"backupRestoreWarn": "A restauração sobrescreve data/ e conf/ do espaço de trabalho atual. Arquivos existentes fora do snapshot são mantidos salvo conflito.",
+	"backupRestoreWarn": "Restaurar sobrescreve data/ e conf/ no espaço de trabalho atual. Com a convergência ativada, o espaço de trabalho se torna uma cópia exata do snapshot: documentos e anexos que não estão no snapshot são excluídos; arquivos excluídos, como credenciais de backup, são mantidos",
 	"backupRestoreFailed": "Falha na restauração",
 	"backupRestoreOK": "Restaurado",
 	"backupTargetNote": "Note (optional)",

@@ -1,4 +1,7 @@
 {
+	"backupRestoreForceLabel": "Звести робочий простір до знімка",
+	"backupRestoreNeedForce": "Робочий простір уже містить дані; увімкніть зведення для відновлення",
+	"backupRestorePruned": "Видалено ${x} сторонніх файлів",
 	"backupRestoreTitle": "Відновити",
 	"backupRestoreFrom": "Відновити з резервної копії",
 	"backupRestoreTargetLabel": "Ціль",
@@ -6,7 +9,7 @@
 	"backupRestoreEmpty": "На цій цілі немає знімків",
 	"backupRestoreNoTargets": "Ціль відновлення",
 	"backupRestorePassphrase": "Парольна фраза (лише для шифрованих копій)",
-	"backupRestoreWarn": "Відновлення перезапише data/ і conf/ поточного робочого простору; файли поза знімком зберігаються, крім конфліктів",
+	"backupRestoreWarn": "Відновлення перезаписує data/ та conf/ у поточному робочому просторі. Із увімкненим зведенням робочий простір стає точною копією знімка: документи та вкладення поза знімком видаляються; виняткові файли, як-от облікові дані резервного копіювання, зберігаються",
 	"backupRestoreFailed": "Помилка відновлення",
 	"backupRestoreOK": "Відновлено",
 	"backupTargetNote": "Note (optional)",

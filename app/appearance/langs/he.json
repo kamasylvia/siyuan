@@ -1,4 +1,7 @@
 {
+	"backupRestoreForceLabel": "התאמת סביבת העבודה לצילום המצב",
+	"backupRestoreNeedForce": "סביבת העבודה כבר מכילה נתונים; הפעל התאמה כדי לשחזר",
+	"backupRestorePruned": "הוסרו ${x} קבצים שאינם בצילום המצב",
 	"backupRestoreTitle": "שחזור",
 	"backupRestoreFrom": "שחזור מגיבוי",
 	"backupRestoreTargetLabel": "יעד",
@@ -6,7 +9,7 @@
 	"backupRestoreEmpty": "אין צילומים ביעד זה",
 	"backupRestoreNoTargets": "יעד שחזור",
 	"backupRestorePassphrase": "ביטוי סיסמה (רק לגיבויים מוצפנים)",
-	"backupRestoreWarn": "השחזור ידרוס את data/ ו-conf/ בסביבת העבודה הנוכחית; קבצים קיימים מחוץ לצילום נשמרים אלא אם יש התנגשות",
+	"backupRestoreWarn": "השחזור דורס את data/ ו-conf/ בסביבת העבודה הנוכחית. כאשר ההתאמה מופעלת, סביבת העבודה הופכת לעותק מדויק של צילום המצב: מסמכים וקבצים מצורפים שאינם בצילום המצב יימחקו; קבצים שהוחרגו, כגון פרטי גישה לגיבוי, יישמרו",
 	"backupRestoreFailed": "השחזור נכשל",
 	"backupRestoreOK": "שוחזר",
 	"backupTargetNote": "Note (optional)",

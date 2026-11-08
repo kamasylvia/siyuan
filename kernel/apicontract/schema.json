@@ -17994,6 +17994,12 @@
         "files": {
           "type": "integer"
         },
+        "removed": {
+          "type": "integer"
+        },
+        "removedBytes": {
+          "type": "integer"
+        },
         "snapshot": {
           "type": "string"
         }
@@ -18002,6 +18008,8 @@
         "bytes",
         "dest",
         "files",
+        "removed",
+        "removedBytes",
         "snapshot"
       ],
       "additionalProperties": false
@@ -18009,6 +18017,9 @@
     "BackupRestoreDryRunData": {
       "type": "object",
       "properties": {
+        "conflicts": {
+          "type": "integer"
+        },
         "createdAt": {
           "type": "string"
         },
@@ -18016,6 +18027,12 @@
           "type": "boolean"
         },
         "files": {
+          "type": "integer"
+        },
+        "removeBytes": {
+          "type": "integer"
+        },
+        "removeCount": {
           "type": "integer"
         },
         "roots": {
@@ -18039,9 +18056,12 @@
         }
       },
       "required": [
+        "conflicts",
         "createdAt",
         "encrypted",
         "files",
+        "removeBytes",
+        "removeCount",
         "roots",
         "snapshot",
         "totalBytes"
@@ -18051,6 +18071,9 @@
     "BackupRestoreDryRunRequestInput": {
       "type": "object",
       "properties": {
+        "force": {
+          "type": "boolean"
+        },
         "passphrase": {
           "type": "string"
         },

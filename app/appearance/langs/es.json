@@ -1,4 +1,7 @@
 {
+	"backupRestoreForceLabel": "Converger el espacio de trabajo con la instantánea",
+	"backupRestoreNeedForce": "El espacio de trabajo ya tiene datos; activa la convergencia para restaurar",
+	"backupRestorePruned": "Se eliminaron ${x} archivos ajenos",
 	"backupRestoreTitle": "Restaurar",
 	"backupRestoreFrom": "Restaurar desde copia de seguridad",
 	"backupRestoreTargetLabel": "Destino",
@@ -6,7 +9,7 @@
 	"backupRestoreEmpty": "No hay instantáneas en este destino",
 	"backupRestoreNoTargets": "Destino de restauración",
 	"backupRestorePassphrase": "Frase de contraseña (solo copias cifradas)",
-	"backupRestoreWarn": "La restauración sobrescribe data/ y conf/ del espacio de trabajo actual. Los archivos existentes fuera de la instantánea se conservan salvo conflicto.",
+	"backupRestoreWarn": "Restaurar sobrescribe data/ y conf/ en el espacio de trabajo actual. Con la convergencia activada, el espacio de trabajo se convierte en una copia exacta de la instantánea: los documentos y adjuntos que no estén en la instantánea se eliminan; los archivos excluidos, como las credenciales de copia de seguridad, se conservan",
 	"backupRestoreFailed": "Error al restaurar",
 	"backupRestoreOK": "Restaurado",
 	"backupTargetNote": "Note (optional)",

@@ -1,4 +1,7 @@
 {
+	"backupRestoreForceLabel": "वर्कस्पेस को स्नैपशॉट के अनुसार बदलें",
+	"backupRestoreNeedForce": "वर्कस्पेस में पहले से डेटा है; पुनर्स्थापित करने के लिए बदलाव सक्षम करें",
+	"backupRestorePruned": "${x} बाहरी फ़ाइलें हटाई गईं",
 	"backupRestoreTitle": "पुनर्स्थापित",
 	"backupRestoreFrom": "बैकअप से पुनर्स्थापित करें",
 	"backupRestoreTargetLabel": "लक्ष्य",
@@ -6,7 +9,7 @@
 	"backupRestoreEmpty": "इस लक्ष्य पर कोई स्नैपशॉट नहीं",
 	"backupRestoreNoTargets": "पुनर्स्थापना लक्ष्य",
 	"backupRestorePassphrase": "पासफ़्रेज़ (केवल एन्क्रिप्टेड बैकअप)",
-	"backupRestoreWarn": "पुनर्स्थापना वर्तमान कार्यक्षेत्र के data/ और conf/ को अधिलेखित करती है; स्नैपशॉट के बाहर की मौजूद फ़ाइलें तब तक रखी जाती हैं जब तक टकराव न हो",
+	"backupRestoreWarn": "पुनर्स्थापना वर्तमान वर्कस्पेस की data/ और conf/ को अधिलेखित करती है। बदलाव सक्षम होने पर वर्कस्पेस स्नैपशॉट की सटीक प्रति बन जाता है: स्नैपशॉट में न होने वाले दस्तावेज़ और अनुलग्नक हटा दिए जाते हैं; बैकअप क्रेडेंशियल जैसी बाहर की गई फ़ाइलें सुरक्षित रहती हैं",
 	"backupRestoreFailed": "पुनर्स्थापना विफल",
 	"backupRestoreOK": "पुनर्स्थापित",
 	"backupTargetNote": "Note (optional)",
