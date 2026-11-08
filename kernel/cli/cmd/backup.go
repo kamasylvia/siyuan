@@ -111,8 +111,6 @@ var backupTargetsCmd = &cobra.Command{
 		for _, target := range cfg.Targets {
 			location := ""
 			switch target.Type {
-			case backup.TypeLocal:
-				location = target.Local.Path
 			case backup.TypePG:
 				location = target.PG.Schema
 			case backup.TypeS3:
@@ -177,8 +175,6 @@ var backupSampleCmd = &cobra.Command{
 			Enabled: true,
 			Include: backup.Include{Data: true, Conf: true},
 			Targets: []*backup.Target{
-				{ID: "local-1", Name: "Local disk", Type: backup.TypeLocal, Enabled: true,
-					Local: &backup.Local{Path: "/path/to/backup"}, Retention: &backup.Retention{KeepLast: 30, MaxAgeDays: 90}},
 				{ID: "pg-1", Name: "PostgreSQL", Type: backup.TypePG, Enabled: false,
 					PG: &backup.PG{Host: "127.0.0.1", Port: 5432, User: "postgres", Password: "", Database: "siyuan", SSLMode: "disable"}},
 			},
