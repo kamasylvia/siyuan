@@ -1,4 +1,7 @@
 {
+	"backupRunOne": "نسخ احتياطي",
+	"backupRestoreOne": "استعادة",
+	"backupTargetClaimed": "هدف النسخ ${target} تستخدمه بالفعل النسخة ${instance} على ${host}. بعد الاستيلاء سيتم النسخ الاحتياطي من هذه النسخة. هل تريد الاستيلاء؟",
 	"backupSelectTargets": "اختر هدف نسخ احتياطي واحدًا على الأقل",
 	"backupProgressBackup": "جارٍ نسخ ${target}: ${done}/${total} · ${seconds} ث",
 	"backupProgressRestore": "جارٍ الاستعادة: ${done}/${total} · ${seconds} ث",

@@ -191,3 +191,68 @@ func TestRunProgressLifecycle(t *testing.T) {
 		t.Fatal("restore state must clear after finish")
 	}
 }
+
+func TestTargetOwnershipClaim(t *testing.T) {
+	workspace := t.TempDir()
+	targetDir := t.TempDir()
+	// conf.json 带 system.id 才启用归属检查
+	writeTestFile(t, workspace, "conf/conf.json", `{"system":{"id":"instance-a"},"lang":"zh-CN"}`)
+	writeTestFile(t, workspace, "data/box/doc.sy", "v1")
+	engine := newLocalTestEngine(t, workspace, targetDir)
+	if _, err := engine.Run(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	target, err := NewLocalTarget("local-1", targetDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	owner, err := readOwner(context.Background(), target)
+	if err != nil || owner == nil || owner.InstanceID != "instance-a" {
+		t.Fatalf("first backup should claim ownership: %v %+v", err, owner)
+	}
+
+	// 同实例再次备份:放行
+	if _, err = engine.Run(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	// 另一实例备份同一目标:拒绝并报告归属,不写快照
+	workspaceB := t.TempDir()
+	writeTestFile(t, workspaceB, "conf/conf.json", `{"system":{"id":"instance-b"},"lang":"zh-CN"}`)
+	engineB := newLocalTestEngine(t, workspaceB, targetDir)
+	resultB, err := engineB.Run(context.Background())
+	if err != nil {
+		t.Fatalf("denial should be reported per target, not fail the run: %v", err)
+	}
+	if len(resultB.Targets) != 1 || resultB.Targets[0].OK || resultB.Targets[0].ClaimedBy != "instance-a" {
+		t.Fatalf("expected denial reporting instance-a: %+v", resultB.Targets)
+	}
+	keys, _ := target.List(context.Background(), ManifestPrefix)
+	countsBeforeTakeover := len(keys)
+
+	// takeover 接管:成功且归属切换
+	engineB.Takeover = true
+	resultB, err = engineB.Run(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !resultB.Targets[0].OK {
+		t.Fatalf("takeover run should succeed: %+v", resultB.Targets)
+	}
+	owner, err = readOwner(context.Background(), target)
+	if err != nil || owner.InstanceID != "instance-b" {
+		t.Fatalf("takeover should reassign ownership: %v %+v", err, owner)
+	}
+	keys, _ = target.List(context.Background(), ManifestPrefix)
+	if len(keys) != countsBeforeTakeover+1 {
+		t.Fatalf("takeover run should write one snapshot: %d -> %d", countsBeforeTakeover, len(keys))
+	}
+	// 原 owner(instance-a)现在被拒
+	resultA, err := engine.Run(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resultA.Targets[0].OK || resultA.Targets[0].ClaimedBy != "instance-b" {
+		t.Fatalf("original owner should be denied after takeover: %+v", resultA.Targets)
+	}
+}

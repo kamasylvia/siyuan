@@ -1,4 +1,7 @@
 {
+	"backupRunOne": "バックアップ",
+	"backupRestoreOne": "復元",
+	"backupTargetClaimed": "バックアップ対象 ${target} は既にインスタンス ${instance}(${host})で使用中です。引き継ぐとこのインスタンスからバックアップするようになります。引き継ぎますか?",
 	"backupSelectTargets": "バックアップ対象を 1 つ以上選択してください",
 	"backupProgressBackup": "バックアップ中 ${target}: ${done}/${total} · ${seconds}秒",
 	"backupProgressRestore": "復元中: ${done}/${total} · ${seconds}秒",

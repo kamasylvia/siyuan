@@ -794,9 +794,9 @@ export type BackupRunData = { "files": number; "finishedAt": string; "snapshot":
 
 export type BackupRunProgress = { "done": number; "startedAt": number; "target": string; "total": number; };
 
-export type BackupRunRequestInput = { "targets"?: Array<string> | null; };
+export type BackupRunRequestInput = { "takeover"?: boolean; "targets"?: Array<string> | null; };
 
-export type BackupRunTarget = { "error"?: string; "id": string; "manifest"?: string; "ok": boolean; "skippedBlobs": number; "uploadedBlobs": number; "uploadedBytes": number; };
+export type BackupRunTarget = { "claimedAt"?: string; "claimedBy"?: string; "claimedHost"?: string; "error"?: string; "id": string; "manifest"?: string; "ok": boolean; "skippedBlobs": number; "uploadedBlobs": number; "uploadedBytes": number; };
 
 export type BackupS3 = { "accessKey"?: string; "bucket": string; "endpoint": string; "pathStyle"?: boolean; "region"?: string; "secretKey"?: string; "skipTlsVerify"?: boolean; "timeout"?: number; };
 

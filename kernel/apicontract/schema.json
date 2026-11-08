@@ -18240,6 +18240,9 @@
     "BackupRunRequestInput": {
       "type": "object",
       "properties": {
+        "takeover": {
+          "type": "boolean"
+        },
         "targets": {
           "anyOf": [
             {
@@ -18259,6 +18262,15 @@
     "BackupRunTarget": {
       "type": "object",
       "properties": {
+        "claimedAt": {
+          "type": "string"
+        },
+        "claimedBy": {
+          "type": "string"
+        },
+        "claimedHost": {
+          "type": "string"
+        },
         "error": {
           "type": "string"
         },

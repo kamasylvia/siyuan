@@ -128,6 +128,8 @@ type BackupTestTargetData struct {
 
 type BackupRunRequest struct {
 	Targets []string `json:"targets" api:"optional,nullable"`
+	// Takeover 接管已被其它实例认领的目标归属,本次配置生效
+	Takeover bool `json:"takeover" api:"optional"`
 }
 
 type BackupRunTarget struct {
@@ -138,6 +140,10 @@ type BackupRunTarget struct {
 	SkippedBlobs  int    `json:"skippedBlobs"`
 	UploadedBytes int64  `json:"uploadedBytes"`
 	Manifest      string `json:"manifest,omitempty"`
+	// ClaimedBy/ClaimedHost/ClaimedAt 非空表示该目标被其它实例认领而拒绝备份
+	ClaimedBy   string `json:"claimedBy,omitempty"`
+	ClaimedHost string `json:"claimedHost,omitempty"`
+	ClaimedAt   string `json:"claimedAt,omitempty"`
 }
 
 type BackupRunData struct {

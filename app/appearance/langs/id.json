@@ -1,4 +1,7 @@
 {
+	"backupRunOne": "Cadangkan",
+	"backupRestoreOne": "Pulihkan",
+	"backupTargetClaimed": "Target ${target} sudah digunakan instansi ${instance} di ${host}. Setelah diambil alih, pencadangan berjalan dari instansi ini. Ambil alih?",
 	"backupSelectTargets": "Pilih minimal satu target pencadangan",
 	"backupProgressBackup": "Mencadangkan ${target}: ${done}/${total} · ${seconds}s",
 	"backupProgressRestore": "Memulihkan: ${done}/${total} · ${seconds}s",

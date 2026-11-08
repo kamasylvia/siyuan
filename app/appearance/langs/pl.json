@@ -1,4 +1,7 @@
 {
+	"backupRunOne": "Kopia",
+	"backupRestoreOne": "Przywróć",
+	"backupTargetClaimed": "Cel ${target} jest już używany przez instancję ${instance} na ${host}. Po przejęciu kopie będą tworzone z tej instancji. Przejąć?",
 	"backupSelectTargets": "Wybierz co najmniej jeden cel kopii zapasowej",
 	"backupProgressBackup": "Tworzenie kopii ${target}: ${done}/${total} · ${seconds}s",
 	"backupProgressRestore": "Przywracanie: ${done}/${total} · ${seconds}s",

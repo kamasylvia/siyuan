@@ -1,4 +1,7 @@
 {
+	"backupRunOne": "बैकअप",
+	"backupRestoreOne": "पुनर्स्थापित करें",
+	"backupTargetClaimed": "बैकअप लक्ष्य ${target} पहले से इंस्टेंस ${instance}(${host}) द्वारा उपयोग में है। अधिग्रहण के बाद बैकअप इसी इंस्टेंस से चलेगा। अधिग्रहण करें?",
 	"backupSelectTargets": "कम से कम एक बैकअप लक्ष्य चुनें",
 	"backupProgressBackup": "बैकअप हो रहा है ${target}: ${done}/${total} · ${seconds}s",
 	"backupProgressRestore": "पुनर्स्थापित हो रहा है: ${done}/${total} · ${seconds}s",

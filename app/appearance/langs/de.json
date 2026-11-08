@@ -1,4 +1,7 @@
 {
+	"backupRunOne": "Sichern",
+	"backupRestoreOne": "Wiederherstellen",
+	"backupTargetClaimed": "Das Sicherungsziel ${target} wird bereits von Instanz ${instance} auf ${host} verwendet. Nach der Übernahme läuft die Sicherung von dieser Instanz. Übernehmen?",
 	"backupSelectTargets": "Mindestens ein Sicherungsziel auswählen",
 	"backupProgressBackup": "Sichere ${target}: ${done}/${total} · ${seconds}s",
 	"backupProgressRestore": "Wiederherstellung: ${done}/${total} · ${seconds}s",

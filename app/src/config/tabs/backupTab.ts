@@ -199,6 +199,8 @@ const targetRowHTML = (target: BackupTarget): string => {
             <span class="ft__on-surface">${typeLabel(target.type)}</span>
             ${status ? `<div class="ft__on-surface">${escapeHtmlTextAndAttr(status)}</div>` : ""}
         </span>
+        <button class="b3-button b3-button--outline" data-action="backup">${escapeHtmlTextAndAttr(text("backupRunOne", "Back up"))}</button>
+        <button class="b3-button b3-button--outline" data-action="restore">${escapeHtmlTextAndAttr(text("backupRestoreOne", "Restore"))}</button>
         <button class="b3-button b3-button--outline" data-action="edit">${escapeHtmlTextAndAttr(window.siyuan.languages.edit)}</button>
         <button class="b3-button b3-button--outline" data-action="test">${escapeHtmlTextAndAttr(text("backupTestTarget", "Test"))}</button>
         <button class="b3-button b3-button--outline" data-action="delete">${escapeHtmlTextAndAttr(window.siyuan.languages.delete)}</button>
@@ -229,6 +231,10 @@ const bind = () => {
                 }
             } else if (action === "delete") {
                 void deleteTarget(id);
+            } else if (action === "backup") {
+                void runBackup([id]);
+            } else if (action === "restore") {
+                void openRestoreDialog(id);
             } else if (action === "test") {
                 const target = currentConfig.targets.find(item => item.id === id);
                 if (target) {
@@ -350,7 +356,7 @@ const loadPanel = async () => {
             const seconds = Math.max(1, Math.round(Date.now() / 1000) - run.startedAt);
             progressEl.textContent =
                 text("backupProgressBackup", "Backing up ${target}: ${done}/${total} · ${seconds}s")
-                    .replace("${target}", run.target)
+                    .replace("${target}", currentConfig.targets.find(item => item.id === run.target)?.name || run.target)
                     .replace("${done}", String(run.done))
                     .replace("${total}", String(run.total))
                     .replace("${seconds}", String(seconds));
@@ -425,15 +431,15 @@ const testTarget = async (target: BackupTarget) => {
     }
 };
 
-const runBackup = async () => {
+const runBackup = async (targetIds?: string[], takeover = false): Promise<void> => {
     if (currentConfig.targets.length > 0 && !currentConfig.enabled) {
         currentConfig.enabled = true;
         if (!await saveConfig()) {
             return;
         }
     }
-    // 备份支持批量:仅备份勾选的目标;还原不受此勾选影响
-    const selected = Array.from(panelRoot?.querySelectorAll(".backupTargetSelect:checked") || [])
+    // 备份支持批量:无参时备份勾选的目标;行内按钮传单目标单独备份
+    const selected = targetIds || Array.from(panelRoot?.querySelectorAll(".backupTargetSelect:checked") || [])
         .map((el: HTMLInputElement) => el.dataset.id).filter(Boolean) as string[];
     if (!selected.length) {
         showMessage(text("backupSelectTargets", "Select at least one backup target"), 6000, "error");
@@ -463,21 +469,35 @@ const runBackup = async () => {
             const seconds = Math.max(1, Math.round(Date.now() / 1000) - run.startedAt);
             progressEl.textContent =
                 text("backupProgressBackup", "Backing up ${target}: ${done}/${total} · ${seconds}s")
-                    .replace("${target}", run.target)
+                    .replace("${target}", currentConfig.targets.find(item => item.id === run.target)?.name || run.target)
                     .replace("${done}", String(run.done))
                     .replace("${total}", String(run.total))
                     .replace("${seconds}", String(seconds));
         }
     }, 2000);
     try {
-        const response = await fetchSyncPost("/api/backup/run", {targets: selected});
+        const response = await fetchSyncPost("/api/backup/run", {targets: selected, takeover});
         if (response.code !== 0) {
             showMessage(`${text("backupRunFailed", "Backup failed")}: ${response.msg}`, 7000, "error");
             return;
         }
-        const result = response.data as {snapshot?: string; targets?: Array<{ok: boolean; error?: string}>};
+        const result = response.data as {snapshot?: string; targets?: Array<{id: string; ok: boolean; error?: string; claimedBy?: string; claimedHost?: string}>};
         const failed = (result.targets || []).filter(target => !target.ok);
         if (failed.length) {
+            // 归属被其它实例占用:确认后接管重试(最后配置的实例生效)
+            const claimed = failed.find(target => target.claimedBy);
+            if (claimed && !takeover) {
+                confirmDialog(text("backupRunFailed", "Backup failed"),
+                    `<div class="b3-dialog__content" style="padding:12px">${escapeHtmlTextAndAttr(
+                        text("backupTargetClaimed", "Backup target \${target} is already used by instance \${instance} on \${host}. Take over so backups run from this instance?")
+                            .replace("\${target}", currentConfig.targets.find(item => item.id === claimed.id)?.name || claimed.id)
+                            .replace("\${instance}", claimed.claimedBy || "")
+                            .replace("\${host}", claimed.claimedHost || ""))}</div>`,
+                    () => {
+                        void runBackup([claimed.id], true);
+                    });
+                return;
+            }
             showMessage(`${text("backupRunFailed", "Backup failed")}: ${failed.map(target => target.error).join("; ")}`, 7000, "error");
         } else {
             showMessage(`${text("backupRunOK", "Backup completed")}: ${result.snapshot || ""}`, 4000);
@@ -493,7 +513,7 @@ const runBackup = async () => {
     }
 };
 
-const openRestoreDialog = async () => {
+const openRestoreDialog = async (preselectId?: string) => {
     const enabledTargets = (currentConfig.targets || []).filter(target => target.enabled);
     if (!enabledTargets.length) {
         showMessage(text("backupRestoreNoTargets", "No enabled backup target to restore from"), 6000, "error");
@@ -515,8 +535,8 @@ const openRestoreDialog = async () => {
         return snapshotOptionsHTML(snapshots);
     };
     const targetOptions = enabledTargets.map((target, index) =>
-        `<option value="${escapeHtmlTextAndAttr(target.id)}"${index === 0 ? " selected" : ""}>${escapeHtmlTextAndAttr(targetLabel(target))}</option>`).join("");
-    const snapshotOptions = await loadSnapshots(enabledTargets[0].id);
+        `<option value="${escapeHtmlTextAndAttr(target.id)}"${(preselectId ? target.id === preselectId : index === 0) ? " selected" : ""}>${escapeHtmlTextAndAttr(targetLabel(target))}</option>`).join("");
+    const snapshotOptions = await loadSnapshots(preselectId || enabledTargets[0].id);
     const dialogHTML = `<div class="b3-dialog__content" style="padding:12px">
     <div class="fn__flex" style="align-items:center;gap:8px;margin-bottom:8px">
         <span class="fn__flex-center ft__on-surface">${escapeHtmlTextAndAttr(text("backupRestoreTargetLabel", "Target"))}</span>

@@ -284,6 +284,7 @@ var runBackup = contractHandler(apicontract.RunBackup, func(c *gin.Context,
 		return apicontract.Failure[apicontract.BackupRunData](-1, err.Error())
 	}
 	engine := backup.NewEngine(util.WorkspaceDir, cfg)
+	engine.Takeover = req.Takeover
 	result, err := engine.Run(c.Request.Context(), req.Targets...)
 	if err != nil {
 		return apicontract.Failure[apicontract.BackupRunData](-1, err.Error())
@@ -296,6 +297,7 @@ var runBackup = contractHandler(apicontract.RunBackup, func(c *gin.Context,
 		out.Targets = append(out.Targets, apicontract.BackupRunTarget{
 			ID: target.ID, OK: target.OK, Error: target.Error, UploadedBlobs: target.UploadedBlobs,
 			SkippedBlobs: target.SkippedBlobs, UploadedBytes: target.UploadedBytes, Manifest: target.Manifest,
+			ClaimedBy: target.ClaimedBy, ClaimedHost: target.ClaimedHost, ClaimedAt: target.ClaimedAt,
 		})
 	}
 	return apicontract.Success(out)

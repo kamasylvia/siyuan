@@ -1,4 +1,7 @@
 {
+	"backupRunOne": "Back up",
+	"backupRestoreOne": "Restore",
+	"backupTargetClaimed": "Backup target ${target} is already used by instance ${instance} on ${host}. Take over so backups run from this instance?",
 	"backupSelectTargets": "Select at least one backup target",
 	"backupProgressBackup": "Backing up ${target}: ${done}/${total} · ${seconds}s",
 	"backupProgressRestore": "Restoring: ${done}/${total} · ${seconds}s",

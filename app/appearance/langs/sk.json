@@ -1,4 +1,7 @@
 {
+	"backupRunOne": "Záloha",
+	"backupRestoreOne": "Obnoviť",
+	"backupTargetClaimed": "Cieľ ${target} už používa inštancia ${instance} na ${host}. Po prevzatí budú zálohy bežať z tejto inštancie. Prevziať?",
 	"backupSelectTargets": "Vyberte aspoň jeden cieľ zálohovania",
 	"backupProgressBackup": "Zálohuje sa ${target}: ${done}/${total} · ${seconds}s",
 	"backupProgressRestore": "Obnovuje sa: ${done}/${total} · ${seconds}s",

@@ -1,4 +1,7 @@
 {
+	"backupRunOne": "백업",
+	"backupRestoreOne": "복원",
+	"backupTargetClaimed": "백업 대상 ${target}은(는) 이미 인스턴스 ${instance}(${host})에서 사용 중입니다. 인계하면 이 인스턴스에서 백업이 실행됩니다. 인계하시겠습니까?",
 	"backupSelectTargets": "백업 대상을 하나 이상 선택하세요",
 	"backupProgressBackup": "백업 중 ${target}: ${done}/${total} · ${seconds}초",
 	"backupProgressRestore": "복원 중: ${done}/${total} · ${seconds}초",

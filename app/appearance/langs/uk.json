@@ -1,4 +1,7 @@
 {
+	"backupRunOne": "Копія",
+	"backupRestoreOne": "Відновити",
+	"backupTargetClaimed": "Ціль ${target} уже використовується екземпляром ${instance} на ${host}. Після перехоплення резервне копіювання виконуватиметься з цього екземпляра. Перехопити?",
 	"backupSelectTargets": "Виберіть щонайменше одну ціль резервного копіювання",
 	"backupProgressBackup": "Копіювання ${target}: ${done}/${total} · ${seconds} с",
 	"backupProgressRestore": "Відновлення: ${done}/${total} · ${seconds} с",

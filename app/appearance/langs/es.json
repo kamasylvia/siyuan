@@ -1,4 +1,7 @@
 {
+	"backupRunOne": "Copia",
+	"backupRestoreOne": "Restaurar",
+	"backupTargetClaimed": "El objetivo ${target} ya lo usa la instancia ${instance} en ${host}. Si lo tomas, las copias se ejecutarán desde esta instancia. ¿Tomar el control?",
 	"backupSelectTargets": "Selecciona al menos un objetivo de copia",
 	"backupProgressBackup": "Copiando ${target}: ${done}/${total} · ${seconds}s",
 	"backupProgressRestore": "Restaurando: ${done}/${total} · ${seconds}s",

@@ -1,4 +1,7 @@
 {
+	"backupRunOne": "Резерва",
+	"backupRestoreOne": "Обнови",
+	"backupTargetClaimed": "Циль ${target} већ користи инстанца ${instance} на ${host}. Након преузимања резерве ће ићи са ове инстанце. Преузети?",
 	"backupSelectTargets": "Изаберите барем један циљ резерве",
 	"backupProgressBackup": "Резерва ${target}: ${done}/${total} · ${seconds}s",
 	"backupProgressRestore": "Обнављање: ${done}/${total} · ${seconds}s",

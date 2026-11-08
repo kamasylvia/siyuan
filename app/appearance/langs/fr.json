@@ -1,4 +1,7 @@
 {
+	"backupRunOne": "Sauvegarder",
+	"backupRestoreOne": "Restaurer",
+	"backupTargetClaimed": "La cible ${target} est déjà utilisée par l'instance ${instance} sur ${host}. Après reprise, les sauvegardes partiront de cette instance. Reprendre ?",
 	"backupSelectTargets": "Sélectionnez au moins une cible de sauvegarde",
 	"backupProgressBackup": "Sauvegarde de ${target} : ${done}/${total} · ${seconds}s",
 	"backupProgressRestore": "Restauration : ${done}/${total} · ${seconds}s",

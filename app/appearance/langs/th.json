@@ -1,4 +1,7 @@
 {
+	"backupRunOne": "สำรอง",
+	"backupRestoreOne": "กู้คืน",
+	"backupTargetClaimed": "เป้าหมาย ${target} ถูกใช้โดยอินสแตนซ์ ${instance} บน ${host} อยู่แล้ว หลังจากยึดครอง การสำรองข้อมูลจะรันจากอินสแตนซ์นี้ ยึดครองหรือไม่?",
 	"backupSelectTargets": "เลือกเป้าหมายการสำรองข้อมูลอย่างน้อยหนึ่งรายการ",
 	"backupProgressBackup": "กำลังสำรอง ${target}: ${done}/${total} · ${seconds} วิ",
 	"backupProgressRestore": "กำลังกู้คืน: ${done}/${total} · ${seconds} วิ",

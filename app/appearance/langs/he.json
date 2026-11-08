@@ -1,4 +1,7 @@
 {
+	"backupRunOne": "גיבוי",
+	"backupRestoreOne": "שחזור",
+	"backupTargetClaimed": "את יעד הגיבוי ${target} כבר משתמשת המופע ${instance} ב-${host}. לאחר ההשתלטות הגיבויים ירוצו מהמופע הזה. להשתלט?",
 	"backupSelectTargets": "בחרו לפחות יעד גיבוי אחד",
 	"backupProgressBackup": "מגבה את ${target}: ${done}/${total} · ${seconds}s",
 	"backupProgressRestore": "משחזר: ${done}/${total} · ${seconds}s",

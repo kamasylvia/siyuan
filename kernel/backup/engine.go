@@ -54,6 +54,8 @@ type Engine struct {
 	// 测试注入:非空时替代按配置构建的目标列表与对应 retention,绕过 conf 目标类型校验
 	InjectedTargets   []Store
 	InjectedRetention map[string]Retention
+	// Takeover 接管已被其它实例认领的目标归属
+	Takeover bool
 }
 
 type TargetResult struct {
@@ -64,6 +66,10 @@ type TargetResult struct {
 	SkippedBlobs  int    `json:"skippedBlobs"`
 	UploadedBytes int64  `json:"uploadedBytes"`
 	Manifest      string `json:"manifest,omitempty"`
+	// ClaimedBy/ClaimedHost/ClaimedAt 非空表示该目标被其它实例认领而拒绝备份
+	ClaimedBy   string `json:"claimedBy,omitempty"`
+	ClaimedHost string `json:"claimedHost,omitempty"`
+	ClaimedAt   string `json:"claimedAt,omitempty"`
 }
 
 type RunResult struct {
@@ -148,6 +154,15 @@ func (engine *Engine) Run(ctx context.Context, onlyTargets ...string) (*RunResul
 		return nil, errors.New("no enabled backup targets")
 	}
 
+	// 归属检查:同一存储可能被多个实例配置,只有最近认领的实例能写入
+	var denied []DeniedTarget
+	if instanceID := loadInstanceID(engine.WorkspaceDir); instanceID != "" {
+		outcome, claimErr := claimTargets(ctx, targets, instanceID, engine.Takeover)
+		if claimErr != nil {
+			return nil, claimErr
+		}
+		denied = outcome.Denied
+	}
 	key, encryptionInfo, err := engine.encryption()
 	if err != nil {
 		return nil, err
@@ -167,7 +182,18 @@ func (engine *Engine) Run(ctx context.Context, onlyTargets ...string) (*RunResul
 		Snapshot: snapshotID, StartedAt: now, Files: len(entries), TotalBytes: manifest.TotalBytes,
 	}
 	result.Targets = append(result.Targets, initFailures...)
+	deniedByID := map[string]DeniedTarget{}
+	for _, d := range denied {
+		deniedByID[d.TargetID] = d
+	}
 	for _, target := range targets {
+		if d, blocked := deniedByID[target.ID()]; blocked {
+			result.Targets = append(result.Targets, TargetResult{ID: target.ID(),
+				Error:     fmt.Sprintf("claimed by instance %s (%s) since %s", d.Owner.InstanceID, d.Owner.Hostname, d.Owner.ClaimedAt.Format(time.RFC3339)),
+				ClaimedBy: d.Owner.InstanceID, ClaimedHost: d.Owner.Hostname,
+				ClaimedAt: d.Owner.ClaimedAt.Format(time.RFC3339)})
+			continue
+		}
 		MarkRunTarget(target.ID())
 		targetResult := engine.upload(ctx, target, snapshotID, manifest, entries, key)
 		result.Targets = append(result.Targets, targetResult)

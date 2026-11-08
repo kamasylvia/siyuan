@@ -34,6 +34,7 @@ var backupRunCmd = &cobra.Command{
 		}
 		targets, _ := cmd.Flags().GetStringSlice("target")
 		engine := backup.NewEngine(util.WorkspaceDir, cfg)
+		engine.Takeover, _ = cmd.Flags().GetBool("takeover")
 		result, err := engine.Run(context.Background(), targets...)
 		if err != nil {
 			return err
@@ -214,6 +215,7 @@ func init() {
 		command.Flags().String("config", "", "backup config path (default: workspace/conf/backup.json)")
 	}
 	backupRunCmd.Flags().StringSlice("target", nil, "run only these target IDs")
+	backupRunCmd.Flags().Bool("takeover", false, "claim targets owned by another instance")
 	backupRestoreCmd.Flags().String("target", "", "backup target ID")
 	backupRestoreCmd.Flags().String("snapshot", "", "snapshot ID")
 	backupRestoreCmd.Flags().String("dest", "", "restore destination workspace")

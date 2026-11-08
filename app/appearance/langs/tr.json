@@ -1,4 +1,7 @@
 {
+	"backupRunOne": "Yedekle",
+	"backupRestoreOne": "Geri yükle",
+	"backupTargetClaimed": "Yedekleme hedefi ${target} zaten ${host} üzerindeki ${instance} örneği tarafından kullanılıyor. Devralındığında yedeklemeler bu örnekten çalışacak. Devralınsın mı?",
 	"backupSelectTargets": "En az bir yedekleme hedefi seçin",
 	"backupProgressBackup": "Yedekleniyor ${target}: ${done}/${total} · ${seconds}sn",
 	"backupProgressRestore": "Geri yükleniyor: ${done}/${total} · ${seconds}sn",

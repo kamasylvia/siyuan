@@ -1,4 +1,7 @@
 {
+	"backupRunOne": "Backup",
+	"backupRestoreOne": "Restaurar",
+	"backupTargetClaimed": "O destino ${target} já é usado pela instância ${instance} em ${host}. Após assumir, os backups passarão a sair desta instância. Assumir?",
 	"backupSelectTargets": "Selecione pelo menos um destino de backup",
 	"backupProgressBackup": "Fazendo backup de ${target}: ${done}/${total} · ${seconds}s",
 	"backupProgressRestore": "Restaurando: ${done}/${total} · ${seconds}s",

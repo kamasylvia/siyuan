@@ -1,4 +1,7 @@
 {
+	"backupRunOne": "备份",
+	"backupRestoreOne": "还原",
+	"backupTargetClaimed": "备份目标 ${target} 已被实例 ${instance}(${host})使用。接管后备份将从本实例执行,是否接管?",
 	"backupSelectTargets": "请至少勾选一个备份目标",
 	"backupProgressBackup": "备份中 ${target}:${done}/${total} · ${seconds} 秒",
 	"backupProgressRestore": "还原中:${done}/${total} · ${seconds} 秒",
