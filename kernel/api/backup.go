@@ -66,9 +66,6 @@ func maskBackupConfig(cfg *backup.Config) *apicontract.BackupConfig {
 				KeepLast: target.Retention.KeepLast, MaxAgeDays: target.Retention.MaxAgeDays,
 			}
 		}
-		if target.Local != nil {
-			item.Local = &apicontract.BackupLocal{Path: target.Local.Path}
-		}
 		if target.PG != nil {
 			item.PG = &apicontract.BackupPG{
 				DSN: maskDSN(target.PG.DSN), Host: target.PG.Host, Port: target.PG.Port,
@@ -140,9 +137,6 @@ func unmaskBackupConfig(cfg *apicontract.BackupConfig, old *backup.Config) *back
 			target.Retention = &backup.Retention{KeepLast: item.Retention.KeepLast, MaxAgeDays: item.Retention.MaxAgeDays}
 		}
 		previous := oldByID[item.ID]
-		if item.Local != nil {
-			target.Local = &backup.Local{Path: item.Local.Path}
-		}
 		if item.PG != nil {
 			dsn := item.PG.DSN
 			if strings.Contains(dsn, backupMasked) {

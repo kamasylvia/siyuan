@@ -4,10 +4,9 @@ import {showMessage} from "../../dialog/message";
 import {escapeHtmlTextAndAttr} from "../../util/escape";
 import type {SettingTabBuilder} from "../setting/builder";
 
-type BackupType = "local" | "pg" | "s3" | "webdav";
+type BackupType = "pg" | "s3" | "webdav";
 
 type Retention = {keepLast?: number; maxAgeDays?: number};
-type LocalConfig = {path: string};
 type PGConfig = {host: string; port?: number; user?: string; password?: string; database: string; sslMode?: string; schema?: string};
 type S3Config = {endpoint: string; accessKey?: string; secretKey?: string; bucket: string; region?: string;
     pathStyle?: boolean; skipTlsVerify?: boolean; timeout?: number};
@@ -18,7 +17,6 @@ type BackupTarget = {
     name?: string;
     type: BackupType;
     enabled: boolean;
-    local?: LocalConfig;
     pg?: PGConfig;
     s3?: S3Config;
     webdav?: WebDAVConfig;
@@ -50,7 +48,6 @@ const text = (key: string, fallback: string): string =>
 
 const typeLabel = (type: BackupType): string => {
     switch (type) {
-        case "local": return "Local";
         case "pg": return "PostgreSQL";
         case "s3": return "S3";
         case "webdav": return "WebDAV";
@@ -63,9 +60,8 @@ const newTargetID = (): string =>
 const defaultTarget = (): BackupTarget => ({
     id: "",
     name: "",
-    type: "local",
+    type: "pg",
     enabled: true,
-    local: {path: ""},
     retention: {keepLast: 30, maxAgeDays: 90},
 });
 
@@ -99,15 +95,13 @@ const selectType = (value: BackupType): string =>
     `<label class="fn__flex b3-label" style="align-items:center;margin:0 0 6px 0">
         <span class="fn__flex-1">${escapeHtmlTextAndAttr(text("backupType", "Type"))}</span>
         <select id="backupTargetType" class="b3-select fn__flex-1">
-            ${(["local", "pg", "s3", "webdav"] as BackupType[]).map(type =>
+            ${(["pg", "s3", "webdav"] as BackupType[]).map(type =>
                 `<option value="${type}" ${type === value ? "selected" : ""}>${typeLabel(type)}</option>`).join("")}
         </select>
     </label>`;
 
 const typeFields = (target: BackupTarget): string => {
     switch (target.type) {
-        case "local":
-            return field("backupLocalPath", text("backupPath", "Directory"), target.local?.path || "");
         case "pg":
             return field("backupPGHost", "Host", target.pg?.host || "") +
                 field("backupPGPort", "Port", String(target.pg?.port || 5432), "number") +
@@ -163,7 +157,7 @@ const render = () => {
         <div class="b3-label__text" id="backupFormTitle"></div>
         <div style="margin-top:8px">
             ${field("backupTargetNote", text("backupTargetNote", "Note (optional)"), "")}
-            ${selectType("local")}
+            ${selectType("pg")}
             ${field("backupKeepLast", text("backupKeepLast", "Keep last"), "30", "number")}
             ${field("backupMaxAgeDays", text("backupMaxAgeDays", "Max age (days)"), "90", "number", 'placeholder="0 = unlimited"')}
             <div id="backupTypeFields"></div>
@@ -183,8 +177,6 @@ const targetLabel = (target: BackupTarget): string => {
         return target.name;
     }
     switch (target.type) {
-        case "local":
-            return `Local · ${(target.local?.path || "").split("/").filter(Boolean).pop() || "/"}`;
         case "pg":
             return `PostgreSQL · ${target.pg?.host || ""}/${target.pg?.database || ""}`;
         case "s3":
@@ -242,11 +234,9 @@ const bind = () => {
     });
     panelRoot.querySelector("#backupTargetType")?.addEventListener("change", (event) => {
         draft.type = (event.target as HTMLSelectElement).value as BackupType;
-        draft.local = undefined;
         draft.pg = undefined;
         draft.s3 = undefined;
         draft.webdav = undefined;
-        if (draft.type === "local") draft.local = {path: ""};
         if (draft.type === "pg") draft.pg = {host: "", port: 5432, user: "", password: "", database: "", sslMode: "disable"};
         if (draft.type === "s3") draft.s3 = {endpoint: "", bucket: "", region: "", pathStyle: true, timeout: 60};
         if (draft.type === "webdav") draft.webdav = {endpoint: "", username: "", password: "", timeout: 60};
@@ -294,7 +284,7 @@ const readForm = (): BackupTarget => {
     const target: BackupTarget = {
         id: editingID || draftID,
         name: value("backupTargetNote").trim(),
-        type: (panelRoot?.querySelector("#backupTargetType") as HTMLSelectElement)?.value as BackupType || "local",
+        type: (panelRoot?.querySelector("#backupTargetType") as HTMLSelectElement)?.value as BackupType || "pg",
         enabled: true,
         retention: {
             keepLast: Number(value("backupKeepLast")) || 0,
@@ -302,9 +292,6 @@ const readForm = (): BackupTarget => {
         },
     };
     switch (target.type) {
-        case "local":
-            target.local = {path: value("backupLocalPath").trim()};
-            break;
         case "pg":
             target.pg = {
                 host: value("backupPGHost").trim(), port: Number(value("backupPGPort")) || 5432,

@@ -169,8 +169,6 @@ func (target *LocalTarget) List(_ context.Context, prefix string) ([]string, err
 // whole run.
 func NewTarget(target *Target) (Store, error) {
 	switch target.Type {
-	case TypeLocal:
-		return NewLocalTarget(target.ID, target.Local.Path)
 	case TypePG:
 		return NewPGTarget(target.ID, target.PG.ConnectionString(), target.PG.Schema)
 	case TypeS3:

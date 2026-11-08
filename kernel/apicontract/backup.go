@@ -16,10 +16,6 @@ type BackupRetention struct {
 	MaxAgeDays int `json:"maxAgeDays,omitempty" api:"optional"`
 }
 
-type BackupLocal struct {
-	Path string `json:"path"`
-}
-
 type BackupPG struct {
 	DSN            string `json:"dsn,omitempty" api:"optional"`
 	Host           string `json:"host,omitempty" api:"optional"`
@@ -57,7 +53,6 @@ type BackupTarget struct {
 	Name      string           `json:"name,omitempty" api:"optional"`
 	Type      string           `json:"type"`
 	Enabled   bool             `json:"enabled"`
-	Local     *BackupLocal     `json:"local,omitempty" api:"optional,nullable"`
 	PG        *BackupPG        `json:"pg,omitempty" api:"optional,nullable"`
 	S3        *BackupS3        `json:"s3,omitempty" api:"optional,nullable"`
 	WebDAV    *BackupWebDAV    `json:"webdav,omitempty" api:"optional,nullable"`

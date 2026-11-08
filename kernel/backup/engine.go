@@ -51,6 +51,9 @@ type Engine struct {
 	WorkspaceDir string
 	Config       *Config
 	Now          func() time.Time
+	// 测试注入:非空时替代按配置构建的目标列表与对应 retention,绕过 conf 目标类型校验
+	InjectedTargets   []Store
+	InjectedRetention map[string]Retention
 }
 
 type TargetResult struct {
@@ -116,7 +119,13 @@ func (engine *Engine) Run(ctx context.Context, onlyTargets ...string) (*RunResul
 	}
 	var targets []Store
 	var initFailures []TargetResult
+	if len(engine.InjectedTargets) > 0 {
+		targets = engine.InjectedTargets
+	}
 	for _, cfgTarget := range engine.Config.Targets {
+		if len(engine.InjectedTargets) > 0 {
+			break
+		}
 		if !cfgTarget.Enabled {
 			continue
 		}
@@ -124,14 +133,6 @@ func (engine *Engine) Run(ctx context.Context, onlyTargets ...string) (*RunResul
 			continue
 		}
 		target, err := NewTarget(cfgTarget)
-		if err == nil {
-			if local, ok := target.(*LocalTarget); ok {
-				if rel, relErr := filepath.Rel(engine.WorkspaceDir, local.root); relErr == nil &&
-					rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
-					err = fmt.Errorf("backup target [%s] must not be inside the workspace", cfgTarget.ID)
-				}
-			}
-		}
 		if err != nil {
 			initFailures = append(initFailures, TargetResult{ID: cfgTarget.ID, Error: err.Error()})
 			continue
@@ -365,7 +366,13 @@ func (engine *Engine) upload(ctx context.Context, target Store, snapshotID strin
 		result.Error = err.Error()
 		return result
 	}
-	if err = engine.prune(ctx, target, engine.Config.RetentionFor(target.ID())); err != nil {
+	retention := engine.Config.RetentionFor(target.ID())
+	if engine.InjectedRetention != nil {
+		if injected, ok := engine.InjectedRetention[target.ID()]; ok {
+			retention = injected
+		}
+	}
+	if err = engine.prune(ctx, target, retention); err != nil {
 		result.Error = "prune failed: " + err.Error()
 		return result
 	}

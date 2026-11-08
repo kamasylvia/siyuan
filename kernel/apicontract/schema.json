@@ -17910,30 +17910,6 @@
       ],
       "additionalProperties": false
     },
-    "BackupLocal": {
-      "type": "object",
-      "properties": {
-        "path": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "path"
-      ],
-      "additionalProperties": false
-    },
-    "BackupLocalInput": {
-      "type": "object",
-      "properties": {
-        "path": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "path"
-      ],
-      "additionalProperties": false
-    },
     "BackupPG": {
       "type": "object",
       "properties": {
@@ -18402,9 +18378,6 @@
         "id": {
           "type": "string"
         },
-        "local": {
-          "$ref": "#/$defs/BackupLocal"
-        },
         "name": {
           "type": "string"
         },
@@ -18439,16 +18412,6 @@
         },
         "id": {
           "type": "string"
-        },
-        "local": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/BackupLocalInput"
-            },
-            {
-              "type": "null"
-            }
-          ]
         },
         "name": {
           "type": "string"

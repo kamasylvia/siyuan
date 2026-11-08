@@ -23,19 +23,18 @@ func writeTestFile(t *testing.T, root, rel, content string) {
 	}
 }
 
-func newLocalTestConfig(t *testing.T, workspace, targetDir string) *Config {
+func newLocalTestEngine(t *testing.T, workspace, targetDir string) *Engine {
 	t.Helper()
 	cfg := NewConfig()
 	cfg.Enabled = true
-	cfg.Targets = []*Target{{
-		ID: "local-1", Name: "local", Type: TypeLocal, Enabled: true,
-		Local:     &Local{Path: targetDir},
-		Retention: &Retention{KeepLast: 10},
-	}}
-	if err := cfg.Normalize(); err != nil {
+	engine := NewEngine(workspace, cfg)
+	local, err := NewLocalTarget("local-1", targetDir)
+	if err != nil {
 		t.Fatal(err)
 	}
-	return cfg
+	engine.InjectedTargets = []Store{local}
+	engine.InjectedRetention = map[string]Retention{"local-1": {KeepLast: 10}}
+	return engine
 }
 
 func TestLocalBackupIsIncrementalAndRestorable(t *testing.T) {
@@ -49,8 +48,7 @@ func TestLocalBackupIsIncrementalAndRestorable(t *testing.T) {
 	writeTestFile(t, workspace, "temp/index.db", "not backed up")
 	writeTestFile(t, workspace, "repo/indexes/x", "not backed up")
 
-	cfg := newLocalTestConfig(t, workspace, targetDir)
-	engine := NewEngine(workspace, cfg)
+	engine := newLocalTestEngine(t, workspace, targetDir)
 	first, err := engine.Run(context.Background())
 	if err != nil {
 		t.Fatal(err)
@@ -129,9 +127,8 @@ func TestBackupIncludeLocalStorage(t *testing.T) {
 	workspace := t.TempDir()
 	targetDir := t.TempDir()
 	writeTestFile(t, workspace, "data/storage/local.json", `{"local":true}`)
-	cfg := newLocalTestConfig(t, workspace, targetDir)
-	cfg.Include.LocalStorage = true
-	engine := NewEngine(workspace, cfg)
+	engine := newLocalTestEngine(t, workspace, targetDir)
+	engine.Config.Include.LocalStorage = true
 	result, err := engine.Run(context.Background())
 	if err != nil {
 		t.Fatal(err)
@@ -143,9 +140,9 @@ func TestBackupIncludeLocalStorage(t *testing.T) {
 
 func TestConfigValidation(t *testing.T) {
 	cfg := NewConfig()
-	cfg.Targets = []*Target{{ID: "x", Type: TypeLocal, Enabled: true}}
+	cfg.Targets = []*Target{{ID: "x", Type: TypePG, Enabled: true}}
 	if err := cfg.Normalize(); err == nil {
-		t.Fatal("expected missing local path error")
+		t.Fatal("expected missing pg settings error")
 	}
 	cfg = NewConfig()
 	cfg.Targets = []*Target{{ID: "x", Type: TypePG, Enabled: true, PG: &PG{DSN: "postgres://x"}}}
@@ -161,9 +158,8 @@ func TestRetentionKeepsConfiguredSnapshots(t *testing.T) {
 	workspace := t.TempDir()
 	targetDir := t.TempDir()
 	writeTestFile(t, workspace, "data/box/doc.sy", "v1")
-	cfg := newLocalTestConfig(t, workspace, targetDir)
-	cfg.Targets[0].Retention = &Retention{KeepLast: 2}
-	engine := NewEngine(workspace, cfg)
+	engine := newLocalTestEngine(t, workspace, targetDir)
+	engine.InjectedRetention = map[string]Retention{"local-1": {KeepLast: 2}}
 	for i := 0; i < 3; i++ {
 		writeTestFile(t, workspace, "data/box/doc.sy", "v"+string(rune('1'+i)))
 		if _, err := engine.Run(context.Background()); err != nil {
@@ -194,9 +190,9 @@ func TestEncryptedBackupRequiresPassphrase(t *testing.T) {
 	workspace := t.TempDir()
 	targetDir := t.TempDir()
 	writeTestFile(t, workspace, "conf/conf.json", `{"api":{"token":"secret-token"}}`)
-	cfg := newLocalTestConfig(t, workspace, targetDir)
+	engine := newLocalTestEngine(t, workspace, targetDir)
+	cfg := engine.Config
 	cfg.Encryption = &Encryption{Enabled: true, Passphrase: "correct horse battery staple"}
-	engine := NewEngine(workspace, cfg)
 	result, err := engine.Run(context.Background())
 	if err != nil {
 		t.Fatal(err)

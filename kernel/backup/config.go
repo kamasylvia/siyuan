@@ -17,7 +17,6 @@ import (
 )
 
 const (
-	TypeLocal  = "local"
 	TypePG     = "pg"
 	TypeS3     = "s3"
 	TypeWebDAV = "webdav"
@@ -52,15 +51,10 @@ type Target struct {
 	Name      string     `json:"name"`
 	Type      string     `json:"type"`
 	Enabled   bool       `json:"enabled"`
-	Local     *Local     `json:"local,omitempty"`
 	PG        *PG        `json:"pg,omitempty"`
 	S3        *S3        `json:"s3,omitempty"`
 	WebDAV    *WebDAV    `json:"webdav,omitempty"`
 	Retention *Retention `json:"retention,omitempty"`
-}
-
-type Local struct {
-	Path string `json:"path"`
 }
 
 type PG struct {
@@ -160,10 +154,6 @@ func (cfg *Config) Normalize() error {
 			target.Retention.KeepLast = DefaultKeepLast
 		}
 		switch target.Type {
-		case TypeLocal:
-			if target.Local == nil || strings.TrimSpace(target.Local.Path) == "" {
-				return fmt.Errorf("backup target [%s] requires local.path", target.ID)
-			}
 		case TypePG:
 			if target.PG == nil {
 				return fmt.Errorf("backup target [%s] requires pg settings", target.ID)
