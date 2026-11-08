@@ -1,5 +1,8 @@
 {
-	"backupRunInProgress": "Sedang mencadangkan · ${x}s",
+	"backupSelectTargets": "Pilih minimal satu target pencadangan",
+	"backupProgressBackup": "Mencadangkan ${target}: ${done}/${total} · ${seconds}s",
+	"backupProgressRestore": "Memulihkan: ${done}/${total} · ${seconds}s",
+	"backupRestoreStarted": "Pemulihan dimulai; menulis ruang kerja",
 	"backupRunStarted": "Pencadangan dimulai; mengunggah snapshot",
 	"backupRestoreForceLabel": "Samakan ruang kerja dengan snapshot",
 	"backupRestoreNeedForce": "Ruang kerja sudah berisi data; aktifkan penyamaan untuk memulihkan",

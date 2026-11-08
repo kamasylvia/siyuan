@@ -1,5 +1,8 @@
 {
-	"backupRunInProgress": "Yedekleniyor · ${x}sn",
+	"backupSelectTargets": "En az bir yedekleme hedefi seçin",
+	"backupProgressBackup": "Yedekleniyor ${target}: ${done}/${total} · ${seconds}sn",
+	"backupProgressRestore": "Geri yükleniyor: ${done}/${total} · ${seconds}sn",
+	"backupRestoreStarted": "Geri yükleme başladı; çalışma alanına yazılıyor",
 	"backupRunStarted": "Yedekleme başladı; anlık görüntü yükleniyor",
 	"backupRestoreForceLabel": "Çalışma alanını anlık görüntüye göre eşitle",
 	"backupRestoreNeedForce": "Çalışma alanında zaten veri var; geri yüklemek için eşitlemeyi etkinleştir",

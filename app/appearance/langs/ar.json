@@ -1,5 +1,8 @@
 {
-	"backupRunInProgress": "جارٍ النسخ الاحتياطي · ${x} ث",
+	"backupSelectTargets": "اختر هدف نسخ احتياطي واحدًا على الأقل",
+	"backupProgressBackup": "جارٍ نسخ ${target}: ${done}/${total} · ${seconds} ث",
+	"backupProgressRestore": "جارٍ الاستعادة: ${done}/${total} · ${seconds} ث",
+	"backupRestoreStarted": "بدأت الاستعادة؛ جارٍ كتابة مساحة العمل",
 	"backupRunStarted": "بدأ النسخ الاحتياطي؛ جارٍ رفع اللقطة",
 	"backupRestoreForceLabel": "مطابقة مساحة العمل مع اللقطة",
 	"backupRestoreNeedForce": "مساحة العمل تحتوي بالفعل على بيانات؛ فعّل المطابقة للاستعادة",

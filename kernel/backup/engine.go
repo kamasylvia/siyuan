@@ -156,6 +156,7 @@ func (engine *Engine) Run(ctx context.Context, onlyTargets ...string) (*RunResul
 	if err != nil {
 		return nil, err
 	}
+	MarkRunTotals(int64(len(entries)))
 	now := engine.now()
 	snapshotID := now.UTC().Format("20060102T150405Z") + "-" + randomSuffix()
 	manifest := Manifest{ID: snapshotID, CreatedAt: now.UTC(), Roots: roots, Files: entries, Encryption: encryptionInfo}
@@ -167,6 +168,7 @@ func (engine *Engine) Run(ctx context.Context, onlyTargets ...string) (*RunResul
 	}
 	result.Targets = append(result.Targets, initFailures...)
 	for _, target := range targets {
+		MarkRunTarget(target.ID())
 		targetResult := engine.upload(ctx, target, snapshotID, manifest, entries, key)
 		result.Targets = append(result.Targets, targetResult)
 	}
@@ -320,6 +322,7 @@ func (engine *Engine) upload(ctx context.Context, target Store, snapshotID strin
 		}
 		if exists {
 			result.SkippedBlobs++
+			AddRunDone()
 			continue
 		}
 		data, err := os.ReadFile(filepath.Join(engine.WorkspaceDir, filepath.FromSlash(entry.Path)))

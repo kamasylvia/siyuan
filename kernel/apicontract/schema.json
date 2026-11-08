@@ -17815,16 +17815,15 @@
             }
           ]
         },
-        "running": {
-          "type": "integer"
+        "progress": {
+          "$ref": "#/$defs/BackupProgress"
         },
         "state": {
           "$ref": "#/$defs/BackupState"
         }
       },
       "required": [
-        "config",
-        "running"
+        "config"
       ],
       "additionalProperties": false
     },
@@ -17986,6 +17985,18 @@
       },
       "additionalProperties": false
     },
+    "BackupProgress": {
+      "type": "object",
+      "properties": {
+        "backup": {
+          "$ref": "#/$defs/BackupRunProgress"
+        },
+        "restore": {
+          "$ref": "#/$defs/BackupRestoreProgress"
+        }
+      },
+      "additionalProperties": false
+    },
     "BackupRestoreData": {
       "type": "object",
       "properties": {
@@ -18094,6 +18105,26 @@
       ],
       "additionalProperties": false
     },
+    "BackupRestoreProgress": {
+      "type": "object",
+      "properties": {
+        "done": {
+          "type": "integer"
+        },
+        "startedAt": {
+          "type": "integer"
+        },
+        "total": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "done",
+        "startedAt",
+        "total"
+      ],
+      "additionalProperties": false
+    },
     "BackupRestoreRequestInput": {
       "type": "object",
       "properties": {
@@ -18179,6 +18210,30 @@
         "startedAt",
         "targets",
         "totalBytes"
+      ],
+      "additionalProperties": false
+    },
+    "BackupRunProgress": {
+      "type": "object",
+      "properties": {
+        "done": {
+          "type": "integer"
+        },
+        "startedAt": {
+          "type": "integer"
+        },
+        "target": {
+          "type": "string"
+        },
+        "total": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "done",
+        "startedAt",
+        "target",
+        "total"
       ],
       "additionalProperties": false
     },

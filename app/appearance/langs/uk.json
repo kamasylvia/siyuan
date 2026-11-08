@@ -1,5 +1,8 @@
 {
-	"backupRunInProgress": "Триває копіювання · ${x} с",
+	"backupSelectTargets": "Виберіть щонайменше одну ціль резервного копіювання",
+	"backupProgressBackup": "Копіювання ${target}: ${done}/${total} · ${seconds} с",
+	"backupProgressRestore": "Відновлення: ${done}/${total} · ${seconds} с",
+	"backupRestoreStarted": "Відновлення почато; запис робочого простору",
 	"backupRunStarted": "Резервне копіювання почато; завантаження знімка",
 	"backupRestoreForceLabel": "Звести робочий простір до знімка",
 	"backupRestoreNeedForce": "Робочий простір уже містить дані; увімкніть зведення для відновлення",

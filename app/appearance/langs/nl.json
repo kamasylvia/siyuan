@@ -1,5 +1,8 @@
 {
-	"backupRunInProgress": "Back-up bezig · ${x}s",
+	"backupSelectTargets": "Selecteer minstens één back-updoel",
+	"backupProgressBackup": "Back-up van ${target}: ${done}/${total} · ${seconds}s",
+	"backupProgressRestore": "Herstellen: ${done}/${total} · ${seconds}s",
+	"backupRestoreStarted": "Herstel gestart; werkruimte wordt geschreven",
 	"backupRunStarted": "Back-up gestart; momentopname wordt geüpload",
 	"backupRestoreForceLabel": "Werkruimte afstemmen op de momentopname",
 	"backupRestoreNeedForce": "De werkruimte bevat al gegevens; schakel afstemmen in om te herstellen",

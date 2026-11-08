@@ -41,7 +41,10 @@ type TargetState = {
 
 type BackupState = {updatedAt?: string; targets: Record<string, TargetState>};
 
-type BackupData = {config: BackupConfig; state?: BackupState; running?: number};
+type BackupData = {config: BackupConfig; state?: BackupState; progress?: {
+    backup?: {startedAt: number; target: string; done: number; total: number};
+    restore?: {startedAt: number; done: number; total: number};
+}};
 
 const text = (key: string, fallback: string): string =>
     (window.siyuan.languages as unknown as Record<string, string>)[key] || fallback;
@@ -191,6 +194,7 @@ const targetRowHTML = (target: BackupTarget): string => {
     const state = currentState.targets?.[target.id];
     const status = state ? `${state.lastOk ? "OK" : "FAIL"} ${state.lastSnapshot || ""} ${state.lastError || ""}` : "";
     return `<div class="fn__flex" data-id="${escapeHtmlTextAndAttr(target.id)}" style="align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--b3-border-color)">
+        <input type="checkbox" class="backupTargetSelect" data-id="${escapeHtmlTextAndAttr(target.id)}" checked>
         <span class="fn__flex-1"><b>${escapeHtmlTextAndAttr(targetLabel(target))}</b>
             <span class="ft__on-surface">${typeLabel(target.type)}</span>
             ${status ? `<div class="ft__on-surface">${escapeHtmlTextAndAttr(status)}</div>` : ""}
@@ -330,15 +334,28 @@ const loadPanel = async () => {
     currentConfig = data.config || defaultConfig();
     currentState = data.state || {targets: {}};
     render();
-    // 面板打开时备份正在跑:显示运行态(轮询由点击流程接管,这里只展示)
-    if ((data.running || 0) > 0) {
-        const progressEl = panelRoot?.querySelector("#backupRunProgress") as HTMLElement;
-        if (progressEl) {
-            const seconds = Math.max(1, Math.round(Date.now() / 1000) - (data.running || 0));
-            progressEl.classList.remove("fn__none");
+    // 面板打开时备份或还原正在跑:显示运行态(轮询由点击流程接管,这里只展示)
+    const progressEl = panelRoot?.querySelector("#backupRunProgress") as HTMLElement;
+    const run = data.progress?.backup;
+    const restore = data.progress?.restore;
+    if (progressEl && (run || restore)) {
+        if (restore) {
+            const seconds = Math.max(1, Math.round(Date.now() / 1000) - restore.startedAt);
             progressEl.textContent =
-                text("backupRunInProgress", "Backing up · ${x}s").replace("${x}", String(seconds));
+                text("backupProgressRestore", "Restoring: ${done}/${total} · ${seconds}s")
+                    .replace("${done}", String(restore.done))
+                    .replace("${total}", String(restore.total))
+                    .replace("${seconds}", String(seconds));
+        } else if (run) {
+            const seconds = Math.max(1, Math.round(Date.now() / 1000) - run.startedAt);
+            progressEl.textContent =
+                text("backupProgressBackup", "Backing up ${target}: ${done}/${total} · ${seconds}s")
+                    .replace("${target}", run.target)
+                    .replace("${done}", String(run.done))
+                    .replace("${total}", String(run.total))
+                    .replace("${seconds}", String(seconds));
         }
+        progressEl.classList.remove("fn__none");
     }
 };
 
@@ -415,6 +432,13 @@ const runBackup = async () => {
             return;
         }
     }
+    // 备份支持批量:仅备份勾选的目标;还原不受此勾选影响
+    const selected = Array.from(panelRoot?.querySelectorAll(".backupTargetSelect:checked") || [])
+        .map((el: HTMLInputElement) => el.dataset.id).filter(Boolean) as string[];
+    if (!selected.length) {
+        showMessage(text("backupSelectTargets", "Select at least one backup target"), 6000, "error");
+        return;
+    }
     // 备份是同步 HTTP,大工作空间要跑数分钟:点击即进 loading 态并轮询运行态,
     // 防止重复点击与无反馈
     const button = panelRoot?.querySelector("#backupRun") as HTMLButtonElement;
@@ -434,15 +458,19 @@ const runBackup = async () => {
         if (response.code !== 0) {
             return;
         }
-        const started = (response.data as BackupData)?.running || 0;
-        if (started > 0 && progressEl) {
-            const seconds = Math.max(1, Math.round(Date.now() / 1000) - started);
+        const run = (response.data as BackupData)?.progress?.backup;
+        if (run && progressEl) {
+            const seconds = Math.max(1, Math.round(Date.now() / 1000) - run.startedAt);
             progressEl.textContent =
-                text("backupRunInProgress", "Backing up · ${x}s").replace("${x}", String(seconds));
+                text("backupProgressBackup", "Backing up ${target}: ${done}/${total} · ${seconds}s")
+                    .replace("${target}", run.target)
+                    .replace("${done}", String(run.done))
+                    .replace("${total}", String(run.total))
+                    .replace("${seconds}", String(seconds));
         }
     }, 2000);
     try {
-        const response = await fetchSyncPost("/api/backup/run", {targets: []});
+        const response = await fetchSyncPost("/api/backup/run", {targets: selected});
         if (response.code !== 0) {
             showMessage(`${text("backupRunFailed", "Backup failed")}: ${response.msg}`, 7000, "error");
             return;
@@ -471,25 +499,30 @@ const openRestoreDialog = async () => {
         showMessage(text("backupRestoreNoTargets", "No enabled backup target to restore from"), 6000, "error");
         return;
     }
-    const target = enabledTargets[0];
-    const listResponse = await fetchSyncPost("/api/backup/listSnapshots", {target: target.id});
-    if (listResponse.code !== 0) {
-        showMessage(`${text("backupRestoreListFailed", "Could not list snapshots")}: ${listResponse.msg}`, 7000, "error");
-        return;
-    }
-    const snapshots = (listResponse.data as {snapshots?: Array<{id: string; createdAt: string; files: number; encrypted: boolean}>}).snapshots || [];
-    if (!snapshots.length) {
-        showMessage(text("backupRestoreEmpty", "No snapshots on this target"), 6000);
-        return;
-    }
-    const options = snapshots.map(snapshot =>
-        `<option value="${escapeHtmlTextAndAttr(snapshot.id)}">${escapeHtmlTextAndAttr(snapshot.createdAt)} · ${snapshot.files} files${snapshot.encrypted ? " · 🔒" : ""}</option>`).join("");
+    // 还原是单目标操作:对话框内选目标,切换后按需拉取该目标的快照列表
+    const snapshotOptionsHTML = (snapshots: Array<{id: string; createdAt: string; files: number; encrypted: boolean}>) =>
+        snapshots.map(snapshot =>
+            `<option value="${escapeHtmlTextAndAttr(snapshot.id)}">${escapeHtmlTextAndAttr(snapshot.createdAt)} · ${snapshot.files} files${snapshot.encrypted ? " · 🔒" : ""}</option>`).join("");
+    const loadSnapshots = async (targetId: string): Promise<string> => {
+        const listResponse = await fetchSyncPost("/api/backup/listSnapshots", {target: targetId});
+        if (listResponse.code !== 0) {
+            return `<option value="">${escapeHtmlTextAndAttr(`${text("backupRestoreListFailed", "Could not list snapshots")}: ${listResponse.msg}`)}</option>`;
+        }
+        const snapshots = (listResponse.data as {snapshots?: Array<{id: string; createdAt: string; files: number; encrypted: boolean}>}).snapshots || [];
+        if (!snapshots.length) {
+            return `<option value="">${escapeHtmlTextAndAttr(text("backupRestoreEmpty", "No snapshots on this target"))}</option>`;
+        }
+        return snapshotOptionsHTML(snapshots);
+    };
+    const targetOptions = enabledTargets.map((target, index) =>
+        `<option value="${escapeHtmlTextAndAttr(target.id)}"${index === 0 ? " selected" : ""}>${escapeHtmlTextAndAttr(targetLabel(target))}</option>`).join("");
+    const snapshotOptions = await loadSnapshots(enabledTargets[0].id);
     const dialogHTML = `<div class="b3-dialog__content" style="padding:12px">
     <div class="fn__flex" style="align-items:center;gap:8px;margin-bottom:8px">
         <span class="fn__flex-center ft__on-surface">${escapeHtmlTextAndAttr(text("backupRestoreTargetLabel", "Target"))}</span>
-        <span>${escapeHtmlTextAndAttr(targetLabel(target))}</span>
+        <select id="backupRestoreTarget" class="b3-select" style="width:100%">${targetOptions}</select>
     </div>
-    <select id="backupRestoreSnapshot" class="b3-select" style="width:100%">${options}</select>
+    <select id="backupRestoreSnapshot" class="b3-select" style="width:100%">${snapshotOptions}</select>
     <input id="backupRestorePassphrase" type="password" class="b3-text-field fn__block" style="margin-top:8px"
         placeholder="${escapeHtmlTextAndAttr(text("backupRestorePassphrase", "Passphrase (encrypted backups only)"))}">
     <label class="fn__flex" style="align-items:center;gap:6px;margin-top:8px;cursor:pointer">
@@ -499,31 +532,79 @@ const openRestoreDialog = async () => {
     <div class="ft__on-surface" style="margin-top:8px;font-size:12px">${escapeHtmlTextAndAttr(text("backupRestoreWarn", "Restoring overwrites data/ and conf/ in the current workspace. With converge enabled the workspace becomes an exact copy of the snapshot: documents and assets not in the snapshot are deleted; excluded files such as backup credentials are kept"))}</div>
 </div>`;
     confirmDialog(text("backupRestoreTitle", "Restore from backup"), dialogHTML, async () => {
+        const targetId = (document.querySelector("#backupRestoreTarget") as HTMLSelectElement)?.value || "";
+        const target = enabledTargets.find(item => item.id === targetId);
+        if (!target) {
+            showMessage(text("backupRestoreNoTargets", "No enabled backup target to restore from"), 6000, "error");
+            return;
+        }
         const snapshot = (document.querySelector("#backupRestoreSnapshot") as HTMLSelectElement)?.value || "";
+        if (!snapshot) {
+            showMessage(text("backupRestoreEmpty", "No snapshots on this target"), 6000, "error");
+            return;
+        }
         const passphrase = (document.querySelector("#backupRestorePassphrase") as HTMLInputElement)?.value || "";
         const force = (document.querySelector("#backupRestoreForce") as HTMLInputElement)?.checked || false;
-        const dryRun = await fetchSyncPost("/api/backup/restoreDryRun", {target: target.id, snapshot, passphrase, force});
+        const dryRun = await fetchSyncPost("/api/backup/restoreDryRun", {target: targetId, snapshot, passphrase, force});
         if (dryRun.code !== 0) {
             showMessage(`${text("backupRestoreFailed", "Restore failed")}: ${dryRun.msg}`, 7000, "error");
             return;
         }
-        const plan = dryRun.data as {conflicts?: number; removeCount?: number; removeBytes?: number} | undefined;
+        const plan = dryRun.data as {conflicts?: number; removeCount?: number} | undefined;
         // 未勾选覆盖还原且工作空间已有数据:还原必然被拒绝,提前拦截并提示
         if (!force && (plan?.conflicts || 0) > 0) {
             showMessage(text("backupRestoreNeedForce", "The workspace already has data; enable converge to restore"), 7000, "error");
             return;
         }
-        const response = await fetchSyncPost("/api/backup/restore", {target: target.id, snapshot, passphrase, force});
-        const data = response.data as {files?: number; bytes?: number; removed?: number} | undefined;
-        if (response.code !== 0) {
-            showMessage(`${text("backupRestoreFailed", "Restore failed")}: ${response.msg}`, 7000, "error");
+        // 还原是同步 HTTP:面板进度行轮询内核还原状态,完成后回填面板
+        const progressEl = panelRoot?.querySelector("#backupRunProgress") as HTMLElement;
+        const restoreTip = text("backupRestoreStarted", "Restore started");
+        if (progressEl) {
+            progressEl.classList.remove("fn__none");
+            progressEl.textContent = restoreTip;
+        }
+        const poll = window.setInterval(async () => {
+            const response = await fetchSyncPost("/api/backup/getConfig", {});
+            const restore = (response.data as BackupData)?.progress?.restore;
+            if (restore && progressEl) {
+                const seconds = Math.max(1, Math.round(Date.now() / 1000) - restore.startedAt);
+                progressEl.textContent =
+                    text("backupProgressRestore", "Restoring: ${done}/${total} · ${seconds}s")
+                        .replace("${done}", String(restore.done))
+                        .replace("${total}", String(restore.total))
+                        .replace("${seconds}", String(seconds));
+            }
+        }, 2000);
+        try {
+            const response = await fetchSyncPost("/api/backup/restore", {target: targetId, snapshot, passphrase, force});
+            const data = response.data as {files?: number; bytes?: number; removed?: number} | undefined;
+            if (response.code !== 0) {
+                showMessage(`${text("backupRestoreFailed", "Restore failed")}: ${response.msg}`, 7000, "error");
+                return;
+            }
+            let message = `${text("backupRestoreOK", "Restored")}: ${data?.files || 0} files`;
+            if ((data?.removed || 0) > 0) {
+                message += ", " + text("backupRestorePruned", "${x} stale files removed").replace("${x}", String(data?.removed));
+            }
+            showMessage(message, 6000);
+        } finally {
+            window.clearInterval(poll);
+            if (progressEl) {
+                progressEl.classList.add("fn__none");
+                progressEl.textContent = "";
+            }
+            await loadPanel();
+        }
+    });
+    // 目标切换后重拉快照列表(Dialog 同步注入 DOM,绑定安全)
+    const targetSelect = document.querySelector("#backupRestoreTarget") as HTMLSelectElement;
+    const snapshotSelect = document.querySelector("#backupRestoreSnapshot") as HTMLSelectElement;
+    targetSelect?.addEventListener("change", async () => {
+        if (!snapshotSelect) {
             return;
         }
-        let message = `${text("backupRestoreOK", "Restored")}: ${data?.files || 0} files`;
-        if ((data?.removed || 0) > 0) {
-            message += ", " + text("backupRestorePruned", "${x} stale files removed").replace("${x}", String(data?.removed));
-        }
-        showMessage(message, 6000);
+        snapshotSelect.innerHTML = "<option value=\"\">...</option>";
+        snapshotSelect.innerHTML = await loadSnapshots(targetSelect.value);
     });
 };
 

@@ -1,5 +1,8 @@
 {
-	"backupRunInProgress": "Copia de seguridad en curso · ${x}s",
+	"backupSelectTargets": "Selecciona al menos un objetivo de copia",
+	"backupProgressBackup": "Copiando ${target}: ${done}/${total} · ${seconds}s",
+	"backupProgressRestore": "Restaurando: ${done}/${total} · ${seconds}s",
+	"backupRestoreStarted": "Restauración iniciada; escribiendo el espacio de trabajo",
 	"backupRunStarted": "Copia de seguridad iniciada; subiendo instantánea",
 	"backupRestoreForceLabel": "Converger el espacio de trabajo con la instantánea",
 	"backupRestoreNeedForce": "El espacio de trabajo ya tiene datos; activa la convergencia para restaurar",

@@ -88,8 +88,29 @@ type BackupState struct {
 type BackupGetConfigData struct {
 	Config *BackupConfig `json:"config"`
 	State  *BackupState  `json:"state,omitempty"`
-	// Running 是在飞备份的 Unix 起始秒,0 = 空闲;前端据此显示进度
-	Running int64 `json:"running"`
+	// Progress 是备份/还原的在飞进度快照,空闲时为空
+	Progress *BackupProgress `json:"progress,omitempty"`
+}
+
+type BackupProgress struct {
+	Backup  *BackupRunProgress     `json:"backup,omitempty"`
+	Restore *BackupRestoreProgress `json:"restore,omitempty"`
+}
+
+// BackupRunProgress 是在飞备份的进度:Total 为快照条目数,Done 按当前目标
+// 逐一累计(上传与复用都计入)
+type BackupRunProgress struct {
+	StartedAt int64  `json:"startedAt"`
+	Target    string `json:"target"`
+	Done      int64  `json:"done"`
+	Total     int64  `json:"total"`
+}
+
+// BackupRestoreProgress 是在飞还原的进度:Total 为快照文件数
+type BackupRestoreProgress struct {
+	StartedAt int64 `json:"startedAt"`
+	Done      int64 `json:"done"`
+	Total     int64 `json:"total"`
 }
 
 type BackupSetConfigRequest struct {

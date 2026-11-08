@@ -1,5 +1,8 @@
 {
-	"backupRunInProgress": "Zálohuje sa · ${x}s",
+	"backupSelectTargets": "Vyberte aspoň jeden cieľ zálohovania",
+	"backupProgressBackup": "Zálohuje sa ${target}: ${done}/${total} · ${seconds}s",
+	"backupProgressRestore": "Obnovuje sa: ${done}/${total} · ${seconds}s",
+	"backupRestoreStarted": "Obnovenie spustené; zapisuje sa pracovný priestor",
 	"backupRunStarted": "Záloha spustená; snímka sa odovzdáva",
 	"backupRestoreForceLabel": "Zjednotiť pracovný priestor so snímkou",
 	"backupRestoreNeedForce": "Pracovný priestor už obsahuje údaje; na obnovenie povoľte zjednotenie",

@@ -1,5 +1,8 @@
 {
-	"backupRunInProgress": "Backup in corso · ${x}s",
+	"backupSelectTargets": "Seleziona almeno una destinazione di backup",
+	"backupProgressBackup": "Backup di ${target}: ${done}/${total} · ${seconds}s",
+	"backupProgressRestore": "Ripristino: ${done}/${total} · ${seconds}s",
+	"backupRestoreStarted": "Ripristino avviato; scrittura dell'area di lavoro",
 	"backupRunStarted": "Backup avviato; caricamento snapshot in corso",
 	"backupRestoreForceLabel": "Convergi l'area di lavoro allo snapshot",
 	"backupRestoreNeedForce": "L'area di lavoro contiene già dati; attiva la convergenza per ripristinare",

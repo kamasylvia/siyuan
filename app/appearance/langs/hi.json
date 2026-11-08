@@ -1,5 +1,8 @@
 {
-	"backupRunInProgress": "बैकअप चल रहा है · ${x}s",
+	"backupSelectTargets": "कम से कम एक बैकअप लक्ष्य चुनें",
+	"backupProgressBackup": "बैकअप हो रहा है ${target}: ${done}/${total} · ${seconds}s",
+	"backupProgressRestore": "पुनर्स्थापित हो रहा है: ${done}/${total} · ${seconds}s",
+	"backupRestoreStarted": "पुनर्स्थापना शुरू; वर्कस्पेस लिखा जा रहा है",
 	"backupRunStarted": "बैकअप शुरू; स्नैपशॉट अपलोड हो रहा है",
 	"backupRestoreForceLabel": "वर्कस्पेस को स्नैपशॉट के अनुसार बदलें",
 	"backupRestoreNeedForce": "वर्कस्पेस में पहले से डेटा है; पुनर्स्थापित करने के लिए बदलाव सक्षम करें",

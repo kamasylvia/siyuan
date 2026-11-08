@@ -224,7 +224,7 @@ var getBackupConfig = contractHandler(apicontract.GetBackupConfig, func(c *gin.C
 	}
 	return apicontract.Success(apicontract.BackupGetConfigData{
 		Config: maskBackupConfig(cfg), State: backupStateForAPI(),
-		Running: backup.RunStartedAt(),
+		Progress: backupProgressForAPI(),
 	})
 })
 
@@ -243,7 +243,7 @@ var setBackupConfig = contractHandler(apicontract.SetBackupConfig, func(c *gin.C
 	}
 	return apicontract.Success(apicontract.BackupGetConfigData{
 		Config: maskBackupConfig(next), State: backupStateForAPI(),
-		Running: backup.RunStartedAt(),
+		Progress: backupProgressForAPI(),
 	})
 })
 
@@ -300,6 +300,25 @@ var runBackup = contractHandler(apicontract.RunBackup, func(c *gin.Context,
 	}
 	return apicontract.Success(out)
 })
+
+// backupProgressForAPI 组装在飞备份/还原的进度快照,空闲时返回 nil
+func backupProgressForAPI() *apicontract.BackupProgress {
+	out := &apicontract.BackupProgress{}
+	if run := backup.RunState(); run != nil {
+		out.Backup = &apicontract.BackupRunProgress{
+			StartedAt: run.StartedAt, Target: run.Target, Done: run.Done, Total: run.Total,
+		}
+	}
+	if restore := backup.RestoreState(); restore != nil {
+		out.Restore = &apicontract.BackupRestoreProgress{
+			StartedAt: restore.StartedAt, Done: restore.Done, Total: restore.Total,
+		}
+	}
+	if out.Backup == nil && out.Restore == nil {
+		return nil
+	}
+	return out
+}
 
 func backupTargetByID(cfg *backup.Config, id string) (*backup.Target, error) {
 	for _, cfgTarget := range cfg.Targets {

@@ -1,5 +1,8 @@
 {
-	"backupRunInProgress": "Резерва у току · ${x}s",
+	"backupSelectTargets": "Изаберите барем један циљ резерве",
+	"backupProgressBackup": "Резерва ${target}: ${done}/${total} · ${seconds}s",
+	"backupProgressRestore": "Обнављање: ${done}/${total} · ${seconds}s",
+	"backupRestoreStarted": "Обнављање почело; уписује се радни простор",
 	"backupRunStarted": "Резерва је почела; снимак се отпрема",
 	"backupRestoreForceLabel": "Усклади радни простор са снимком",
 	"backupRestoreNeedForce": "Радни простор већ садржи податке; омогући усклађивање за обнављање",

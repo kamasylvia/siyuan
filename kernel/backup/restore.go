@@ -150,6 +150,11 @@ func Restore(ctx context.Context, target Store, snapshotID, dest string, force b
 	if err != nil {
 		return nil, err
 	}
+	// 原子占位还原运行态:拒绝并发还原,失败路径经 defer 清理
+	if !MarkRestoreStarted(int64(len(manifest.Files))) {
+		return nil, errors.New("another restore is already running")
+	}
+	defer MarkRestoreFinished()
 	delta, err := scanRestoreDelta(destAbs, manifest)
 	if err != nil {
 		return nil, err
@@ -188,6 +193,7 @@ func Restore(ctx context.Context, target Store, snapshotID, dest string, force b
 		}
 		result.Files++
 		result.Bytes += int64(len(blob))
+		AddRestoreDone()
 	}
 	if force {
 		if err = pruneRestoreDelta(destAbs, manifest.Roots, delta, result); err != nil {

@@ -1,5 +1,8 @@
 {
-	"backupRunInProgress": "กำลังสำรองข้อมูล · ${x} วิ",
+	"backupSelectTargets": "เลือกเป้าหมายการสำรองข้อมูลอย่างน้อยหนึ่งรายการ",
+	"backupProgressBackup": "กำลังสำรอง ${target}: ${done}/${total} · ${seconds} วิ",
+	"backupProgressRestore": "กำลังกู้คืน: ${done}/${total} · ${seconds} วิ",
+	"backupRestoreStarted": "เริ่มการกู้คืนแล้ว กำลังเขียนพื้นที่ทำงาน",
 	"backupRunStarted": "เริ่มการสำรองข้อมูลแล้ว กำลังอัปโหลดสแนปชอต",
 	"backupRestoreForceLabel": "ทำให้พื้นที่ทำงานตรงกับสแนปชอต",
 	"backupRestoreNeedForce": "พื้นที่ทำงานมีข้อมูลอยู่แล้ว เปิดใช้การจับคู่ก่อนกู้คืน",

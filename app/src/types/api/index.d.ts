@@ -760,7 +760,7 @@ export type BackupEncryption = { "enabled": boolean; "passphrase"?: string; };
 
 export type BackupEncryptionInput = { "enabled": boolean; "passphrase"?: string; };
 
-export type BackupGetConfigData = { "config": BackupConfig | null; "running": number; "state"?: BackupState; };
+export type BackupGetConfigData = { "config": BackupConfig | null; "progress"?: BackupProgress; "state"?: BackupState; };
 
 export type BackupInclude = { "conf": boolean; "data": boolean; "history": boolean; "localStorage": boolean; };
 
@@ -774,11 +774,15 @@ export type BackupPG = { "concurrentReqs"?: number; "database"?: string; "dsn"?:
 
 export type BackupPGInput = { "concurrentReqs"?: number; "database"?: string; "dsn"?: string; "host"?: string; "password"?: string; "port"?: number; "schema"?: string; "sslMode"?: string; "timeout"?: number; "user"?: string; };
 
+export type BackupProgress = { "backup"?: BackupRunProgress; "restore"?: BackupRestoreProgress; };
+
 export type BackupRestoreData = { "bytes": number; "dest": string; "files": number; "removed": number; "removedBytes": number; "snapshot": string; };
 
 export type BackupRestoreDryRunData = { "conflicts": number; "createdAt": string; "encrypted": boolean; "files": number; "removeBytes": number; "removeCount": number; "roots": Array<string> | null; "snapshot": string; "totalBytes": number; };
 
 export type BackupRestoreDryRunRequestInput = { "force"?: boolean; "passphrase"?: string; "snapshot": string; "target": string; };
+
+export type BackupRestoreProgress = { "done": number; "startedAt": number; "total": number; };
 
 export type BackupRestoreRequestInput = { "force"?: boolean; "passphrase"?: string; "snapshot": string; "target": string; };
 
@@ -787,6 +791,8 @@ export type BackupRetention = { "keepLast"?: number; "maxAgeDays"?: number; };
 export type BackupRetentionInput = { "keepLast"?: number; "maxAgeDays"?: number; };
 
 export type BackupRunData = { "files": number; "finishedAt": string; "snapshot": string; "startedAt": string; "targets": Array<BackupRunTarget> | null; "totalBytes": number; };
+
+export type BackupRunProgress = { "done": number; "startedAt": number; "target": string; "total": number; };
 
 export type BackupRunRequestInput = { "targets"?: Array<string> | null; };
 

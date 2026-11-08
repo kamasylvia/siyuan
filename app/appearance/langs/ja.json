@@ -1,5 +1,8 @@
 {
-	"backupRunInProgress": "バックアップ中 · ${x}秒",
+	"backupSelectTargets": "バックアップ対象を 1 つ以上選択してください",
+	"backupProgressBackup": "バックアップ中 ${target}: ${done}/${total} · ${seconds}秒",
+	"backupProgressRestore": "復元中: ${done}/${total} · ${seconds}秒",
+	"backupRestoreStarted": "復元を開始し、ワークスペースに書き込んでいます",
 	"backupRunStarted": "バックアップを開始し、スナップショットをアップロード中",
 	"backupRestoreForceLabel": "上書き復元:ワークスペースをスナップショット時点に一致させる",
 	"backupRestoreNeedForce": "ワークスペースに既存データがあります。上書き復元を有効にしてから実行してください",

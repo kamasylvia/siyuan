@@ -1,5 +1,8 @@
 {
-	"backupRunInProgress": "Wykonywanie kopii · ${x}s",
+	"backupSelectTargets": "Wybierz co najmniej jeden cel kopii zapasowej",
+	"backupProgressBackup": "Tworzenie kopii ${target}: ${done}/${total} · ${seconds}s",
+	"backupProgressRestore": "Przywracanie: ${done}/${total} · ${seconds}s",
+	"backupRestoreStarted": "Przywracanie rozpoczęte; zapisywanie przestrzeni roboczej",
 	"backupRunStarted": "Kopia zapasowa rozpoczęta; wysyłanie migawki",
 	"backupRestoreForceLabel": "Uzgodnij przestrzeń roboczą z migawką",
 	"backupRestoreNeedForce": "Przestrzeń robocza zawiera już dane; włącz uzgadnianie, aby przywrócić",

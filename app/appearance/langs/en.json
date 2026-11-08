@@ -1,5 +1,8 @@
 {
-	"backupRunInProgress": "Backing up · ${x}s",
+	"backupSelectTargets": "Select at least one backup target",
+	"backupProgressBackup": "Backing up ${target}: ${done}/${total} · ${seconds}s",
+	"backupProgressRestore": "Restoring: ${done}/${total} · ${seconds}s",
+	"backupRestoreStarted": "Restore started; writing the workspace",
 	"backupRunStarted": "Backup started; uploading snapshot",
 	"backupRestoreForceLabel": "Converge workspace to the snapshot",
 	"backupRestoreNeedForce": "The workspace already has data; enable converge to restore",

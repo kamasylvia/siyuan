@@ -1,5 +1,8 @@
 {
-	"backupRunInProgress": "Sicherung läuft · ${x}s",
+	"backupSelectTargets": "Mindestens ein Sicherungsziel auswählen",
+	"backupProgressBackup": "Sichere ${target}: ${done}/${total} · ${seconds}s",
+	"backupProgressRestore": "Wiederherstellung: ${done}/${total} · ${seconds}s",
+	"backupRestoreStarted": "Wiederherstellung gestartet; Arbeitsbereich wird geschrieben",
 	"backupRunStarted": "Sicherung gestartet; Snapshot wird hochgeladen",
 	"backupRestoreForceLabel": "Arbeitsbereich auf den Snapshot bringen",
 	"backupRestoreNeedForce": "Der Arbeitsbereich enthält bereits Daten; aktiviere das Übernehmen, um wiederherzustellen",

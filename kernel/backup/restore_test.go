@@ -141,7 +141,7 @@ func TestRestoreDryRunOnEmptyDestination(t *testing.T) {
 }
 
 func TestRunProgressLifecycle(t *testing.T) {
-	if RunStartedAt() != 0 {
+	if RunState() != nil || RestoreState() != nil {
 		t.Fatal("progress should be idle initially")
 	}
 	workspace := t.TempDir()
@@ -151,7 +151,7 @@ func TestRunProgressLifecycle(t *testing.T) {
 	if _, err := engine.Run(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	if RunStartedAt() != 0 {
+	if RunState() != nil {
 		t.Fatal("progress must clear after run returns")
 	}
 	// 锁被占用时不产生运行态
@@ -169,7 +169,25 @@ func TestRunProgressLifecycle(t *testing.T) {
 	if _, runErr := engine2.Run(context.Background()); runErr == nil {
 		t.Fatal("expected lock conflict error")
 	}
-	if RunStartedAt() != 0 {
+	if RunState() != nil {
 		t.Fatal("failed lock attempt must not leave progress running")
+	}
+	// 还原运行态:原子占位拒绝并发,结束后清零
+	if !MarkRestoreStarted(3) {
+		t.Fatal("first restore should acquire the slot")
+	}
+	if MarkRestoreStarted(3) {
+		t.Fatal("second restore must be rejected while one is running")
+	}
+	if state := RestoreState(); state == nil || state.Total != 3 || state.Done != 0 {
+		t.Fatalf("unexpected restore state: %+v", state)
+	}
+	AddRestoreDone()
+	if state := RestoreState(); state == nil || state.Done != 1 {
+		t.Fatalf("done counter not tracked: %+v", state)
+	}
+	MarkRestoreFinished()
+	if RestoreState() != nil {
+		t.Fatal("restore state must clear after finish")
 	}
 }
