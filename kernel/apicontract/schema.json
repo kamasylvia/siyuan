@@ -18290,6 +18290,9 @@
         "startedAt": {
           "type": "integer"
         },
+        "target": {
+          "type": "string"
+        },
         "total": {
           "type": "integer"
         }
@@ -18297,6 +18300,7 @@
       "required": [
         "done",
         "startedAt",
+        "target",
         "total"
       ],
       "additionalProperties": false

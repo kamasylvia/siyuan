@@ -140,6 +140,7 @@ func (cfg *Config) Normalize() error {
 		return fmt.Errorf("backup encryption is enabled but the passphrase is empty")
 	}
 	seen := map[string]bool{}
+	identities := map[string]string{}
 	for i, target := range cfg.Targets {
 		if target == nil {
 			return fmt.Errorf("backup target %d is empty", i)
@@ -202,8 +203,44 @@ func (cfg *Config) Normalize() error {
 		default:
 			return fmt.Errorf("backup target [%s] has unsupported type [%s]", target.ID, target.Type)
 		}
+		identity, idErr := storageIdentity(target)
+		if idErr != nil {
+			return fmt.Errorf("backup target [%s]: %w", target.ID, idErr)
+		}
+		if first, clash := identities[identity]; clash {
+			return fmt.Errorf("backup target [%s] points to the same storage as [%s]; each target must use a unique host, port, database or bucket", target.ID, first)
+		}
+		identities[identity] = target.ID
 	}
 	return nil
+}
+
+// storageIdentity 归一化目标的连接标识:host、端口、数据库或桶相同即视为
+// 同一存储,与 IP/域名的写法差异无关;DSN 写法用整串比较
+func storageIdentity(target *Target) (string, error) {
+	normalizeEndpoint := func(endpoint string) string {
+		value := strings.ToLower(strings.TrimSpace(endpoint))
+		value = strings.TrimSuffix(value, "/")
+		value = strings.TrimPrefix(value, "https://")
+		value = strings.TrimPrefix(value, "http://")
+		return value
+	}
+	switch target.Type {
+	case TypePG:
+		if strings.TrimSpace(target.PG.DSN) != "" {
+			return "pg|dsn|" + strings.TrimSpace(target.PG.DSN), nil
+		}
+		return fmt.Sprintf("pg|%s|%d|%s|%s",
+			strings.ToLower(strings.TrimSpace(target.PG.Host)),
+			target.PG.Port,
+			strings.ToLower(strings.TrimSpace(target.PG.Database)),
+			strings.ToLower(strings.TrimSpace(target.PG.Schema))), nil
+	case TypeS3:
+		return "s3|" + normalizeEndpoint(target.S3.Endpoint) + "|" + strings.ToLower(strings.TrimSpace(target.S3.Bucket)), nil
+	case TypeWebDAV:
+		return "webdav|" + normalizeEndpoint(target.WebDAV.Endpoint), nil
+	}
+	return "", fmt.Errorf("unsupported type [%s]", target.Type)
 }
 
 func validIdentifier(value string) bool {

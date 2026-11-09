@@ -800,7 +800,7 @@ export type BackupRestoreDryRunData = { "conflicts": number; "createdAt": string
 
 export type BackupRestoreDryRunRequestInput = { "force"?: boolean; "passphrase"?: string; "snapshot": string; "target": string; };
 
-export type BackupRestoreProgress = { "done": number; "startedAt": number; "total": number; };
+export type BackupRestoreProgress = { "done": number; "startedAt": number; "target": string; "total": number; };
 
 export type BackupRestoreRequestInput = { "force"?: boolean; "keepIdentity"?: boolean; "passphrase"?: string; "snapshot": string; "target": string; };
 

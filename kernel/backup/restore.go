@@ -156,7 +156,7 @@ func Restore(ctx context.Context, target Store, snapshotID, dest string, force b
 		return nil, err
 	}
 	// 原子占位还原运行态:拒绝并发还原,失败路径经 defer 清理
-	if !MarkRestoreStarted(int64(len(manifest.Files))) {
+	if !MarkRestoreStarted(int64(len(manifest.Files)), target.ID()) {
 		return nil, errors.New("another restore is already running")
 	}
 	defer MarkRestoreFinished()

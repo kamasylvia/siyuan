@@ -1,4 +1,5 @@
 {
+	"backupDuplicateTarget": "备份目标 ${a} 与 ${b} 指向同一存储;每个目标必须使用唯一的主机、端口、数据库或存储桶",
 	"backupRunOne": "备份",
 	"backupRestoreOne": "还原",
 	"backupTargetClaimed": "备份目标 ${target} 已被实例 ${instance}(${host})使用。接管后备份将从本实例执行,是否接管?",

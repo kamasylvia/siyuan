@@ -322,7 +322,7 @@ func backupProgressForAPI() *apicontract.BackupProgress {
 	}
 	if restore := backup.RestoreState(); restore != nil {
 		out.Restore = &apicontract.BackupRestoreProgress{
-			StartedAt: restore.StartedAt, Done: restore.Done, Total: restore.Total,
+			StartedAt: restore.StartedAt, Target: restore.Target, Done: restore.Done, Total: restore.Total,
 		}
 	}
 	if out.Backup == nil && out.Restore == nil {

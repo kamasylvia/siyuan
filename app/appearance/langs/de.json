@@ -1,4 +1,5 @@
 {
+	"backupDuplicateTarget": "Das Sicherungsziel ${a} zeigt auf denselben Speicher wie ${b}; jedes Ziel muss einen eindeutigen Host, Port, Datenbank oder Bucket verwenden",
 	"backupRunOne": "Sichern",
 	"backupRestoreOne": "Wiederherstellen",
 	"backupTargetClaimed": "Das Sicherungsziel ${target} wird bereits von Instanz ${instance} auf ${host} verwendet. Nach der Übernahme läuft die Sicherung von dieser Instanz. Übernehmen?",

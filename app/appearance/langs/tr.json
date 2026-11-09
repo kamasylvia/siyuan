@@ -1,4 +1,5 @@
 {
+	"backupDuplicateTarget": "Yedekleme hedefi ${a}, ${b} ile aynı depolama alanına işaret ediyor; her hedef benzersiz bir ana makine, bağlantı noktası, veritabanı veya kova kullanmalıdır",
 	"backupRunOne": "Yedekle",
 	"backupRestoreOne": "Geri yükle",
 	"backupTargetClaimed": "Yedekleme hedefi ${target} zaten ${host} üzerindeki ${instance} örneği tarafından kullanılıyor. Devralındığında yedeklemeler bu örnekten çalışacak. Devralınsın mı?",

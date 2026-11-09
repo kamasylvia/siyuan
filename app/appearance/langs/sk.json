@@ -1,4 +1,5 @@
 {
+	"backupDuplicateTarget": "Cieľ ${a} smeruje na rovnaké úložisko ako ${b}; každý cieľ musí používať jedinečný hostiteľ, port, databázu alebo bucket",
 	"backupRunOne": "Záloha",
 	"backupRestoreOne": "Obnoviť",
 	"backupTargetClaimed": "Cieľ ${target} už používa inštancia ${instance} na ${host}. Po prevzatí budú zálohy bežať z tejto inštancie. Prevziať?",

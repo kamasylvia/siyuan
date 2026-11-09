@@ -1,4 +1,5 @@
 {
+	"backupDuplicateTarget": "Backup target ${a} points to the same storage as ${b}; each target must use a unique host, port, database or bucket",
 	"backupRunOne": "Back up",
 	"backupRestoreOne": "Restore",
 	"backupTargetClaimed": "Backup target ${target} is already used by instance ${instance} on ${host}. Take over so backups run from this instance?",

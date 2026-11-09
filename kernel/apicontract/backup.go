@@ -115,9 +115,10 @@ type BackupRunProgress struct {
 
 // BackupRestoreProgress 是在飞还原的进度:Total 为快照文件数
 type BackupRestoreProgress struct {
-	StartedAt int64 `json:"startedAt"`
-	Done      int64 `json:"done"`
-	Total     int64 `json:"total"`
+	StartedAt int64  `json:"startedAt"`
+	Target    string `json:"target"`
+	Done      int64  `json:"done"`
+	Total     int64  `json:"total"`
 }
 
 type BackupSetConfigRequest struct {

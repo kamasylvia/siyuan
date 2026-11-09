@@ -1,4 +1,5 @@
 {
+	"backupDuplicateTarget": "Cel ${a} wskazuje to samostorage co ${b}; każdy cel musi używać unikalnego hosta, portu, bazy danych lub kubełka",
 	"backupRunOne": "Kopia",
 	"backupRestoreOne": "Przywróć",
 	"backupTargetClaimed": "Cel ${target} jest już używany przez instancję ${instance} na ${host}. Po przejęciu kopie będą tworzone z tej instancji. Przejąć?",

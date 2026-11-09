@@ -1,4 +1,5 @@
 {
+	"backupDuplicateTarget": "El objetivo ${a} apunta al mismo almacenamiento que ${b}; cada objetivo debe usar un host, puerto, base de datos o bucket únicos",
 	"backupRunOne": "Copia",
 	"backupRestoreOne": "Restaurar",
 	"backupTargetClaimed": "El objetivo ${target} ya lo usa la instancia ${instance} en ${host}. Si lo tomas, las copias se ejecutarán desde esta instancia. ¿Tomar el control?",

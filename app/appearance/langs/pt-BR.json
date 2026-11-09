@@ -1,4 +1,5 @@
 {
+	"backupDuplicateTarget": "O destino ${a} aponta para o mesmo armazenamento que ${b}; cada destino deve usar host, porta, banco de dados ou bucket únicos",
 	"backupRunOne": "Backup",
 	"backupRestoreOne": "Restaurar",
 	"backupTargetClaimed": "O destino ${target} já é usado pela instância ${instance} em ${host}. Após assumir, os backups passarão a sair desta instância. Assumir?",

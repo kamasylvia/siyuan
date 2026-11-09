@@ -1,4 +1,5 @@
 {
+	"backupDuplicateTarget": "백업 대상 ${a}은(는) ${b}와(과) 동일한 저장소를 가리킵니다. 각 대상은 고유한 호스트, 포트, 데이터베이스 또는 버킷을 사용해야 합니다",
 	"backupRunOne": "백업",
 	"backupRestoreOne": "복원",
 	"backupTargetClaimed": "백업 대상 ${target}은(는) 이미 인스턴스 ${instance}(${host})에서 사용 중입니다. 인계하면 이 인스턴스에서 백업이 실행됩니다. 인계하시겠습니까?",

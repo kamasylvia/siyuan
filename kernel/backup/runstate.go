@@ -23,6 +23,7 @@ type runProgress struct {
 type restoreProgress struct {
 	running   atomic.Bool
 	startedAt atomic.Int64
+	target    atomic.Value
 	done      atomic.Int64
 	total     atomic.Int64
 }
@@ -43,6 +44,7 @@ type RunStateView struct {
 // RestoreStateView 是还原在飞状态的只读快照
 type RestoreStateView struct {
 	StartedAt int64
+	Target    string
 	Done      int64
 	Total     int64
 }
@@ -92,12 +94,13 @@ func RunState() *RunStateView {
 	}
 }
 
-// MarkRestoreStarted 原子占位还原运行态;已有还原在跑时返回 false
-func MarkRestoreStarted(total int64) bool {
+// MarkRestoreStarted 原子占位还原运行态并记录目标;已有还原在跑时返回 false
+func MarkRestoreStarted(total int64, targetID string) bool {
 	if !restoreTracker.running.CompareAndSwap(false, true) {
 		return false
 	}
 	restoreTracker.startedAt.Store(time.Now().Unix())
+	restoreTracker.target.Store(targetID)
 	restoreTracker.done.Store(0)
 	restoreTracker.total.Store(total)
 	return true
@@ -107,6 +110,7 @@ func MarkRestoreStarted(total int64) bool {
 func MarkRestoreFinished() {
 	restoreTracker.running.Store(false)
 	restoreTracker.startedAt.Store(0)
+	restoreTracker.target.Store("")
 	restoreTracker.done.Store(0)
 	restoreTracker.total.Store(0)
 }
@@ -121,8 +125,10 @@ func RestoreState() *RestoreStateView {
 	if !restoreTracker.running.Load() {
 		return nil
 	}
+	target, _ := restoreTracker.target.Load().(string)
 	return &RestoreStateView{
 		StartedAt: restoreTracker.startedAt.Load(),
+		Target:    target,
 		Done:      restoreTracker.done.Load(),
 		Total:     restoreTracker.total.Load(),
 	}

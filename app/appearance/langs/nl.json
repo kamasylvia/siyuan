@@ -1,4 +1,5 @@
 {
+	"backupDuplicateTarget": "Back-updoel ${a} wijst naar dezelfde opslag als ${b}; elk doel moet een unieke host, poort, database of bucket gebruiken",
 	"backupRunOne": "Back-up",
 	"backupRestoreOne": "Herstellen",
 	"backupTargetClaimed": "Back-updoel ${target} wordt al gebruikt door instantie ${instance} op ${host}. Na overname lopen back-ups vanaf deze instantie. Overnemen?",

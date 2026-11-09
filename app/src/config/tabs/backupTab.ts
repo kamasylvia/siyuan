@@ -7,7 +7,7 @@ import type {SettingTabBuilder} from "../setting/builder";
 type BackupType = "pg" | "s3" | "webdav";
 
 type Retention = {keepLast?: number; maxAgeDays?: number};
-type PGConfig = {host: string; port?: number; user?: string; password?: string; database: string; sslMode?: string; schema?: string};
+type PGConfig = {host: string; port?: number; user?: string; password?: string; database: string; sslMode?: string; schema?: string; dsn?: string};
 type S3Config = {endpoint: string; accessKey?: string; secretKey?: string; bucket: string; region?: string;
     pathStyle?: boolean; skipTlsVerify?: boolean; timeout?: number};
 type WebDAVConfig = {endpoint: string; username?: string; password?: string; skipTlsVerify?: boolean; timeout?: number};
@@ -44,7 +44,7 @@ type BackupState = {updatedAt?: string; targets: Record<string, TargetState>};
 
 type BackupData = {config: BackupConfig; state?: BackupState; progress?: {
     backup?: {startedAt: number; target: string; done: number; total: number};
-    restore?: {startedAt: number; done: number; total: number};
+    restore?: {startedAt: number; target: string; done: number; total: number};
 }};
 
 type DeleteCheckResult = {target: string; deletable: boolean; reason?: string; snapshots: number; duplicate: boolean};
@@ -359,6 +359,7 @@ const loadPanel = async () => {
     const progressEl = panelRoot?.querySelector("#backupRunProgress") as HTMLElement;
     const run = data.progress?.backup;
     const restore = data.progress?.restore;
+    setBackupBusy(Boolean(run || restore), run?.target || restore?.target);
     if (progressEl && (run || restore)) {
         if (restore) {
             const seconds = Math.max(1, Math.round(Date.now() / 1000) - restore.startedAt);
@@ -382,18 +383,38 @@ const loadPanel = async () => {
     setBackupBusy(Boolean(run || restore));
 };
 
-// 备份或还原运行期间,顶部与行内的备份、还原、删除、快照管理按钮全部禁用:
-// 快照管理里的删除与清空会动到正在读写的存储;编辑、测试连接保持可用
-const setBackupBusy = (on: boolean): void => {
+// 备份或还原运行期间,运行中的目标行全部按钮(含编辑、测试连接、快照管理)
+// 无豁免禁用,顶部全局按钮同步禁用;其余目标行保持可用。targetID 省略时
+// 先禁用全部行,待进度回报运行目标后收窄
+const setBackupBusy = (on: boolean, targetID?: string): void => {
     panelRoot?.querySelectorAll("#backupRun, #backupDelete, #backupRestore").forEach(button => {
         (button as HTMLButtonElement).disabled = on;
     });
     panelRoot?.querySelectorAll("#backupTargetList [data-action]").forEach(button => {
-        const action = button.getAttribute("data-action");
-        if (action === "backup" || action === "restore" || action === "delete" || action === "snapshots") {
-            (button as HTMLButtonElement).disabled = on;
-        }
+        const row = button.closest("[data-id]") as HTMLElement;
+        const rowTarget = row?.getAttribute("data-id") || "";
+        (button as HTMLButtonElement).disabled = on && (!targetID || rowTarget === targetID);
     });
+};
+
+// storageIdentityOf 与内核 storageIdentity 同规则:连接标识相同即视为同一
+// 存储,与 IP/域名的写法差异无关
+const storageIdentityOf = (target: BackupTarget): string => {
+    const endpoint = (value?: string) =>
+        (value || "").trim().toLowerCase().replace(/\/+$/, "").replace(/^https?:\/\//, "");
+    switch (target.type) {
+        case "pg":
+            if (target.pg?.dsn?.trim()) {
+                return "pg|dsn|" + target.pg.dsn.trim();
+            }
+            return ["pg", (target.pg?.host || "").trim().toLowerCase(), String(target.pg?.port || 5432),
+                (target.pg?.database || "").trim().toLowerCase(), (target.pg?.schema || "public").trim().toLowerCase()].join("|");
+        case "s3":
+            return "s3|" + endpoint(target.s3?.endpoint) + "|" + (target.s3?.bucket || "").trim().toLowerCase();
+        case "webdav":
+            return "webdav|" + endpoint(target.webdav?.endpoint);
+    }
+    return target.type;
 };
 
 const saveConfig = async () => {
@@ -433,6 +454,15 @@ const saveInclude = async () => {
 const saveForm = async () => {
     const target = readForm();
     currentConfig.enabled = true;
+    // 连接标识唯一性:同一 host/端口/库或桶不允许出现第二条配置
+    const identity = storageIdentityOf(target);
+    const clash = currentConfig.targets.find(item => item.id !== target.id && storageIdentityOf(item) === identity);
+    if (clash) {
+        showMessage(text("backupDuplicateTarget", "Backup target \${a} points to the same storage as \${b}; each target must use a unique host, port, database or bucket")
+            .replace("\${a}", targetLabel(target) || target.id)
+            .replace("\${b}", targetLabel(clash)), 7000, "error");
+        return;
+    }
     // 编辑模式下连接信息变化时先过存储门禁:同一物理存储或原存储已清空才放行,
     // 防止更换存储后把有快照的存储留在无人认领的状态
     if (editingID) {
@@ -514,7 +544,9 @@ const runBackup = async (targetIds?: string[], takeover = false): Promise<void> 
             return;
         }
         const run = (response.data as BackupData)?.progress?.backup;
-        if (run && progressEl) {
+        if (run) {
+            setBackupBusy(true, run.target);
+            if (progressEl) {
             const seconds = Math.max(1, Math.round(Date.now() / 1000) - run.startedAt);
             progressEl.textContent =
                 text("backupProgressBackup", "Backing up ${target}: ${done}/${total} · ${seconds}s")
@@ -522,6 +554,7 @@ const runBackup = async (targetIds?: string[], takeover = false): Promise<void> 
                     .replace("${done}", String(run.done))
                     .replace("${total}", String(run.total))
                     .replace("${seconds}", String(seconds));
+            }
         }
     }, 2000);
     try {
@@ -803,13 +836,16 @@ const openRestoreDialog = async (targetId: string) => {
         const poll = window.setInterval(async () => {
             const response = await fetchSyncPost("/api/backup/getConfig", {});
             const restore = (response.data as BackupData)?.progress?.restore;
-            if (restore && progressEl) {
-                const seconds = Math.max(1, Math.round(Date.now() / 1000) - restore.startedAt);
-                progressEl.textContent =
-                    text("backupProgressRestore", "Restoring: ${done}/${total} · ${seconds}s")
-                        .replace("${done}", String(restore.done))
-                        .replace("${total}", String(restore.total))
-                        .replace("${seconds}", String(seconds));
+            if (restore) {
+                setBackupBusy(true, restore.target);
+                if (progressEl) {
+                    const seconds = Math.max(1, Math.round(Date.now() / 1000) - restore.startedAt);
+                    progressEl.textContent =
+                        text("backupProgressRestore", "Restoring: ${done}/${total} · ${seconds}s")
+                            .replace("${done}", String(restore.done))
+                            .replace("${total}", String(restore.total))
+                            .replace("${seconds}", String(seconds));
+                }
             }
         }, 2000);
         try {

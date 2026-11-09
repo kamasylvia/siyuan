@@ -1,4 +1,5 @@
 {
+	"backupDuplicateTarget": "バックアップ対象 ${a} は ${b} と同じストレージを指しています。各対象には一意なホスト・ポート・データベース・バケットが必要です",
 	"backupRunOne": "バックアップ",
 	"backupRestoreOne": "復元",
 	"backupTargetClaimed": "バックアップ対象 ${target} は既にインスタンス ${instance}(${host})で使用中です。引き継ぐとこのインスタンスからバックアップするようになります。引き継ぎますか?",

@@ -1,4 +1,5 @@
 {
+	"backupDuplicateTarget": "Target ${a} menunjuk ke penyimpanan yang sama dengan ${b}; setiap target harus memakai host, port, basis data, atau bucket yang unik",
 	"backupRunOne": "Cadangkan",
 	"backupRestoreOne": "Pulihkan",
 	"backupTargetClaimed": "Target ${target} sudah digunakan instansi ${instance} di ${host}. Setelah diambil alih, pencadangan berjalan dari instansi ini. Ambil alih?",
