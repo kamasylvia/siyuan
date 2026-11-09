@@ -364,6 +364,47 @@ var listBackupSnapshots = contractHandler(apicontract.BackupListSnapshots, func(
 	return apicontract.Success(out)
 })
 
+// deleteCheckBackup 逐目标校验连通与快照数量并返回删除门禁判定:目标确认已
+// 清空才可删除配置,同一存储的重复配置经指纹比对放行
+var deleteCheckBackup = contractHandler(apicontract.BackupDeleteCheck, func(c *gin.Context,
+	req apicontract.BackupDeleteCheckRequest) apicontract.Response[apicontract.BackupDeleteCheckData] {
+	if len(req.Targets) == 0 {
+		return apicontract.Failure[apicontract.BackupDeleteCheckData](-1, "backup target ids are required")
+	}
+	cfg, err := loadBackupConfigForAPI()
+	if err != nil {
+		return apicontract.Failure[apicontract.BackupDeleteCheckData](-1, err.Error())
+	}
+	checks := make([]backup.TargetCheck, 0, len(req.Targets))
+	for _, id := range req.Targets {
+		check := backup.TargetCheck{Target: id}
+		if targetConfig, targetErr := backupTargetByID(cfg, id); targetErr == nil {
+			if store, storeErr := backup.NewTarget(unmaskBackupTarget(cfg, targetConfig)); storeErr == nil {
+				ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+				manifests, listErr := backup.ListSnapshots(ctx, store)
+				if listErr == nil {
+					check.Reachable = true
+					check.Snapshots = len(manifests)
+					if fingerprint, fingerprintErr := store.Fingerprint(ctx); fingerprintErr == nil {
+						check.Fingerprint = fingerprint
+					}
+				}
+				cancel()
+			}
+		}
+		checks = append(checks, check)
+	}
+	policy := backup.ApplyDeletionPolicy(checks)
+	out := apicontract.BackupDeleteCheckData{Results: make([]apicontract.BackupDeleteCheckItem, 0, len(policy))}
+	for _, result := range policy {
+		out.Results = append(out.Results, apicontract.BackupDeleteCheckItem{
+			Target: result.Target, Deletable: result.Deletable, Reason: result.Reason,
+			Snapshots: result.Snapshots, Duplicate: result.Duplicate,
+		})
+	}
+	return apicontract.Success(out)
+})
+
 var restoreBackupDryRun = contractHandler(apicontract.BackupRestoreDryRun, func(c *gin.Context,
 	req apicontract.BackupRestoreDryRunRequest) apicontract.Response[apicontract.BackupRestoreDryRunData] {
 	cfg, err := loadBackupConfigForAPI()

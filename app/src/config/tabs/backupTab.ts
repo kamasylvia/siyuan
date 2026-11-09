@@ -46,6 +46,8 @@ type BackupData = {config: BackupConfig; state?: BackupState; progress?: {
     restore?: {startedAt: number; done: number; total: number};
 }};
 
+type DeleteCheckResult = {target: string; deletable: boolean; reason?: string; snapshots: number; duplicate: boolean};
+
 const text = (key: string, fallback: string): string =>
     (window.siyuan.languages as unknown as Record<string, string>)[key] || fallback;
 
@@ -143,8 +145,8 @@ const render = () => {
     panelRoot.innerHTML = `<div class="b3-label">
     <div class="fn__flex" style="align-items:center;gap:8px;margin-bottom:10px">
         <button class="b3-button b3-button--outline" id="backupAdd">${escapeHtmlTextAndAttr(text("backupAddTarget", "Add target"))}</button>
-        <button class="b3-button b3-button--outline" id="backupRun">${escapeHtmlTextAndAttr(text("backupRunNow", "Back up now"))}</button>
-        <button class="b3-button b3-button--outline" id="backupRestore">${escapeHtmlTextAndAttr(text("backupRestoreTitle", "Restore"))}</button>
+        <button class="b3-button b3-button--outline" id="backupRun">${escapeHtmlTextAndAttr(text("backupRunNow", "Back up"))}</button>
+        <button class="b3-button b3-button--outline" id="backupDelete">${escapeHtmlTextAndAttr(window.siyuan.languages.delete)}</button>
         <span class="fn__space"></span>
         <label class="fn__flex" style="align-items:center;gap:4px"><input id="backupIncludeData" type="checkbox" class="b3-switch" ${currentConfig.include?.data ? "checked" : ""}>${escapeHtmlTextAndAttr(text("backupIncludeData", "Data"))}</label>
         <label class="fn__flex" style="align-items:center;gap:4px"><input id="backupIncludeConf" type="checkbox" class="b3-switch" ${currentConfig.include?.conf ? "checked" : ""}>${escapeHtmlTextAndAttr(text("backupIncludeConf", "Configuration"))}</label>
@@ -213,7 +215,7 @@ const bind = () => {
     }
     panelRoot.querySelector("#backupAdd")?.addEventListener("click", () => openForm(defaultTarget()));
     panelRoot.querySelector("#backupRun")?.addEventListener("click", () => void runBackup());
-    panelRoot.querySelector("#backupRestore")?.addEventListener("click", () => void openRestoreDialog());
+    panelRoot.querySelector("#backupDelete")?.addEventListener("click", () => void deleteTargets());
     for (const id of ["backupIncludeData", "backupIncludeConf", "backupIncludeHistory"]) {
         panelRoot.querySelector(`#${id}`)?.addEventListener("change", () => void saveInclude());
     }
@@ -513,18 +515,87 @@ const runBackup = async (targetIds?: string[], takeover = false): Promise<void> 
     }
 };
 
-const openRestoreDialog = async (preselectId?: string) => {
-    const enabledTargets = (currentConfig.targets || []).filter(target => target.enabled);
-    if (!enabledTargets.length) {
+// 删除是批量配置操作,但有删除门禁:仅确认已清空的目标可删,防止在存储上遗留
+// 孤儿快照;同一存储的重复配置(如 IP 与域名两种写法)由内核指纹比对放行
+const deleteTargets = async () => {
+    const selected = Array.from(panelRoot?.querySelectorAll(".backupTargetSelect:checked") || [])
+        .map((el: HTMLInputElement) => el.dataset.id).filter(Boolean) as string[];
+    if (!selected.length) {
+        showMessage(text("backupSelectTargets", "Select at least one backup target"), 6000, "error");
+        return;
+    }
+    const response = await fetchSyncPost("/api/backup/deleteCheck", {targets: selected});
+    const data = response.data as {results?: DeleteCheckResult[]} | undefined;
+    if (response.code !== 0 || !data?.results) {
+        showMessage(`${text("backupDeleteCheckFailed", "Could not verify the selected targets")}: ${response.msg}`, 7000, "error");
+        return;
+    }
+    const labelOf = (id: string): string => {
+        const target = currentConfig.targets.find(item => item.id === id);
+        return target ? targetLabel(target) : id;
+    };
+    const verdictLine = (result: DeleteCheckResult): string => {
+        const label = `<b>${escapeHtmlTextAndAttr(labelOf(result.target))}</b>`;
+        if (result.deletable) {
+            const note = result.duplicate
+                ? text("backupDeleteDuplicateEmpty", "Points at the same storage as a reachable, emptied target")
+                : text("backupDeleteOK", "Emptied, ready to delete");
+            return `<div class="fn__flex" style="align-items:center;gap:6px;padding:3px 0">
+                <span class="ft__success">✓</span><span class="fn__flex-1">${label}</span>
+                <span class="ft__on-surface">${escapeHtmlTextAndAttr(note)}</span></div>`;
+        }
+        const note = result.reason === "snapshots"
+            ? text("backupDeleteBlockedSnapshots", "Still has ${x} snapshots; empty the target storage manually first")
+                .replace("${x}", String(result.snapshots))
+            : text("backupDeleteBlockedUnreachable", "Unreachable; cannot verify it is emptied");
+        return `<div class="fn__flex" style="align-items:center;gap:6px;padding:3px 0">
+            <span class="ft__error">✗</span><span class="fn__flex-1">${label}</span>
+            <span class="ft__on-surface">${escapeHtmlTextAndAttr(note)}</span></div>`;
+    };
+    const deletable = data.results.filter(result => result.deletable);
+    if (!deletable.length) {
+        showMessage(text("backupDeleteNoneDeletable", "No target can be deleted: a target must be emptied first"), 7000, "error");
+        return;
+    }
+    const stepTitle = text("backupDeleteStepTitle", "Delete backup targets");
+    // 第一步确认:展示每个目标的门禁校验结果
+    const step1HTML = `<div class="b3-dialog__content" style="padding:12px">
+    <div class="ft__on-surface" style="margin-bottom:8px">${escapeHtmlTextAndAttr(text("backupDeleteStep1Body",
+        "Only emptied targets can be deleted; targets that still have snapshots or cannot be reached stay locked to prevent orphan snapshots."))}</div>
+    ${data.results.map(verdictLine).join("")}
+</div>`;
+    confirmDialog(stepTitle, step1HTML, async () => {
+        // 第二步确认:最终列出将删除的目标,红色确认按钮
+        const step2HTML = `<div class="b3-dialog__content" style="padding:12px">
+    <div class="ft__on-surface" style="margin-bottom:8px">${escapeHtmlTextAndAttr(text("backupDeleteStep2Body",
+        "This removes the backup configuration of the listed targets (no data on the storage is touched). Please confirm these targets are already emptied; this action cannot be undone."))}</div>
+    ${deletable.map(verdictLine).join("")}
+</div>`;
+        confirmDialog(stepTitle, step2HTML, async () => {
+            const deletedIds = new Set(deletable.map(result => result.target));
+            currentConfig.targets = currentConfig.targets.filter(target => !deletedIds.has(target.id));
+            if (await saveConfig()) {
+                showMessage(text("backupDeleteDone", "Deleted ${x} backup target(s)")
+                    .replace("${x}", String(deletable.length)), 3000);
+                await loadPanel();
+            }
+        }, undefined, true);
+    }, undefined, true);
+};
+
+// 还原是单源操作:仅能从目标行的还原按钮发起,源目标在对话框内钉死,禁止批量还原
+const openRestoreDialog = async (targetId: string) => {
+    const target = (currentConfig.targets || []).find(item => item.id === targetId && item.enabled);
+    if (!target) {
         showMessage(text("backupRestoreNoTargets", "No enabled backup target to restore from"), 6000, "error");
         return;
     }
-    // 还原是单目标操作:对话框内选目标,切换后按需拉取该目标的快照列表
+    // 快照列表按该目标拉取
     const snapshotOptionsHTML = (snapshots: Array<{id: string; createdAt: string; files: number; encrypted: boolean}>) =>
         snapshots.map(snapshot =>
             `<option value="${escapeHtmlTextAndAttr(snapshot.id)}">${escapeHtmlTextAndAttr(snapshot.createdAt)} · ${snapshot.files} files${snapshot.encrypted ? " · 🔒" : ""}</option>`).join("");
-    const loadSnapshots = async (targetId: string): Promise<string> => {
-        const listResponse = await fetchSyncPost("/api/backup/listSnapshots", {target: targetId});
+    const loadSnapshots = async (id: string): Promise<string> => {
+        const listResponse = await fetchSyncPost("/api/backup/listSnapshots", {target: id});
         if (listResponse.code !== 0) {
             return `<option value="">${escapeHtmlTextAndAttr(`${text("backupRestoreListFailed", "Could not list snapshots")}: ${listResponse.msg}`)}</option>`;
         }
@@ -534,13 +605,11 @@ const openRestoreDialog = async (preselectId?: string) => {
         }
         return snapshotOptionsHTML(snapshots);
     };
-    const targetOptions = enabledTargets.map((target, index) =>
-        `<option value="${escapeHtmlTextAndAttr(target.id)}"${(preselectId ? target.id === preselectId : index === 0) ? " selected" : ""}>${escapeHtmlTextAndAttr(targetLabel(target))}</option>`).join("");
-    const snapshotOptions = await loadSnapshots(preselectId || enabledTargets[0].id);
+    const snapshotOptions = await loadSnapshots(target.id);
     const dialogHTML = `<div class="b3-dialog__content" style="padding:12px">
     <div class="fn__flex" style="align-items:center;gap:8px;margin-bottom:8px">
         <span class="fn__flex-center ft__on-surface">${escapeHtmlTextAndAttr(text("backupRestoreTargetLabel", "Target"))}</span>
-        <select id="backupRestoreTarget" class="b3-select" style="width:100%">${targetOptions}</select>
+        <span class="fn__flex-1">${escapeHtmlTextAndAttr(targetLabel(target))}</span>
     </div>
     <select id="backupRestoreSnapshot" class="b3-select" style="width:100%">${snapshotOptions}</select>
     <input id="backupRestorePassphrase" type="password" class="b3-text-field fn__block" style="margin-top:8px"
@@ -552,12 +621,6 @@ const openRestoreDialog = async (preselectId?: string) => {
     <div class="ft__on-surface" style="margin-top:8px;font-size:12px">${escapeHtmlTextAndAttr(text("backupRestoreWarn", "Restoring overwrites data/ and conf/ in the current workspace. With converge enabled the workspace becomes an exact copy of the snapshot: documents and assets not in the snapshot are deleted; excluded files such as backup credentials are kept"))}</div>
 </div>`;
     confirmDialog(text("backupRestoreTitle", "Restore from backup"), dialogHTML, async () => {
-        const targetId = (document.querySelector("#backupRestoreTarget") as HTMLSelectElement)?.value || "";
-        const target = enabledTargets.find(item => item.id === targetId);
-        if (!target) {
-            showMessage(text("backupRestoreNoTargets", "No enabled backup target to restore from"), 6000, "error");
-            return;
-        }
         const snapshot = (document.querySelector("#backupRestoreSnapshot") as HTMLSelectElement)?.value || "";
         if (!snapshot) {
             showMessage(text("backupRestoreEmpty", "No snapshots on this target"), 6000, "error");
@@ -615,16 +678,6 @@ const openRestoreDialog = async (preselectId?: string) => {
             }
             await loadPanel();
         }
-    });
-    // 目标切换后重拉快照列表(Dialog 同步注入 DOM,绑定安全)
-    const targetSelect = document.querySelector("#backupRestoreTarget") as HTMLSelectElement;
-    const snapshotSelect = document.querySelector("#backupRestoreSnapshot") as HTMLSelectElement;
-    targetSelect?.addEventListener("change", async () => {
-        if (!snapshotSelect) {
-            return;
-        }
-        snapshotSelect.innerHTML = "<option value=\"\">...</option>";
-        snapshotSelect.innerHTML = await loadSnapshots(targetSelect.value);
     });
 };
 

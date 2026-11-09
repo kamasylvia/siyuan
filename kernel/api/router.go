@@ -992,4 +992,5 @@ func registerUiRoutes(ginServer *gin.Engine) {
 	ginServer.Handle("POST", "/api/backup/listSnapshots", contractRouteHandlers(apicontract.BackupListSnapshots, listBackupSnapshots)...)
 	ginServer.Handle("POST", "/api/backup/restoreDryRun", contractRouteHandlers(apicontract.BackupRestoreDryRun, restoreBackupDryRun)...)
 	ginServer.Handle("POST", "/api/backup/restore", contractRouteHandlers(apicontract.BackupRestore, restoreBackup)...)
+	ginServer.Handle("POST", "/api/backup/deleteCheck", contractRouteHandlers(apicontract.BackupDeleteCheck, deleteCheckBackup)...)
 }

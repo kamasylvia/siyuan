@@ -6,7 +6,9 @@ package backup
 
 import (
 	"context"
+	"crypto/sha256"
 	"crypto/tls"
+	"encoding/hex"
 	"errors"
 	"net/http"
 	"path"
@@ -43,6 +45,21 @@ func NewWebDAVTarget(target *Target) (*WebDAVTarget, error) {
 }
 
 func (target *WebDAVTarget) ID() string { return target.id }
+
+// Fingerprint 用归属标记内容作为物理存储身份:同一存储经不同 endpoint 配置时
+// 归属标记一致;目标从未被写入时没有标记,返回空指纹,删除门禁会保守锁定
+func (target *WebDAVTarget) Fingerprint(ctx context.Context) (string, error) {
+	exists, err := target.Has(ctx, ownerKey)
+	if err != nil || !exists {
+		return "", err
+	}
+	data, err := target.Get(ctx, ownerKey)
+	if err != nil {
+		return "", err
+	}
+	sum := sha256.Sum256(data)
+	return "webdav/" + hex.EncodeToString(sum[:]), nil
+}
 
 func webdavPath(key string) string {
 	return "/" + strings.TrimPrefix(path.Clean("/"+key), "/")

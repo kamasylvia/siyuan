@@ -13,6 +13,10 @@ import (
 // independent from the workspace layout.
 type Store interface {
 	ID() string
+	// Fingerprint 返回物理存储身份:同一存储经不同连接配置(IP/域名)访问时
+	// 指纹必须一致;存储从未写入过身份标记时返回空指纹。指纹用于删除门禁
+	// 识别同一存储的重复配置
+	Fingerprint(ctx context.Context) (string, error)
 	Has(ctx context.Context, key string) (bool, error)
 	Put(ctx context.Context, key string, data []byte) error
 	Get(ctx context.Context, key string) ([]byte, error)

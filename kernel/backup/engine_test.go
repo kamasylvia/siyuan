@@ -260,6 +260,11 @@ func NewLocalTarget(id, root string) (*LocalTarget, error) {
 
 func (target *LocalTarget) ID() string { return target.id }
 
+func (target *LocalTarget) Fingerprint(_ context.Context) (string, error) {
+	// 指纹取物理根目录而非配置 ID:同一根目录的多个配置视为同一存储
+	return "local/" + filepath.ToSlash(target.root), nil
+}
+
 func (target *LocalTarget) resolve(key string) (string, error) {
 	key = path.Clean("/" + strings.TrimSpace(key))
 	if key == "/" {

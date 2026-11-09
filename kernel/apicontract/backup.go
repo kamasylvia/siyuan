@@ -211,3 +211,24 @@ type BackupRestoreData struct {
 	Removed      int   `json:"removed"`
 	RemovedBytes int64 `json:"removedBytes"`
 }
+
+type BackupDeleteCheckRequest struct {
+	// Targets 是待删除校验的目标配置 ID 列表
+	Targets []string `json:"targets"`
+}
+
+type BackupDeleteCheckItem struct {
+	Target string `json:"target"`
+	// Deletable 为 true 表示目标确认已清空,允许删除配置
+	Deletable bool `json:"deletable"`
+	// Reason 为删除被拒绝的原因: snapshots=目标上仍有快照, unreachable=目标不可达且无法证明已清空
+	Reason string `json:"reason,omitempty"`
+	// Snapshots 是可达目标上的快照数量,不可达时为 0
+	Snapshots int `json:"snapshots"`
+	// Duplicate 为 true 表示该配置因与另一个可连接且已清空的目标指向同一存储而放行
+	Duplicate bool `json:"duplicate"`
+}
+
+type BackupDeleteCheckData struct {
+	Results []BackupDeleteCheckItem `json:"results"`
+}

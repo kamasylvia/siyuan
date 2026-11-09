@@ -71,6 +71,24 @@ func quoteIdent(value string) string {
 
 func (target *PGTarget) ID() string { return target.id }
 
+// Fingerprint 返回物理存储身份:集群 system_identifier 加数据库名与 schema,
+// 同一存储经 IP 与域名两种配置得到相同指纹;PG < 14 没有 pg_control_system()
+// 时回退到当前数据库的 oid
+func (target *PGTarget) Fingerprint(ctx context.Context) (string, error) {
+	var identity, database string
+	err := target.db.QueryRowContext(ctx,
+		`select coalesce((select system_identifier::text from pg_control_system()), ''), current_database()`).
+		Scan(&identity, &database)
+	if err != nil {
+		if fallbackErr := target.db.QueryRowContext(ctx,
+			`select oid::text, current_database() from pg_database where datname = current_database()`).
+			Scan(&identity, &database); fallbackErr != nil {
+			return "", fallbackErr
+		}
+	}
+	return "pg/" + identity + "/" + database + "/" + target.schema, nil
+}
+
 func (target *PGTarget) Has(ctx context.Context, key string) (bool, error) {
 	var exists bool
 	err := target.db.QueryRowContext(ctx,

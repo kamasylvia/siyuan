@@ -55,6 +55,11 @@ func NewS3Target(target *Target) (*S3Target, error) {
 
 func (target *S3Target) ID() string { return target.id }
 
+// Fingerprint 返回桶名:S3 桶名全局唯一,同一桶经不同 endpoint 配置时指纹一致
+func (target *S3Target) Fingerprint(_ context.Context) (string, error) {
+	return "s3/" + target.bucket, nil
+}
+
 func s3NotFound(err error) bool {
 	var responseErr *smithyhttp.ResponseError
 	return errors.As(err, &responseErr) && responseErr.HTTPStatusCode() == http.StatusNotFound

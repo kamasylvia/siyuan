@@ -2020,3 +2020,7 @@ var RunBackup = define[BackupRunRequest, BackupRunData]("runBackup", "/api/backu
 var BackupListSnapshots = define[BackupListSnapshotsRequest, BackupListSnapshotsData]("listBackupSnapshots", "/api/backup/listSnapshots", AuthenticatedAccess|AdminAccess, JSONBody, ResponseOptions{}, "POST")
 var BackupRestoreDryRun = define[BackupRestoreDryRunRequest, BackupRestoreDryRunData]("restoreBackupDryRun", "/api/backup/restoreDryRun", AuthenticatedAccess|AdminAccess, JSONBody, ResponseOptions{}, "POST")
 var BackupRestore = define[BackupRestoreRequest, BackupRestoreData]("restoreBackup", "/api/backup/restore", AuthenticatedAccess|AdminAccess|WritableAccess, JSONBody, ResponseOptions{}, "POST")
+
+// 备份删除门禁:逐目标校验连通与快照数量,仅放行确认已清空的目标;
+// 指纹相同(同一存储的重复配置)只要有一个可连接且已清空,其余不可达配置一并放行。
+var BackupDeleteCheck = define[BackupDeleteCheckRequest, BackupDeleteCheckData]("deleteCheckBackup", "/api/backup/deleteCheck", AuthenticatedAccess|AdminAccess, JSONBody, ResponseOptions{}, "POST")

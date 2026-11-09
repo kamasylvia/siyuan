@@ -756,6 +756,12 @@ export type BackupConfig = { "enabled": boolean; "encryption"?: BackupEncryption
 
 export type BackupConfigInput = { "enabled": boolean; "encryption"?: BackupEncryptionInput | null; "include": BackupIncludeInput; "targets": Array<BackupTargetInput | null>; };
 
+export type BackupDeleteCheckData = { "results": Array<BackupDeleteCheckItem> | null; };
+
+export type BackupDeleteCheckItem = { "deletable": boolean; "duplicate": boolean; "reason"?: string; "snapshots": number; "target": string; };
+
+export type BackupDeleteCheckRequestInput = { "targets": Array<string>; };
+
 export type BackupEncryption = { "enabled": boolean; "passphrase"?: string; };
 
 export type BackupEncryptionInput = { "enabled": boolean; "passphrase"?: string; };
@@ -4580,6 +4586,17 @@ export interface APIPOSTRoutes {
         body: "json";
         /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
         authorization?: readonly ["authenticated","admin","writable"];
+    };
+    /**
+     * 备份删除门禁:逐目标校验连通与快照数量,仅放行确认已清空的目标;
+     * 指纹相同(同一存储的重复配置)只要有一个可连接且已清空,其余不可达配置一并放行。
+     */
+    "/api/backup/deleteCheck": {
+        request: BackupDeleteCheckRequestInput;
+        response: { "code": 0; "data": BackupDeleteCheckData; "msg": string; } | { "code": -1; "data": { "closeTimeout": number; } | null; "msg": string; };
+        body: "json";
+        /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
+        authorization?: readonly ["authenticated","admin"];
     };
     /**
      * 备份配置独立于同步配置；S3/WebDAV/PG 目标不经过同步 provider 或付费门控。
