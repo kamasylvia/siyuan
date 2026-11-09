@@ -7,7 +7,7 @@
 
 - 上游线:upstream v3.8.10-alpha.7(客户端与容器严格版本匹配)
 - 最新已发布:**v3.8.10-alpha.7.13**(tag `c0d13fa2a9`,含 P1 还原索引重建 `a952cabaca` + switchLocal 修 `c8a50b2447`;Docker 镜像已出,NAS stack 37 已部署,boot 100%)
-- 本机客户端仍 `.7` 落后(信任连接走 NAS 前端,备份页实测不受影响);DMG/release 发布待补
+- 本机客户端已装 `.13`(2026-11-09 本地构建,forkBuild + 内核哈希双指纹验证);release v3.8.10-alpha.7.13 已补 dmg + SHA256SUMS
 - build script 版本自检:`scripts/fork-mac-build.sh` 会比对 `kernel/util/working.go` 的 Ver 与二进制内嵌串,不一致直接失败
 
 ## 二、下一步要做(按优先级)
