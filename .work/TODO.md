@@ -6,7 +6,7 @@
 ## 一、当前版本线
 
 - 上游线:upstream v3.8.10-alpha.7(客户端与容器严格版本匹配)
-- 最新已发布:**v3.8.10-alpha.7.14**(tag `59509a4b7e`:还原/备份运行中禁止删快照与清空目标——内核 deleteSnapshot/emptyTarget 双 guard 加 RestoreState,面板 busy 态连 Snapshots 按钮一起置灰;.14 双端已部署,release 资产齐。前版 .13 见 git log)
+- 最新已发布:**v3.8.10-alpha.7.15**(tag `4ca51fbfab`:① 运行中目标行全部按钮无豁免置灰——restore progress 记 target id,面板从全面板灰收窄到该行,其余行可用;② 存储标识唯一——Normalize 按 storageIdentity(host|port|db|schema / DSN 串 / endpoint|bucket 归一化大小写尾斜杠)查重,重复配置 setConfig/编辑直接拒绝,表单本地同规则预检;.15 双端已部署(skopeo 中转 34s),release 资产齐。前版 .14 见 git log)
 - 本机客户端已装 `.13`(2026-11-09 本地构建,forkBuild + 内核哈希双指纹验证);release v3.8.10-alpha.7.13 已补 dmg + SHA256SUMS
 - build script 版本自检:`scripts/fork-mac-build.sh` 会比对 `kernel/util/working.go` 的 Ver 与二进制内嵌串,不一致直接失败
 
