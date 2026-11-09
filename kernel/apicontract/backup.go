@@ -232,3 +232,23 @@ type BackupDeleteCheckItem struct {
 type BackupDeleteCheckData struct {
 	Results []BackupDeleteCheckItem `json:"results"`
 }
+
+type BackupDeleteSnapshotRequest struct {
+	Target   string `json:"target"`
+	Snapshot string `json:"snapshot"`
+}
+
+type BackupDeleteSnapshotData struct {
+	// Blobs 是随之清理的不再被其它快照引用的数据块数量
+	Blobs int `json:"blobs"`
+}
+
+type BackupEmptyTargetRequest struct {
+	Target string `json:"target"`
+}
+
+type BackupEmptyTargetData struct {
+	// Snapshots/Blobs 是清空删除的快照与数据块数量
+	Snapshots int `json:"snapshots"`
+	Blobs     int `json:"blobs"`
+}

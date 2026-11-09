@@ -762,6 +762,14 @@ export type BackupDeleteCheckItem = { "deletable": boolean; "duplicate": boolean
 
 export type BackupDeleteCheckRequestInput = { "targets": Array<string>; };
 
+export type BackupDeleteSnapshotData = { "blobs": number; };
+
+export type BackupDeleteSnapshotRequestInput = { "snapshot": string; "target": string; };
+
+export type BackupEmptyTargetData = { "blobs": number; "snapshots": number; };
+
+export type BackupEmptyTargetRequestInput = { "target": string; };
+
 export type BackupEncryption = { "enabled": boolean; "passphrase"?: string; };
 
 export type BackupEncryptionInput = { "enabled": boolean; "passphrase"?: string; };
@@ -4597,6 +4605,24 @@ export interface APIPOSTRoutes {
         body: "json";
         /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
         authorization?: readonly ["authenticated","admin"];
+    };
+    /**
+     * 快照管理:删除单个快照(引用计数保护共享数据块)与清空目标全部快照;
+     * 两者都要求目标可连接,备份或还原进行中时拒绝执行。
+     */
+    "/api/backup/deleteSnapshot": {
+        request: BackupDeleteSnapshotRequestInput;
+        response: { "code": 0; "data": BackupDeleteSnapshotData; "msg": string; } | { "code": -1; "data": { "closeTimeout": number; } | null; "msg": string; };
+        body: "json";
+        /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
+        authorization?: readonly ["authenticated","admin","writable"];
+    };
+    "/api/backup/emptyTarget": {
+        request: BackupEmptyTargetRequestInput;
+        response: { "code": 0; "data": BackupEmptyTargetData; "msg": string; } | { "code": -1; "data": { "closeTimeout": number; } | null; "msg": string; };
+        body: "json";
+        /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
+        authorization?: readonly ["authenticated","admin","writable"];
     };
     /**
      * 备份配置独立于同步配置；S3/WebDAV/PG 目标不经过同步 provider 或付费门控。

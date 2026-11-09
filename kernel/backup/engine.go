@@ -478,6 +478,108 @@ func ListSnapshots(ctx context.Context, target Store) ([]*Manifest, error) {
 	return manifests, nil
 }
 
+// EmptyTarget 删除目标存储上的全部快照、blob 与 latest 引用,保留归属标记,
+// 供在应用内清空目标后再删除配置,避免遗留孤儿快照;返回删除的快照与 blob 数量
+func EmptyTarget(ctx context.Context, target Store) (int, int, error) {
+	snapshots, blobs := 0, 0
+	for _, prefix := range []string{ManifestPrefix, BlobPrefix, EncryptedBlobPrefix} {
+		keys, err := target.List(ctx, prefix)
+		if err != nil {
+			return snapshots, blobs, err
+		}
+		for _, key := range keys {
+			if err = target.Delete(ctx, key); err != nil {
+				return snapshots, blobs, err
+			}
+			if prefix == ManifestPrefix {
+				snapshots++
+			} else {
+				blobs++
+			}
+		}
+	}
+	if err := target.Delete(ctx, LatestRef); err != nil {
+		return snapshots, blobs, err
+	}
+	return snapshots, blobs, nil
+}
+
+// DeleteSnapshot 删除单个快照及其不再被其它快照引用的数据块;任一兄弟快照
+// 不可读时中止以防误删共享数据块;latest 引用指向被删快照时一并移除,返回
+// 清理的数据块数量
+func DeleteSnapshot(ctx context.Context, target Store, snapshotID string) (int, error) {
+	key := ManifestPrefix + snapshotID + ".json"
+	data, err := target.Get(ctx, key)
+	if err != nil {
+		return 0, err
+	}
+	manifest := &Manifest{}
+	if err = json.Unmarshal(data, manifest); err != nil {
+		return 0, fmt.Errorf("parse snapshot %s: %w", snapshotID, err)
+	}
+	ids, err := target.List(ctx, ManifestPrefix)
+	if err != nil {
+		return 0, err
+	}
+	shared := map[string]bool{}
+	for _, id := range ids {
+		if strings.TrimSuffix(strings.TrimPrefix(id, ManifestPrefix), ".json") == snapshotID {
+			continue
+		}
+		otherData, err := target.Get(ctx, id)
+		if err != nil {
+			return 0, fmt.Errorf("read snapshot %s: %w", id, err)
+		}
+		other := &Manifest{}
+		if err = json.Unmarshal(otherData, other); err != nil {
+			return 0, fmt.Errorf("parse snapshot %s: %w", id, err)
+		}
+		prefix := BlobPrefix
+		if other.Encryption != nil {
+			prefix = EncryptedBlobPrefix
+		}
+		for _, entry := range other.Files {
+			shared[prefix+entry.Hash] = true
+		}
+	}
+	blobPrefix := BlobPrefix
+	if manifest.Encryption != nil {
+		blobPrefix = EncryptedBlobPrefix
+	}
+	removed := 0
+	for _, entry := range manifest.Files {
+		blobKey := blobPrefix + entry.Hash
+		if shared[blobKey] {
+			continue
+		}
+		if err = target.Delete(ctx, blobKey); err != nil {
+			return 0, err
+		}
+		removed++
+	}
+	if err = target.Delete(ctx, key); err != nil {
+		return 0, err
+	}
+	forgetSnapshotLatestRef(ctx, target, snapshotID)
+	return removed, nil
+}
+
+// forgetSnapshotLatestRef 在 latest 引用指向被删快照时移除该引用;不存在或
+// 指向其它快照时不动,清理失败不影响删除结果
+func forgetSnapshotLatestRef(ctx context.Context, target Store, snapshotID string) {
+	data, err := target.Get(ctx, LatestRef)
+	if err != nil {
+		return
+	}
+	var latest struct {
+		Snapshot string `json:"snapshot"`
+	}
+	if json.Unmarshal(data, &latest) != nil || latest.Snapshot != snapshotID {
+		return
+	}
+	target.Delete(ctx, LatestRef)
+}
+
 // RestorePlan is a dry-run summary of a restore: what would be written, where.
 type RestorePlan struct {
 	Snapshot   string   `json:"snapshot"`

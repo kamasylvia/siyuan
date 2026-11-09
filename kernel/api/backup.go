@@ -405,6 +405,61 @@ var deleteCheckBackup = contractHandler(apicontract.BackupDeleteCheck, func(c *g
 	return apicontract.Success(out)
 })
 
+// backupTargetStoreForAPI 加载配置并构建目标存储;任一步失败返回错误
+func backupTargetStoreForAPI(cfg *backup.Config, id string) (backup.Store, error) {
+	targetConfig, err := backupTargetByID(cfg, id)
+	if err != nil {
+		return nil, err
+	}
+	return backup.NewTarget(unmaskBackupTarget(cfg, targetConfig))
+}
+
+// deleteBackupSnapshot 删除目标上的单个快照,共享数据块按引用计数保留
+var deleteBackupSnapshot = contractHandler(apicontract.BackupDeleteSnapshot, func(c *gin.Context,
+	req apicontract.BackupDeleteSnapshotRequest) apicontract.Response[apicontract.BackupDeleteSnapshotData] {
+	if backup.RunState() != nil {
+		return apicontract.Failure[apicontract.BackupDeleteSnapshotData](-1, "a backup or restore is running")
+	}
+	cfg, err := loadBackupConfigForAPI()
+	if err != nil {
+		return apicontract.Failure[apicontract.BackupDeleteSnapshotData](-1, err.Error())
+	}
+	store, err := backupTargetStoreForAPI(cfg, req.Target)
+	if err != nil {
+		return apicontract.Failure[apicontract.BackupDeleteSnapshotData](-1, err.Error())
+	}
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 120*time.Second)
+	defer cancel()
+	blobs, err := backup.DeleteSnapshot(ctx, store, req.Snapshot)
+	if err != nil {
+		return apicontract.Failure[apicontract.BackupDeleteSnapshotData](-1, err.Error())
+	}
+	return apicontract.Success(apicontract.BackupDeleteSnapshotData{Blobs: blobs})
+})
+
+// emptyBackupTarget 清空目标上的全部快照与数据块,保留归属标记
+var emptyBackupTarget = contractHandler(apicontract.BackupEmptyTarget, func(c *gin.Context,
+	req apicontract.BackupEmptyTargetRequest) apicontract.Response[apicontract.BackupEmptyTargetData] {
+	if backup.RunState() != nil {
+		return apicontract.Failure[apicontract.BackupEmptyTargetData](-1, "a backup or restore is running")
+	}
+	cfg, err := loadBackupConfigForAPI()
+	if err != nil {
+		return apicontract.Failure[apicontract.BackupEmptyTargetData](-1, err.Error())
+	}
+	store, err := backupTargetStoreForAPI(cfg, req.Target)
+	if err != nil {
+		return apicontract.Failure[apicontract.BackupEmptyTargetData](-1, err.Error())
+	}
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 600*time.Second)
+	defer cancel()
+	snapshots, blobs, err := backup.EmptyTarget(ctx, store)
+	if err != nil {
+		return apicontract.Failure[apicontract.BackupEmptyTargetData](-1, err.Error())
+	}
+	return apicontract.Success(apicontract.BackupEmptyTargetData{Snapshots: snapshots, Blobs: blobs})
+})
+
 var restoreBackupDryRun = contractHandler(apicontract.BackupRestoreDryRun, func(c *gin.Context,
 	req apicontract.BackupRestoreDryRunRequest) apicontract.Response[apicontract.BackupRestoreDryRunData] {
 	cfg, err := loadBackupConfigForAPI()

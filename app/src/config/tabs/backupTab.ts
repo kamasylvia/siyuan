@@ -203,6 +203,7 @@ const targetRowHTML = (target: BackupTarget): string => {
         </span>
         <button class="b3-button b3-button--outline" data-action="backup">${escapeHtmlTextAndAttr(text("backupRunOne", "Back up"))}</button>
         <button class="b3-button b3-button--outline" data-action="restore">${escapeHtmlTextAndAttr(text("backupRestoreOne", "Restore"))}</button>
+        <button class="b3-button b3-button--outline" data-action="snapshots">${escapeHtmlTextAndAttr(text("backupSnapshotsOne", "Snapshots"))}</button>
         <button class="b3-button b3-button--outline" data-action="edit">${escapeHtmlTextAndAttr(window.siyuan.languages.edit)}</button>
         <button class="b3-button b3-button--outline" data-action="test">${escapeHtmlTextAndAttr(text("backupTestTarget", "Test"))}</button>
         <button class="b3-button b3-button--outline" data-action="delete">${escapeHtmlTextAndAttr(window.siyuan.languages.delete)}</button>
@@ -237,6 +238,8 @@ const bind = () => {
                 void runBackup([id]);
             } else if (action === "restore") {
                 void openRestoreDialog(id);
+            } else if (action === "snapshots") {
+                void openSnapshotsDialog(id);
             } else if (action === "test") {
                 const target = currentConfig.targets.find(item => item.id === id);
                 if (target) {
@@ -581,6 +584,84 @@ const deleteTargets = async () => {
             }
         }, undefined, true);
     }, undefined, true);
+};
+
+// 快照管理:展示目标上的快照列表,支持删除单个快照(共享数据块按引用计数
+// 保留)与清空全部;操作后原位重拉列表,备份或还原进行中由内核拒绝
+const openSnapshotsDialog = async (targetId: string) => {
+    const target = (currentConfig.targets || []).find(item => item.id === targetId && item.enabled);
+    if (!target) {
+        showMessage(text("backupRestoreNoTargets", "No enabled backup target to restore from"), 6000, "error");
+        return;
+    }
+    const snapshotRow = (snapshot: {id: string; createdAt: string; files: number; encrypted: boolean}): string =>
+        `<div class="fn__flex" data-snapshot="${escapeHtmlTextAndAttr(snapshot.id)}" style="align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--b3-border-color)">
+            <span class="fn__flex-1">${escapeHtmlTextAndAttr(snapshot.createdAt)}
+                <span class="ft__on-surface">${snapshot.files} files${snapshot.encrypted ? " · 🔒" : ""}</span></span>
+            <button class="b3-button b3-button--outline backupSnapshotDelete" data-snapshot="${escapeHtmlTextAndAttr(snapshot.id)}">${escapeHtmlTextAndAttr(window.siyuan.languages.delete)}</button>
+        </div>`;
+    const loadAndBind = async (): Promise<number> => {
+        const listEl = document.querySelector("#backupSnapshotList");
+        if (!listEl?.isConnected) {
+            return 0;
+        }
+        const listResponse = await fetchSyncPost("/api/backup/listSnapshots", {target: targetId});
+        const snapshots = listResponse.code === 0
+            ? (listResponse.data as {snapshots?: Array<{id: string; createdAt: string; files: number; encrypted: boolean}>}).snapshots || []
+            : [];
+        listEl.innerHTML = snapshots.length ? snapshots.map(snapshotRow).join("")
+            : `<div class="b3-label__text">${escapeHtmlTextAndAttr(text("backupRestoreEmpty", "No snapshots on this target"))}</div>`;
+        listEl.querySelectorAll(".backupSnapshotDelete").forEach(button => {
+            button.addEventListener("click", (event) => {
+                const snapshotId = (event.currentTarget as HTMLElement).getAttribute("data-snapshot") || "";
+                confirmDialog(text("backupSnapshotsTitle", "Snapshots"),
+                    text("backupSnapshotDeleteConfirm", "This deletes snapshot ${x} and its blobs not referenced by other snapshots; this action cannot be undone.")
+                        .replace("${x}", snapshotId),
+                    async () => {
+                        const response = await fetchSyncPost("/api/backup/deleteSnapshot", {target: targetId, snapshot: snapshotId});
+                        const result = response.data as {blobs?: number} | undefined;
+                        if (response.code !== 0) {
+                            showMessage(`${text("backupDeleteCheckFailed", "Could not verify the selected targets")}: ${response.msg}`, 7000, "error");
+                            return;
+                        }
+                        showMessage(text("backupSnapshotDeleteDone", "Snapshot deleted; ${x} blob(s) removed")
+                            .replace("${x}", String(result?.blobs || 0)), 3000);
+                        await loadAndBind();
+                        await loadPanel();
+                    }, undefined, true);
+            });
+        });
+        return snapshots.length;
+    };
+    const dialogTitle = text("backupSnapshotsTitle", "Snapshots");
+    const dialogHTML = `<div class="b3-dialog__content" style="padding:12px">
+    <div id="backupSnapshotList" style="max-height:320px;overflow:auto;min-width:320px"></div>
+</div>`;
+    confirmDialog(dialogTitle, dialogHTML, async () => {
+        // 确认按钮 = 清空全部:先取当前快照数,空目标直接提示
+        const listResponse = await fetchSyncPost("/api/backup/listSnapshots", {target: targetId});
+        const snapshots = listResponse.code === 0
+            ? (listResponse.data as {snapshots?: unknown[]}).snapshots || [] : [];
+        if (!snapshots.length) {
+            showMessage(text("backupEmptyAlready", "The target storage is already empty"), 3000);
+            return;
+        }
+        confirmDialog(dialogTitle,
+            text("backupEmptyAllConfirm", "This deletes all ${x} snapshots and their data on the target; this action cannot be undone. The ownership marker is kept.")
+                .replace("${x}", String(snapshots.length)),
+            async () => {
+                const response = await fetchSyncPost("/api/backup/emptyTarget", {target: targetId});
+                const result = response.data as {snapshots?: number; blobs?: number} | undefined;
+                if (response.code !== 0) {
+                    showMessage(`${text("backupEmptyFailed", "Failed to empty the target")}: ${response.msg}`, 7000, "error");
+                    return;
+                }
+                showMessage(text("backupEmptyDone", "Emptied ${x} snapshot(s) and ${y} blob(s)")
+                    .replace("${x}", String(result?.snapshots || 0)).replace("${y}", String(result?.blobs || 0)), 4000);
+                await loadPanel();
+            }, undefined, true, undefined, text("backupEmptyAll", "Empty all"));
+    }, undefined, true, undefined, text("backupEmptyAll", "Empty all"));
+    await loadAndBind();
 };
 
 // 还原是单源操作:仅能从目标行的还原按钮发起,源目标在对话框内钉死,禁止批量还原
