@@ -22,6 +22,7 @@
 	"backupRestoreWarn": "Обнављање преписује data/ и conf/ у тренутном радном простору. Са укљученим усклађивањем радни простор постаје тачна копија снимка: документи и прилози ван снимка се бришу; искључене датотеке као што су акредитиви резервне копије остају",
 	"backupRestoreFailed": "Враћање није успело",
 	"backupRestoreOK": "Враћено",
+	"backupRestoreReindexed": "Враћено и индекс поново изграђен",
 	"backupTargetNote": "Note (optional)",
 	"backupEnableGlobal": "Backup master switch",
 	"backupEnableTarget": "Enable this target",

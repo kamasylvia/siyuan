@@ -18172,8 +18172,17 @@
         "dest": {
           "type": "string"
         },
+        "failedBoxes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "files": {
           "type": "integer"
+        },
+        "reindexed": {
+          "type": "boolean"
         },
         "removed": {
           "type": "integer"
@@ -18189,6 +18198,7 @@
         "bytes",
         "dest",
         "files",
+        "reindexed",
         "removed",
         "removedBytes",
         "snapshot"
@@ -146442,6 +146452,9 @@
                   },
                   {
                     "type": "null"
+                  },
+                  {
+                    "$ref": "#/$defs/BackupRestoreData"
                   }
                 ]
               },

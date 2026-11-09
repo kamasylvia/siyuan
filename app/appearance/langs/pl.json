@@ -22,6 +22,7 @@
 	"backupRestoreWarn": "Przywracanie nadpisuje data/ i conf/ w bieżącej przestrzeni roboczej. Po włączeniu uzgadniania przestrzeń robocza staje się dokładną kopią migawki: dokumenty i załączniki spoza migawki zostaną usunięte; pliki wykluczone, np. dane uwierzytelniające kopii zapasowej, pozostaną",
 	"backupRestoreFailed": "Przywracanie nie powiodło się",
 	"backupRestoreOK": "Przywrócono",
+	"backupRestoreReindexed": "Przywrócono i odbudowano indeks",
 	"backupTargetNote": "Note (optional)",
 	"backupEnableGlobal": "Backup master switch",
 	"backupEnableTarget": "Enable this target",

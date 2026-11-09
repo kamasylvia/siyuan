@@ -22,6 +22,7 @@
 	"backupRestoreWarn": "पुनर्स्थापना वर्तमान वर्कस्पेस की data/ और conf/ को अधिलेखित करती है। बदलाव सक्षम होने पर वर्कस्पेस स्नैपशॉट की सटीक प्रति बन जाता है: स्नैपशॉट में न होने वाले दस्तावेज़ और अनुलग्नक हटा दिए जाते हैं; बैकअप क्रेडेंशियल जैसी बाहर की गई फ़ाइलें सुरक्षित रहती हैं",
 	"backupRestoreFailed": "पुनर्स्थापना विफल",
 	"backupRestoreOK": "पुनर्स्थापित",
+	"backupRestoreReindexed": "पुनर्स्थापित और इंडेक्स पुनर्निर्मित",
 	"backupTargetNote": "Note (optional)",
 	"backupEnableGlobal": "Backup master switch",
 	"backupEnableTarget": "Enable this target",

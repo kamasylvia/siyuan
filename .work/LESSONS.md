@@ -46,3 +46,22 @@ readForm/saveForm 三处;只改其中一处等于没做。
 与锁屏口令——认领冲突、直接同步身份冲突、本地被远端口令锁住。
 **规则**:还原默认换新身份(`system.id` 重新生成 + `accessAuthCode` 清空),保留原样必须是
 显式勾选,且文案要写清「使用快照的系统标识与锁屏口令」而不是含糊的「保留」。
+
+### 8. 整库级改写认准标杆:checkout(全量) vs 增量同步
+
+还原/导入/快照检出改写整库→ 标杆是 `checkoutRepo` 全量路径,不是增量 `processSyncMergeResult`。
+但同步内完成索引的序列(`FullReindexDirect` + `IndexRefs` + `FlushQueue` + `ResetVirtualBlockRefCache`)
+在增量保护内路径(`repository.go:2940`)有现成样板,直接复用该序列,不要自己拼。
+**规则**:整库改写先找 checkout 级标杆;保护内同步索引抄 2940 四步序列。
+
+### 9. 索引失败判定用元数据状态,不要自己扫库
+
+`indexBox` 内部失败只记日志不返回错误;`treenode.DocumentMetadataState(boxID)` 是现成
+就绪信号(`ready` vs 其他),`document_source_archive.go:224` 已有 `!= "ready"` 即报错先例。
+**规则**:需判断索引成败时查该状态;用户指南与未解锁加密笔记本沿启动语义跳过。
+
+### 10. 失败载荷走 DataOnError,不要塞 msg 字符串
+
+契约端点 `ResponseOptions{DataOnError: true}` + `FailureWithData` 让失败响应携带类型化
+data(生成器/schema/前端类型全链路);塞 msg 字符串前端只能展示不能分支。
+**规则**:失败时调用方需分支的数据一律 DataOnError,msg 只放人读文案。

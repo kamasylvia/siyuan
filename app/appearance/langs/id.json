@@ -22,6 +22,7 @@
 	"backupRestoreWarn": "Memulihkan akan menimpa data/ dan conf/ di ruang kerja saat ini. Dengan penyamaan aktif, ruang kerja menjadi salinan persis dari snapshot: dokumen dan lampiran yang tidak ada di snapshot dihapus; file yang dikecualikan seperti kredensial cadangan tetap disimpan",
 	"backupRestoreFailed": "Pemulihan gagal",
 	"backupRestoreOK": "Dipulihkan",
+	"backupRestoreReindexed": "Dipulihkan dan indeks dibangun ulang",
 	"backupTargetNote": "Note (optional)",
 	"backupEnableGlobal": "Backup master switch",
 	"backupEnableTarget": "Enable this target",

@@ -17,6 +17,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/siyuan-note/siyuan/kernel/apicontract"
 	"github.com/siyuan-note/siyuan/kernel/backup"
+	"github.com/siyuan-note/siyuan/kernel/model"
 	"github.com/siyuan-note/siyuan/kernel/util"
 )
 
@@ -569,10 +570,20 @@ var restoreBackup = contractHandler(apicontract.BackupRestore, func(c *gin.Conte
 	if err != nil {
 		return apicontract.Failure[apicontract.BackupRestoreData](-1, err.Error())
 	}
-	return apicontract.Success(apicontract.BackupRestoreData{
+	data := apicontract.BackupRestoreData{
 		Snapshot: result.Snapshot, Files: result.Files, Bytes: result.Bytes, Dest: dest,
 		Removed: result.Removed, RemovedBytes: result.RemovedBytes,
-	})
+	}
+	// 还原改写整库:索引在 temp/ 不入快照,落盘后必须在返回前同步重建,
+	// 否则搜索/反链与磁盘实际内容不一致;索引失败按错误返回已落盘规模
+	if err = model.ReindexRestoredWorkspace(); err != nil {
+		if reindexErr, ok := err.(*model.RestoreReindexError); ok {
+			data.FailedBoxes = reindexErr.FailedBoxes
+		}
+		return apicontract.BackupRestore.FailureWithData(-1, err.Error(), data)
+	}
+	data.Reindexed = true
+	return apicontract.Success(data)
 })
 
 // unmaskBackupTarget resolves credential masking in an API-supplied target

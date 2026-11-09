@@ -22,6 +22,7 @@
 	"backupRestoreWarn": "การกู้คืนจะเขียนทับ data/ และ conf/ ในพื้นที่ทำงานปัจจุบัน เมื่อเปิดใช้การจับคู่ พื้นที่ทำงานจะกลายเป็นสำเนาที่ตรงกับสแนปชอตทุกประการ: เอกสารและไฟล์แนบที่ไม่อยู่ในสแนปชอตจะถูกลบ; ไฟล์ที่ยกเว้น เช่น ข้อมูลรับรองการสำรองข้อมูล จะถูกเก็บไว้",
 	"backupRestoreFailed": "การกู้คืนล้มเหลว",
 	"backupRestoreOK": "กู้คืนแล้ว",
+	"backupRestoreReindexed": "กู้คืนและสร้างดัชนีใหม่แล้ว",
 	"backupTargetNote": "Note (optional)",
 	"backupEnableGlobal": "Backup master switch",
 	"backupEnableTarget": "Enable this target",

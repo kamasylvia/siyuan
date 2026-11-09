@@ -22,6 +22,7 @@
 	"backupRestoreWarn": "השחזור דורס את data/ ו-conf/ בסביבת העבודה הנוכחית. כאשר ההתאמה מופעלת, סביבת העבודה הופכת לעותק מדויק של צילום המצב: מסמכים וקבצים מצורפים שאינם בצילום המצב יימחקו; קבצים שהוחרגו, כגון פרטי גישה לגיבוי, יישמרו",
 	"backupRestoreFailed": "השחזור נכשל",
 	"backupRestoreOK": "שוחזר",
+	"backupRestoreReindexed": "שוחזר והאינדקס נבנה מחדש",
 	"backupTargetNote": "Note (optional)",
 	"backupEnableGlobal": "Backup master switch",
 	"backupEnableTarget": "Enable this target",

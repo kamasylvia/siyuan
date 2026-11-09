@@ -22,6 +22,7 @@
 	"backupRestoreWarn": "Restoring overwrites data/ and conf/ in the current workspace. With converge enabled the workspace becomes an exact copy of the snapshot: documents and assets not in the snapshot are deleted; excluded files such as backup credentials are kept",
 	"backupRestoreFailed": "Restore failed",
 	"backupRestoreOK": "Restored",
+	"backupRestoreReindexed": "Restored and reindexed",
 	"backupTargetNote": "Note (optional)",
 	"backupEnableGlobal": "Backup master switch",
 	"backupEnableTarget": "Enable this target",

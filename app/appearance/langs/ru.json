@@ -22,6 +22,7 @@
 	"backupRestoreWarn": "Восстановление перезаписывает data/ и conf/ в текущем рабочем пространстве. При включённом приведении к снимку рабочее пространство становится точной копией снимка: документы и вложения вне снимка удаляются; исключённые файлы, такие как учётные данные резервного копирования, сохраняются",
 	"backupRestoreFailed": "Ошибка восстановления",
 	"backupRestoreOK": "Восстановлено",
+	"backupRestoreReindexed": "Восстановлено, индекс перестроен",
 	"backupTargetNote": "Note (optional)",
 	"backupEnableGlobal": "Backup master switch",
 	"backupEnableTarget": "Enable this target",

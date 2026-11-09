@@ -22,6 +22,7 @@
 	"backupRestoreWarn": "복원하면 현재 작업공간의 data/와 conf/를 덮어씁니다. 덮어쓰기 복원을 활성화하면 작업공간이 스냅샷의 정확한 사본이 되고 스냅샷에 없는 문서와 첨부파일은 삭제됩니다(백업 자격 증명 등 제외 파일은 유지)",
 	"backupRestoreFailed": "복원 실패",
 	"backupRestoreOK": "복원됨",
+	"backupRestoreReindexed": "복원 및 인덱스 재생성 완료",
 	"backupTargetNote": "Note (optional)",
 	"backupEnableGlobal": "Backup master switch",
 	"backupEnableTarget": "Enable this target",

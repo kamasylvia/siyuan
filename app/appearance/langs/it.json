@@ -22,6 +22,7 @@
 	"backupRestoreWarn": "Il ripristino sovrascrive data/ e conf/ nell'area di lavoro corrente. Con la convergenza attiva, l'area di lavoro diventa una copia esatta dello snapshot: documenti e allegati non presenti nello snapshot vengono eliminati; i file esclusi, come le credenziali di backup, vengono conservati",
 	"backupRestoreFailed": "Ripristino non riuscito",
 	"backupRestoreOK": "Ripristinato",
+	"backupRestoreReindexed": "Ripristinato e indice ricostruito",
 	"backupTargetNote": "Note (optional)",
 	"backupEnableGlobal": "Backup master switch",
 	"backupEnableTarget": "Enable this target",

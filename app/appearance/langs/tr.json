@@ -22,6 +22,7 @@
 	"backupRestoreWarn": "Geri yükleme, geçerli çalışma alanındaki data/ ve conf/ dizinlerinin üzerine yazar. Eşitleme etkinleştirildiğinde çalışma alanı anlık görüntünün tam bir kopyası olur: anlık görüntüde olmayan belgeler ve ekler silinir; yedekleme kimlik bilgileri gibi hariç tutulan dosyalar korunur",
 	"backupRestoreFailed": "Geri yükleme başarısız",
 	"backupRestoreOK": "Geri yüklendi",
+	"backupRestoreReindexed": "Geri yüklendi ve dizin yeniden oluşturuldu",
 	"backupTargetNote": "Note (optional)",
 	"backupEnableGlobal": "Backup master switch",
 	"backupEnableTarget": "Enable this target",

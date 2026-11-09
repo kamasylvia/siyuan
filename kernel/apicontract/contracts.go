@@ -2017,9 +2017,10 @@ var RunBackup = define[BackupRunRequest, BackupRunData]("runBackup", "/api/backu
 
 // 备份还原:列出目标上的快照(manifest),dry-run 校验快照与口令,再执行还原写入当前工作空间。
 // 还原写入 data/ + conf/,默认拒绝非空目标(force 显式覆盖);加密备份必须携带口令。
+// 落盘成功后内核同步重建数据索引并解析引用,索引失败时失败载荷携带已落盘规模与失败笔记本。
 var BackupListSnapshots = define[BackupListSnapshotsRequest, BackupListSnapshotsData]("listBackupSnapshots", "/api/backup/listSnapshots", AuthenticatedAccess|AdminAccess, JSONBody, ResponseOptions{}, "POST")
 var BackupRestoreDryRun = define[BackupRestoreDryRunRequest, BackupRestoreDryRunData]("restoreBackupDryRun", "/api/backup/restoreDryRun", AuthenticatedAccess|AdminAccess, JSONBody, ResponseOptions{}, "POST")
-var BackupRestore = define[BackupRestoreRequest, BackupRestoreData]("restoreBackup", "/api/backup/restore", AuthenticatedAccess|AdminAccess|WritableAccess, JSONBody, ResponseOptions{}, "POST")
+var BackupRestore = define[BackupRestoreRequest, BackupRestoreData]("restoreBackup", "/api/backup/restore", AuthenticatedAccess|AdminAccess|WritableAccess, JSONBody, ResponseOptions{DataOnError: true}, "POST")
 
 // 备份删除门禁:逐目标校验连通与快照数量,仅放行确认已清空的目标;
 // 指纹相同(同一存储的重复配置)只要有一个可连接且已清空,其余不可达配置一并放行。

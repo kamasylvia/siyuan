@@ -22,6 +22,7 @@
 	"backupRestoreWarn": "La restauration écrase data/ et conf/ de l'espace de travail actuel. Avec la convergence activée, l'espace de travail devient une copie exacte de l'instantané : les documents et pièces jointes absents de l'instantané sont supprimés ; les fichiers exclus, comme les identifiants de sauvegarde, sont conservés",
 	"backupRestoreFailed": "Échec de la restauration",
 	"backupRestoreOK": "Restauré",
+	"backupRestoreReindexed": "Restauré et index reconstruit",
 	"backupTargetNote": "Note (optional)",
 	"backupEnableGlobal": "Backup master switch",
 	"backupEnableTarget": "Enable this target",

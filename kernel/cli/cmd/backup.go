@@ -170,6 +170,10 @@ var backupRestoreCmd = &cobra.Command{
 		} else {
 			fmt.Printf("restored snapshot %s: %d files, %d bytes -> %s\n", result.Snapshot, result.Files, result.Bytes, dest)
 		}
+		// CLI 独立于运行内核,无法同步重建索引;目标正被伺服时提醒重建,否则搜索/反链陈旧
+		if util.IsWorkspaceLocked(dest) {
+			fmt.Fprintf(os.Stderr, "warning: destination is served by a running kernel; restart it or call /api/system/rebuildDataIndex, otherwise search and backlinks stay stale\n")
+		}
 		return nil
 	},
 }

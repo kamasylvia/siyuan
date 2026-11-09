@@ -22,6 +22,7 @@
 	"backupRestoreWarn": "تستبدل الاستعادة data/ و conf/ في مساحة العمل الحالية. مع تفعيل المطابقة تصبح مساحة العمل نسخة مطابقة من اللقطة: يتم حذف المستندات والمرفقات غير الموجودة في اللقطة؛ تُحتفظ بالملفات المستثناة مثل بيانات اعتماد النسخ الاحتياطي",
 	"backupRestoreFailed": "فشلت الاستعادة",
 	"backupRestoreOK": "تمت الاستعادة",
+	"backupRestoreReindexed": "تمت الاستعادة وتمت إعادة بناء الفهرس",
 	"backupTargetNote": "Note (optional)",
 	"backupEnableGlobal": "Backup master switch",
 	"backupEnableTarget": "Enable this target",

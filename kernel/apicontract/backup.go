@@ -220,6 +220,11 @@ type BackupRestoreData struct {
 	// Removed/RemovedBytes 是 force 还原清理掉的快照外文件规模
 	Removed      int   `json:"removed"`
 	RemovedBytes int64 `json:"removedBytes"`
+	// Reindexed 为 true 表示落盘后内核已同步重建数据索引并完成引用解析;
+	// 失败时经 FailureWithData 返回 false,调用方须按错误处理,不可视为还原可用
+	Reindexed bool `json:"reindexed"`
+	// FailedBoxes 是索引未就绪的笔记本 ID 列表;Reindexed 为 false 时定位陈旧范围
+	FailedBoxes []string `json:"failedBoxes,omitempty"`
 }
 
 type BackupDeleteCheckRequest struct {

@@ -815,12 +815,15 @@ const openRestoreDialog = async (targetId: string) => {
         try {
             const response = await fetchSyncPost("/api/backup/restore", {target: targetId, snapshot, passphrase, force,
                 keepIdentity: (document.querySelector("#backupRestoreKeepIdentity") as HTMLInputElement)?.checked || false});
-            const data = response.data as {files?: number; bytes?: number; removed?: number} | undefined;
+            const data = response.data as {files?: number; bytes?: number; removed?: number; reindexed?: boolean} | undefined;
             if (response.code !== 0) {
                 showMessage(`${text("backupRestoreFailed", "Restore failed")}: ${response.msg}`, 7000, "error");
                 return;
             }
-            let message = `${text("backupRestoreOK", "Restored")}: ${data?.files || 0} files`;
+            // 还原改写整库:内核已在返回前同步重建索引,此处经内核广播整页重载,
+            // 与数据导入完成后同通道,避免界面仍展示还原前的文档树与页签
+            await fetchSyncPost("/api/ui/reloadUI", {});
+            let message = `${text("backupRestoreReindexed", "Restored and reindexed")}: ${data?.files || 0} files`;
             if ((data?.removed || 0) > 0) {
                 message += ", " + text("backupRestorePruned", "${x} stale files removed").replace("${x}", String(data?.removed));
             }

@@ -22,6 +22,7 @@
 	"backupRestoreWarn": "Herstellen overschrijft data/ en conf/ in de huidige werkruimte. Met afstemmen ingeschakeld wordt de werkruimte een exacte kopie van de momentopname: documenten en bijlagen die niet in de momentopname staan worden verwijderd; uitgesloten bestanden zoals back-upreferenties blijven behouden",
 	"backupRestoreFailed": "Herstellen mislukt",
 	"backupRestoreOK": "Hersteld",
+	"backupRestoreReindexed": "Hersteld en index herbouwd",
 	"backupTargetNote": "Note (optional)",
 	"backupEnableGlobal": "Backup master switch",
 	"backupEnableTarget": "Enable this target",

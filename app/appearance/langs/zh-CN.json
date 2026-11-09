@@ -22,6 +22,7 @@
 	"backupRestoreWarn": "还原会覆盖当前工作空间的 data/ 与 conf/;勾选覆盖还原后,工作空间会收敛为快照的精确副本,快照之外的文档与附件会被删除(备份凭证等排除项保留)",
 	"backupRestoreFailed": "还原失败",
 	"backupRestoreOK": "还原完成",
+	"backupRestoreReindexed": "还原完成,索引已重建",
 	"backupTargetNote": "备注（可选）",
 	"backupEnableGlobal": "备份总开关",
 	"backupEnableTarget": "启用此目标",

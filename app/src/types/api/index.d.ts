@@ -794,7 +794,7 @@ export type BackupPGInput = { "concurrentReqs"?: number; "database"?: string; "d
 
 export type BackupProgress = { "backup"?: BackupRunProgress; "restore"?: BackupRestoreProgress; };
 
-export type BackupRestoreData = { "bytes": number; "dest": string; "files": number; "removed": number; "removedBytes": number; "snapshot": string; };
+export type BackupRestoreData = { "bytes": number; "dest": string; "failedBoxes"?: Array<string>; "files": number; "reindexed": boolean; "removed": number; "removedBytes": number; "snapshot": string; };
 
 export type BackupRestoreDryRunData = { "conflicts": number; "createdAt": string; "encrypted": boolean; "files": number; "removeBytes": number; "removeCount": number; "roots": Array<string> | null; "snapshot": string; "totalBytes": number; };
 
@@ -4656,6 +4656,7 @@ export interface APIPOSTRoutes {
     /**
      * 备份还原:列出目标上的快照(manifest),dry-run 校验快照与口令,再执行还原写入当前工作空间。
      * 还原写入 data/ + conf/,默认拒绝非空目标(force 显式覆盖);加密备份必须携带口令。
+     * 落盘成功后内核同步重建数据索引并解析引用,索引失败时失败载荷携带已落盘规模与失败笔记本。
      */
     "/api/backup/listSnapshots": {
         request: BackupListSnapshotsRequestInput;
@@ -4666,7 +4667,7 @@ export interface APIPOSTRoutes {
     };
     "/api/backup/restore": {
         request: BackupRestoreRequestInput;
-        response: { "code": 0; "data": BackupRestoreData; "msg": string; } | { "code": -1; "data": { "closeTimeout": number; } | null; "msg": string; };
+        response: { "code": 0; "data": BackupRestoreData; "msg": string; } | { "code": -1; "data": ({ "closeTimeout": number; } & { "bytes"?: never; "dest"?: never; "failedBoxes"?: never; "files"?: never; "reindexed"?: never; "removed"?: never; "removedBytes"?: never; "snapshot"?: never; }) | null | (BackupRestoreData & { "closeTimeout"?: never; }); "msg": string; };
         body: "json";
         /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
         authorization?: readonly ["authenticated","admin","writable"];

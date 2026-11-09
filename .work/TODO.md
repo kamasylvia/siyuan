@@ -7,28 +7,21 @@
 
 - 上游线:upstream v3.8.10-alpha.7(客户端与容器严格版本匹配)
 - 最新已发布:**v3.8.10-alpha.7.12**(tag `622e3cefcc`,有 Docker 镜像 + DMG + release)
-- 本地未推送提交:**`c8a50b2447`** — switchLocal 修复(sender 门 + quit 路径),已 GDM 实测通过,**尚未 tag/release**
+- 已推送未发布:**`c8a50b2447`** — switchLocal 修复(sender 门 + quit 路径),已 GDM 实测通过,已在 origin/master(本机 2026-11-09 pull 验证),**尚未 tag/release**(下一版 stamp+tag 时带上)
 - build script 版本自检:`scripts/fork-mac-build.sh` 会比对 `kernel/util/working.go` 的 Ver 与二进制内嵌串,不一致直接失败
 
 ## 二、下一步要做(按优先级)
 
-### P1. 还原后重建索引 + 前端整页重载(用户明确要求「要加,但别直接做」)
+### P1. 还原后重建索引 + 前端整页重载(2026-11-09 已实现,未 tag/未部署)
 
-**问题**:`kernel/api/backup.go::restoreBackup` 落盘后没有任何重建索引或前端重载动作。
-备份只收 `data/ conf/ history/`,**SQLite 索引在 `temp/`(siyuan.db、blocktree.db、history.db)不在备份内**(正确设计),
-所以还原后内核索引是陈旧的 → 搜索/反链/块引用与磁盘实际内容不一致,必须重启客户端才恢复。
+**实现**(工作区未提交):
+1. 内核 `model/restore_reindex.go::ReindexRestoredWorkspace`:落盘后同步 `FullReindexDirect()` + `IndexRefs()` + `FlushQueue()` + `ResetVirtualBlockRefCache()`(增量同步保护内路径 `repository.go:2940` 同序列),`lockSync` 与云同步串行;失败集按 `DocumentMetadataState != ready` 判定(用户指南/未解锁加密笔记本沿启动语义跳过)
+2. 契约 `BackupRestoreData` 加 `reindexed` + `failedBoxes`,端点加 `DataOnError:true`;索引失败 → `FailureWithData(-1, msg, data)`(已落盘规模 + 失败笔记本,前端显错);成功 → `reindexed:true`
+3. 前端 `backupTab.ts`:成功后调 `/api/ui/reloadUI`(与数据导入同通道),toast 换 `backupRestoreReindexed`(×22);失败走存量 error toast
+4. CLI `backup restore`:dest 被运行内核锁定时 stderr 警告(重启或调 `/api/system/rebuildDataIndex`),不调索引
+5. 不做:conf 热重载(内核无此能力,快照 conf 下次启动生效);claim 身份读盘同理
 
-**要做的**:
-1. 还原成功后触发索引重建 —— 找内核现有的索引重建入口(参考 `model/index.go` 的 `Box.Index()`,
-   以及 `kernel/api` 里已有的 reindex/rebuild 类接口),不要自己新造扫描逻辑
-2. 重建完成后再让前端整页重载(`window.location.reload()` 或既有 reload 通道),避免重载时索引还在写
-3. 顺序必须是「还原 → 重建索引 → 重载前端」,任一失败要能明确报错,不能静默
-4. 同一改动同时覆盖:手动还原(REST)、CLI 还原(如果 CLI 也落进活动工作区)
-
-**验收**:
-- 还原到活动工作区后,不重启客户端即可搜索到还原进来的文档、反链正确
-- 还原失败/索引失败时前端给出错误提示,不出现「看起来成功但搜不到」
-- go test ./backup/ + go build ./... 全绿(注意 CLI 包,历史上漏过)
+**验证**(2026-11-09 本机):`go build ./...` ✓ / `go vet` ✓ / `go test ./backup/ ./apicontract/` ✓ / api 回归(`TestRestoreReindexFailureCarriesWrittenPayload`) ✓ / `api:generate+check` ✓ / `check-lang-keys` ✓ / `typecheck` ✓ / `pnpm run lint` ✓ / 定向前端 25/25 ✓。待:stamp → tag → 发布 → NAS/客户端部署 → 用户按 P1 验收实测(还原后不重启可搜、反链正、索引失败显错)。
 
 ### P2. 备份子系统剩余待实测项(用户尚未逐项确认)
 

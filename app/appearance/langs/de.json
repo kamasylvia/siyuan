@@ -22,6 +22,7 @@
 	"backupRestoreWarn": "Die Wiederherstellung überschreibt data/ und conf/ im aktuellen Arbeitsbereich. Mit aktiviertem Übernehmen wird der Arbeitsbereich eine exakte Kopie des Snapshots: Dokumente und Anhänge außerhalb des Snapshots werden gelöscht; ausgeschlossene Dateien wie Backup-Zugangsdaten bleiben erhalten",
 	"backupRestoreFailed": "Wiederherstellung fehlgeschlagen",
 	"backupRestoreOK": "Wiederhergestellt",
+	"backupRestoreReindexed": "Wiederhergestellt und Index neu erstellt",
 	"backupTargetNote": "Note (optional)",
 	"backupEnableGlobal": "Backup master switch",
 	"backupEnableTarget": "Enable this target",

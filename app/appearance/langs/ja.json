@@ -22,6 +22,7 @@
 	"backupRestoreWarn": "復元すると現在のワークスペースの data/ と conf/ が上書きされます。上書き復元を有効にすると、ワークスペースはスナップショットの正確なコピーになり、スナップショットに含まれない文書と添付ファイルは削除されます(バックアップ資格情報などの除外ファイルは保持されます)",
 	"backupRestoreFailed": "復元に失敗しました",
 	"backupRestoreOK": "復元完了",
+	"backupRestoreReindexed": "復元とインデックスの再構築が完了",
 	"backupTargetNote": "Note (optional)",
 	"backupEnableGlobal": "Backup master switch",
 	"backupEnableTarget": "Enable this target",

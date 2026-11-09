@@ -22,6 +22,7 @@
 	"backupRestoreWarn": "Відновлення перезаписує data/ та conf/ у поточному робочому просторі. Із увімкненим зведенням робочий простір стає точною копією знімка: документи та вкладення поза знімком видаляються; виняткові файли, як-от облікові дані резервного копіювання, зберігаються",
 	"backupRestoreFailed": "Помилка відновлення",
 	"backupRestoreOK": "Відновлено",
+	"backupRestoreReindexed": "Відновлено, індекс перебудовано",
 	"backupTargetNote": "Note (optional)",
 	"backupEnableGlobal": "Backup master switch",
 	"backupEnableTarget": "Enable this target",
