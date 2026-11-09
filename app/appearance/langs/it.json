@@ -8,6 +8,8 @@
 	"backupRestoreStarted": "Ripristino avviato; scrittura dell'area di lavoro",
 	"backupRunStarted": "Backup avviato; caricamento snapshot in corso",
 	"backupRestoreForceLabel": "Convergi l'area di lavoro allo snapshot",
+	"backupRestoreKeepIdentity": "Use the snapshot's system identity and lock-screen passphrase",
+	"backupRestoreKeepIdentityTip": "Unchecked by default: the restored copy gets a fresh system identity and no lock-screen passphrase to avoid clashing with the source instance; check to migrate the whole instance exactly as the snapshot.",
 	"backupRestoreNeedForce": "L'area di lavoro contiene già dati; attiva la convergenza per ripristinare",
 	"backupRestorePruned": "Rimossi ${x} file estranei",
 	"backupRestoreTitle": "Ripristina",

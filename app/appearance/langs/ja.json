@@ -8,6 +8,8 @@
 	"backupRestoreStarted": "復元を開始し、ワークスペースに書き込んでいます",
 	"backupRunStarted": "バックアップを開始し、スナップショットをアップロード中",
 	"backupRestoreForceLabel": "上書き復元:ワークスペースをスナップショット時点に一致させる",
+	"backupRestoreKeepIdentity": "Use the snapshot's system identity and lock-screen passphrase",
+	"backupRestoreKeepIdentityTip": "Unchecked by default: the restored copy gets a fresh system identity and no lock-screen passphrase to avoid clashing with the source instance; check to migrate the whole instance exactly as the snapshot.",
 	"backupRestoreNeedForce": "ワークスペースに既存データがあります。上書き復元を有効にしてから実行してください",
 	"backupRestorePruned": "スナップショット外のファイル ${x} 件を削除しました",
 	"backupRestoreTitle": "復元",

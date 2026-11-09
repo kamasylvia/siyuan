@@ -8,6 +8,8 @@
 	"backupRestoreStarted": "Pemulihan dimulai; menulis ruang kerja",
 	"backupRunStarted": "Pencadangan dimulai; mengunggah snapshot",
 	"backupRestoreForceLabel": "Samakan ruang kerja dengan snapshot",
+	"backupRestoreKeepIdentity": "Use the snapshot's system identity and lock-screen passphrase",
+	"backupRestoreKeepIdentityTip": "Unchecked by default: the restored copy gets a fresh system identity and no lock-screen passphrase to avoid clashing with the source instance; check to migrate the whole instance exactly as the snapshot.",
 	"backupRestoreNeedForce": "Ruang kerja sudah berisi data; aktifkan penyamaan untuk memulihkan",
 	"backupRestorePruned": "${x} file di luar snapshot dihapus",
 	"backupRestoreTitle": "Pulihkan",

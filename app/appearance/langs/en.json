@@ -8,6 +8,8 @@
 	"backupRestoreStarted": "Restore started; writing the workspace",
 	"backupRunStarted": "Backup started; uploading snapshot",
 	"backupRestoreForceLabel": "Converge workspace to the snapshot",
+	"backupRestoreKeepIdentity": "Use the snapshot's system identity and lock-screen passphrase",
+	"backupRestoreKeepIdentityTip": "Unchecked by default: the restored copy gets a fresh system identity and no lock-screen passphrase to avoid clashing with the source instance; check to migrate the whole instance exactly as the snapshot.",
 	"backupRestoreNeedForce": "The workspace already has data; enable converge to restore",
 	"backupRestorePruned": "${x} stale files removed",
 	"backupRestoreTitle": "Restore",

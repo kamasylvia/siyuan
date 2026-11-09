@@ -722,6 +722,11 @@ const openRestoreDialog = async (targetId: string) => {
         <input id="backupRestoreForce" type="checkbox" checked>
         <span>${escapeHtmlTextAndAttr(text("backupRestoreForceLabel", "Converge workspace to the snapshot"))}</span>
     </label>
+    <label class="fn__flex" style="align-items:center;gap:6px;margin-top:8px;cursor:pointer">
+        <input id="backupRestoreKeepIdentity" type="checkbox">
+        <span>${escapeHtmlTextAndAttr(text("backupRestoreKeepIdentity", "Keep system identity and lock-screen passphrase"))}</span>
+    </label>
+    <div class="ft__on-surface" style="margin-top:4px;font-size:12px">${escapeHtmlTextAndAttr(text("backupRestoreKeepIdentityTip", "By default the restored copy gets a fresh system identity and no lock-screen passphrase to avoid clashing with the source instance; check this only when migrating the whole instance."))}</div>
     <div class="ft__on-surface" style="margin-top:8px;font-size:12px">${escapeHtmlTextAndAttr(text("backupRestoreWarn", "Restoring overwrites data/ and conf/ in the current workspace. With converge enabled the workspace becomes an exact copy of the snapshot: documents and assets not in the snapshot are deleted; excluded files such as backup credentials are kept"))}</div>
 </div>`;
     confirmDialog(text("backupRestoreTitle", "Restore from backup"), dialogHTML, async () => {
@@ -763,7 +768,8 @@ const openRestoreDialog = async (targetId: string) => {
             }
         }, 2000);
         try {
-            const response = await fetchSyncPost("/api/backup/restore", {target: targetId, snapshot, passphrase, force});
+            const response = await fetchSyncPost("/api/backup/restore", {target: targetId, snapshot, passphrase, force,
+                keepIdentity: (document.querySelector("#backupRestoreKeepIdentity") as HTMLInputElement)?.checked || false});
             const data = response.data as {files?: number; bytes?: number; removed?: number} | undefined;
             if (response.code !== 0) {
                 showMessage(`${text("backupRestoreFailed", "Restore failed")}: ${response.msg}`, 7000, "error");

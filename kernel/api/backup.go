@@ -509,7 +509,7 @@ var restoreBackup = contractHandler(apicontract.BackupRestore, func(c *gin.Conte
 	}
 	planCancel()
 	dest := util.WorkspaceDir
-	result, err := backup.Restore(c.Request.Context(), store, req.Snapshot, dest, req.Force, req.Passphrase)
+	result, err := backup.Restore(c.Request.Context(), store, req.Snapshot, dest, req.Force, req.Passphrase, req.KeepIdentity)
 	if err != nil {
 		return apicontract.Failure[apicontract.BackupRestoreData](-1, err.Error())
 	}

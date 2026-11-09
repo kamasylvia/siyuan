@@ -8,6 +8,8 @@
 	"backupRestoreStarted": "Восстановление начато; идёт запись рабочего пространства",
 	"backupRunStarted": "Резервное копирование начато; идёт загрузка снимка",
 	"backupRestoreForceLabel": "Привести рабочее пространство к снимку",
+	"backupRestoreKeepIdentity": "Use the snapshot's system identity and lock-screen passphrase",
+	"backupRestoreKeepIdentityTip": "Unchecked by default: the restored copy gets a fresh system identity and no lock-screen passphrase to avoid clashing with the source instance; check to migrate the whole instance exactly as the snapshot.",
 	"backupRestoreNeedForce": "Рабочее пространство уже содержит данные; включите приведение к снимку для восстановления",
 	"backupRestorePruned": "Удалено посторонних файлов: ${x}",
 	"backupRestoreTitle": "Восстановить",

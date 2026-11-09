@@ -798,7 +798,7 @@ export type BackupRestoreDryRunRequestInput = { "force"?: boolean; "passphrase"?
 
 export type BackupRestoreProgress = { "done": number; "startedAt": number; "total": number; };
 
-export type BackupRestoreRequestInput = { "force"?: boolean; "passphrase"?: string; "snapshot": string; "target": string; };
+export type BackupRestoreRequestInput = { "force"?: boolean; "keepIdentity"?: boolean; "passphrase"?: string; "snapshot": string; "target": string; };
 
 export type BackupRetention = { "keepLast"?: number; "maxAgeDays"?: number; };
 

@@ -96,7 +96,7 @@ func TestLocalBackupIsIncrementalAndRestorable(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	restored, err := Restore(context.Background(), target, third.Snapshot, restoreDir, false, "")
+	restored, err := Restore(context.Background(), target, third.Snapshot, restoreDir, false, "", true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -218,14 +218,14 @@ func TestEncryptedBackupRequiresPassphrase(t *testing.T) {
 		t.Fatal(err)
 	}
 	restoreDir := t.TempDir()
-	if _, err = Restore(context.Background(), target, result.Snapshot, restoreDir, false, ""); err == nil {
+	if _, err = Restore(context.Background(), target, result.Snapshot, restoreDir, false, "", false); err == nil {
 		t.Fatal("expected missing passphrase error")
 	}
-	if _, err = Restore(context.Background(), target, result.Snapshot, restoreDir, false, "wrong"); err == nil {
+	if _, err = Restore(context.Background(), target, result.Snapshot, restoreDir, false, "wrong", false); err == nil {
 		t.Fatal("expected wrong passphrase error")
 	}
 	restored, err := Restore(context.Background(), target, result.Snapshot, restoreDir, false,
-		"correct horse battery staple")
+		"correct horse battery staple", false)
 	if err != nil {
 		t.Fatal(err)
 	}

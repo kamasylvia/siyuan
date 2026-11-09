@@ -200,6 +200,9 @@ type BackupRestoreRequest struct {
 	Snapshot   string `json:"snapshot"`
 	Passphrase string `json:"passphrase" api:"optional"`
 	Force      bool   `json:"force" api:"optional"`
+	// KeepIdentity 为 true 时保留快照 conf.json 中的 system.id 与锁屏口令;
+	// 默认为 false,还原副本重新生成实例身份,避免继承源实例造成冲突
+	KeepIdentity bool `json:"keepIdentity" api:"optional"`
 }
 
 type BackupRestoreData struct {

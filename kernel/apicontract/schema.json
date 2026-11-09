@@ -18251,6 +18251,9 @@
         "force": {
           "type": "boolean"
         },
+        "keepIdentity": {
+          "type": "boolean"
+        },
         "passphrase": {
           "type": "string"
         },

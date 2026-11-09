@@ -8,6 +8,8 @@
 	"backupRestoreStarted": "Wiederherstellung gestartet; Arbeitsbereich wird geschrieben",
 	"backupRunStarted": "Sicherung gestartet; Snapshot wird hochgeladen",
 	"backupRestoreForceLabel": "Arbeitsbereich auf den Snapshot bringen",
+	"backupRestoreKeepIdentity": "Use the snapshot's system identity and lock-screen passphrase",
+	"backupRestoreKeepIdentityTip": "Unchecked by default: the restored copy gets a fresh system identity and no lock-screen passphrase to avoid clashing with the source instance; check to migrate the whole instance exactly as the snapshot.",
 	"backupRestoreNeedForce": "Der Arbeitsbereich enthält bereits Daten; aktiviere das Übernehmen, um wiederherzustellen",
 	"backupRestorePruned": "${x} überflüssige Dateien entfernt",
 	"backupRestoreTitle": "Wiederherstellen",

@@ -6,6 +6,7 @@ package backup
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -69,7 +70,7 @@ func TestRestoreForceConvergesToSnapshotState(t *testing.T) {
 	}
 
 	// force=false:冲突拒绝且零写入,脏数据保持原样
-	if _, err = Restore(context.Background(), target, snapshot, restoreDir, false, ""); err == nil {
+	if _, err = Restore(context.Background(), target, snapshot, restoreDir, false, "", false); err == nil {
 		t.Fatal("expected conflict error without force")
 	}
 	got, err := os.ReadFile(filepath.Join(restoreDir, "data", "box", "doc.sy"))
@@ -78,7 +79,7 @@ func TestRestoreForceConvergesToSnapshotState(t *testing.T) {
 	}
 
 	// force=true:快照文件覆盖、快照外文件与空目录清理、排除项与软链保留
-	result, err := Restore(context.Background(), target, snapshot, restoreDir, true, "")
+	result, err := Restore(context.Background(), target, snapshot, restoreDir, true, "", true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -254,5 +255,65 @@ func TestTargetOwnershipClaim(t *testing.T) {
 	}
 	if resultA.Targets[0].OK || resultA.Targets[0].ClaimedBy != "instance-b" {
 		t.Fatalf("original owner should be denied after takeover: %+v", resultA.Targets)
+	}
+}
+
+func TestRestoreIdentityHandling(t *testing.T) {
+	workspace := t.TempDir()
+	targetDir := t.TempDir()
+	writeTestFile(t, workspace, "data/box/doc.sy", `{"ID":"doc-v1"}`)
+	writeTestFile(t, workspace, "conf/conf.json",
+		`{"lang":"zh-CN","accessAuthCode":"fixture-code","system":{"id":"346317AD-F9F4-558E-B076-06508C552CAE"}}`)
+	engine := newLocalTestEngine(t, workspace, targetDir)
+	result, err := engine.Run(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	target, err := NewLocalTarget("local-1", targetDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// 默认:换新身份 + 清空锁屏口令,其余配置键原样保留
+	restoreDir := t.TempDir()
+	if _, err = Restore(context.Background(), target, result.Snapshot, restoreDir, true, "", false); err != nil {
+		t.Fatal(err)
+	}
+	restored, err := os.ReadFile(filepath.Join(restoreDir, "conf", "conf.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var identity struct {
+		Lang           string `json:"lang"`
+		AccessAuthCode string `json:"accessAuthCode"`
+		System         struct {
+			ID string `json:"id"`
+		} `json:"system"`
+	}
+	if err = json.Unmarshal(restored, &identity); err != nil {
+		t.Fatal(err)
+	}
+	if identity.Lang != "zh-CN" {
+		t.Fatalf("unrelated conf keys should survive, lang = %q", identity.Lang)
+	}
+	if identity.AccessAuthCode != "" {
+		t.Fatalf("lock-screen passphrase should be cleared, got %q", identity.AccessAuthCode)
+	}
+	if identity.System.ID == "" || identity.System.ID == "346317AD-F9F4-558E-B076-06508C552CAE" {
+		t.Fatalf("expected a fresh system id, got %q", identity.System.ID)
+	}
+
+	// keepIdentity=true:迁移整个实例时身份原样保留
+	migrateDir := t.TempDir()
+	if _, err = Restore(context.Background(), target, result.Snapshot, migrateDir, true, "", true); err != nil {
+		t.Fatal(err)
+	}
+	kept, err := os.ReadFile(filepath.Join(migrateDir, "conf", "conf.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(kept), "346317AD-F9F4-558E-B076-06508C552CAE") ||
+		!strings.Contains(string(kept), "fixture-code") {
+		t.Fatal("keepIdentity=true should preserve the snapshot identity")
 	}
 }

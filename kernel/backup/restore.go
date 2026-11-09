@@ -6,6 +6,7 @@ package backup
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -137,8 +138,12 @@ func scanRestoreDelta(destAbs string, manifest *Manifest) (*restoreDelta, error)
 
 // Restore 把一个快照物化到 dest。force=false 时目标存在同路径非空文件即拒绝,
 // 不做任何写入;force=true 时目标被收敛为快照时点的纯净状态:快照内文件按
-// 路径覆盖,Roots 内快照外文件与空目录被清理,排除项与符号链接原样保留
-func Restore(ctx context.Context, target Store, snapshotID, dest string, force bool, passphrase string) (*RestoreResult, error) {
+// 路径覆盖,Roots 内快照外文件与空目录被清理,排除项与符号链接原样保留。
+// keepIdentity 为 false(默认)时,还原后的 conf.json 换上全新 system.id 并清空
+// 锁屏口令,避免本地副本继承源实例身份造成认领与直接同步冲突;迁移整个实例时
+// 才传 true 原样保留
+func Restore(ctx context.Context, target Store, snapshotID, dest string, force bool, passphrase string,
+	keepIdentity bool) (*RestoreResult, error) {
 	if strings.TrimSpace(dest) == "" {
 		return nil, errors.New("restore destination is required")
 	}
@@ -200,7 +205,56 @@ func Restore(ctx context.Context, target Store, snapshotID, dest string, force b
 			return nil, err
 		}
 	}
+	if !keepIdentity {
+		if err = resetRestoredIdentity(destAbs); err != nil {
+			return nil, err
+		}
+	}
 	return result, nil
+}
+
+// resetRestoredIdentity 把还原后的 conf.json 换成全新实例身份:system.id 重新
+// 生成,锁屏口令清空;conf.json 缺失或损坏时返回错误,还原结果必须明确
+func resetRestoredIdentity(destAbs string) error {
+	confPath := filepath.Join(destAbs, "conf", "conf.json")
+	data, err := os.ReadFile(confPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+	var raw map[string]any
+	if err = json.Unmarshal(data, &raw); err != nil {
+		return fmt.Errorf("parse restored conf.json: %w", err)
+	}
+	identity, err := newInstanceID()
+	if err != nil {
+		return err
+	}
+	section, _ := raw["system"].(map[string]any)
+	if section == nil {
+		section = map[string]any{}
+		raw["system"] = section
+	}
+	section["id"] = identity
+	raw["accessAuthCode"] = ""
+	out, err := json.MarshalIndent(raw, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(confPath, out, 0644)
+}
+
+// newInstanceID 生成与现有 conf.json 同形的大写 UUID 作为全新实例身份
+func newInstanceID() (string, error) {
+	buf := make([]byte, 16)
+	if _, err := rand.Read(buf); err != nil {
+		return "", err
+	}
+	buf[6] = (buf[6] & 0x0f) | 0x40
+	buf[8] = (buf[8] & 0x3f) | 0x80
+	return strings.ToUpper(fmt.Sprintf("%x-%x-%x-%x-%x", buf[0:4], buf[4:6], buf[6:8], buf[8:10], buf[10:16])), nil
 }
 
 // pruneRestoreDelta 删除扫描阶段收集的快照外文件,随后自底向上清理 Roots 内

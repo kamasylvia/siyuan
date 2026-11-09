@@ -8,6 +8,8 @@
 	"backupRestoreStarted": "पुनर्स्थापना शुरू; वर्कस्पेस लिखा जा रहा है",
 	"backupRunStarted": "बैकअप शुरू; स्नैपशॉट अपलोड हो रहा है",
 	"backupRestoreForceLabel": "वर्कस्पेस को स्नैपशॉट के अनुसार बदलें",
+	"backupRestoreKeepIdentity": "Use the snapshot's system identity and lock-screen passphrase",
+	"backupRestoreKeepIdentityTip": "Unchecked by default: the restored copy gets a fresh system identity and no lock-screen passphrase to avoid clashing with the source instance; check to migrate the whole instance exactly as the snapshot.",
 	"backupRestoreNeedForce": "वर्कस्पेस में पहले से डेटा है; पुनर्स्थापित करने के लिए बदलाव सक्षम करें",
 	"backupRestorePruned": "${x} बाहरी फ़ाइलें हटाई गईं",
 	"backupRestoreTitle": "पुनर्स्थापित",

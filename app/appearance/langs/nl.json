@@ -8,6 +8,8 @@
 	"backupRestoreStarted": "Herstel gestart; werkruimte wordt geschreven",
 	"backupRunStarted": "Back-up gestart; momentopname wordt geüpload",
 	"backupRestoreForceLabel": "Werkruimte afstemmen op de momentopname",
+	"backupRestoreKeepIdentity": "Use the snapshot's system identity and lock-screen passphrase",
+	"backupRestoreKeepIdentityTip": "Unchecked by default: the restored copy gets a fresh system identity and no lock-screen passphrase to avoid clashing with the source instance; check to migrate the whole instance exactly as the snapshot.",
 	"backupRestoreNeedForce": "De werkruimte bevat al gegevens; schakel afstemmen in om te herstellen",
 	"backupRestorePruned": "${x} overbodige bestanden verwijderd",
 	"backupRestoreTitle": "Herstellen",

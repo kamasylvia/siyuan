@@ -8,6 +8,8 @@
 	"backupRestoreStarted": "还原已开始,正在写入工作空间",
 	"backupRunStarted": "备份已开始,正在上传快照",
 	"backupRestoreForceLabel": "覆盖还原:工作空间收敛为快照时点",
+	"backupRestoreKeepIdentity": "使用快照的系统标识与锁屏口令",
+	"backupRestoreKeepIdentityTip": "默认不勾选：还原副本会生成全新系统标识并清空锁屏口令，避免与源实例冲突；勾选表示按快照原样迁移整个实例。",
 	"backupRestoreNeedForce": "工作空间已有数据,请勾选覆盖还原后再执行",
 	"backupRestorePruned": "已清理 ${x} 个快照外文件",
 	"backupRestoreTitle": "还原",

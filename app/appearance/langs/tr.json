@@ -8,6 +8,8 @@
 	"backupRestoreStarted": "Geri yükleme başladı; çalışma alanına yazılıyor",
 	"backupRunStarted": "Yedekleme başladı; anlık görüntü yükleniyor",
 	"backupRestoreForceLabel": "Çalışma alanını anlık görüntüye göre eşitle",
+	"backupRestoreKeepIdentity": "Use the snapshot's system identity and lock-screen passphrase",
+	"backupRestoreKeepIdentityTip": "Unchecked by default: the restored copy gets a fresh system identity and no lock-screen passphrase to avoid clashing with the source instance; check to migrate the whole instance exactly as the snapshot.",
 	"backupRestoreNeedForce": "Çalışma alanında zaten veri var; geri yüklemek için eşitlemeyi etkinleştir",
 	"backupRestorePruned": "Anlık görüntü dışındaki ${x} dosya silindi",
 	"backupRestoreTitle": "Geri yükle",

@@ -8,6 +8,8 @@
 	"backupRestoreStarted": "השחזור התחיל; נכתבת סביבת העבודה",
 	"backupRunStarted": "הגיבוי התחיל; מתבצעת העלאת צילום המצב",
 	"backupRestoreForceLabel": "התאמת סביבת העבודה לצילום המצב",
+	"backupRestoreKeepIdentity": "Use the snapshot's system identity and lock-screen passphrase",
+	"backupRestoreKeepIdentityTip": "Unchecked by default: the restored copy gets a fresh system identity and no lock-screen passphrase to avoid clashing with the source instance; check to migrate the whole instance exactly as the snapshot.",
 	"backupRestoreNeedForce": "סביבת העבודה כבר מכילה נתונים; הפעל התאמה כדי לשחזר",
 	"backupRestorePruned": "הוסרו ${x} קבצים שאינם בצילום המצב",
 	"backupRestoreTitle": "שחזור",

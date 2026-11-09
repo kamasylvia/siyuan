@@ -8,6 +8,8 @@
 	"backupRestoreStarted": "Restauration démarrée ; écriture de l'espace de travail",
 	"backupRunStarted": "Sauvegarde démarrée ; envoi de l'instantané",
 	"backupRestoreForceLabel": "Converger l'espace de travail vers l'instantané",
+	"backupRestoreKeepIdentity": "Use the snapshot's system identity and lock-screen passphrase",
+	"backupRestoreKeepIdentityTip": "Unchecked by default: the restored copy gets a fresh system identity and no lock-screen passphrase to avoid clashing with the source instance; check to migrate the whole instance exactly as the snapshot.",
 	"backupRestoreNeedForce": "L'espace de travail contient déjà des données ; activez la convergence pour restaurer",
 	"backupRestorePruned": "${x} fichiers obsolètes supprimés",
 	"backupRestoreTitle": "Restaurer",
