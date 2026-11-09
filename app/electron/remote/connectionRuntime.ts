@@ -37,6 +37,10 @@ const createConnectionRuntime = ({
             event.senderFrame === event.sender.mainFrame &&
             !!getWindowKernelTarget(event.sender.id) &&
             getWindowPathname(BrowserWindow.fromWebContents(event.sender)) === APP_PAGE,
+        // 工作空间主窗口也能发起 switchLocal:远程模式下回到本地工作区的唯一出口
+        isWorkspaceWindowSender: (event) =>
+            event.senderFrame === event.sender.mainFrame &&
+            !!getWindowKernelTarget(event.sender.id),
         log: defaultWriteLog,
         restart: async (target) => {
             // 关机、更新安装或上一次切换尚未完成时忽略重入。

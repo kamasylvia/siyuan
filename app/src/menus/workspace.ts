@@ -144,7 +144,12 @@ export const workspaceMenu = async (app: App, rect: DOMRect, openOnly = false, t
                             label: window.siyuan.languages.switchToLocalWorkspace,
                             icon: "iconFolder",
                             click: () => {
-                                ipcRenderer.invoke("siyuan-connections", {cmd: "switchLocal"});
+                                void ipcRenderer.invoke("siyuan-connections", {cmd: "switchLocal"}).then(
+                                    (result: {error?: string} | undefined) => {
+                                        if (result?.error) {
+                                            showMessage(result.error, 7000, "error");
+                                        }
+                                    });
                             },
                         });
                         workspaceSubMenu.push({id: "separator_local_1", type: "separator"});

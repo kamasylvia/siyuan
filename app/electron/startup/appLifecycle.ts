@@ -167,6 +167,8 @@ const handleActivate = (initMainWindow: InitMainWindow, event: ElectronEvent): v
 };
 
 // 退出前把保存请求交给前端：无内核的临时窗口直接关闭，其余窗口等前端回存后退出。
+// 切换连接时前端来不及回存(远程模式的前端来自对端,不参与关闭流程),直接销毁窗口
+// 继续退出,否则 app.quit() 会一直挂起导致切换毫无反应。
 const handleBeforeQuit = (event: ElectronEvent): void => {
     if (state.exit.keepOpenForUpdate) {
         event.preventDefault();
@@ -176,7 +178,14 @@ const handleBeforeQuit = (event: ElectronEvent): void => {
     if (state.markdown.lifecycle?.beforeQuit(event)) {
         return;
     }
+    const switchingConnection = !!state.exit.pendingConnectionArgs;
     state.workspaces.slice().forEach(item => {
+        if (switchingConnection) {
+            removeWorkspace(item);
+            markExpectedRendererExit(item.browserWindow);
+            item.browserWindow.destroy();
+            return;
+        }
         const pathname = getWindowPathname(item.browserWindow);
         if (!item.ownsKernel && (pathname !== APP_PAGE ||
             !isWindowInitialized(item.webContentsId))) {

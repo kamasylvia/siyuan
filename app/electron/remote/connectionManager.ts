@@ -72,6 +72,8 @@ type ConnectionManagerOptions = {
     version: string;
     forkBuild?: string;
     log: LogFunction;
+    /** 工作空间窗口的发送方校验,用于 switchLocal 这类由主窗口发起的命令 */
+    isWorkspaceWindowSender?: (event: IpcMainInvokeEvent) => boolean;
     showWindow?: boolean;
     isTrustedDialogSender?: (event: {senderFrame: {url: string} | null; sender: WebContents}) => boolean;
 };
@@ -81,6 +83,7 @@ const getRemoteSession = (target: ConnectionTarget): ConnectionSession =>
 
 const createConnectionManager = ({confDir, languageDir, assetsDir = runtime.paths.assetsDir, restart, currentTarget,
     version, forkBuild = "", log, showWindow = true,
+    isWorkspaceWindowSender = (() => false) as (event: IpcMainInvokeEvent) => boolean,
     isTrustedDialogSender = (() => false) as (event: {senderFrame: {url: string} | null; sender: WebContents}) => boolean}: ConnectionManagerOptions) => {
     const file = path.join(confDir, "connections.json");
     const page = pathToFileURL(path.join(assetsDir, "connections.html")).href;
@@ -264,7 +267,9 @@ const createConnectionManager = ({confDir, languageDir, assetsDir = runtime.path
             openDialogSession(event, data);
         }
         const fromDialog = isFromDialog(event);
-        if (!fromDialog && !isFromWindow(event)) {
+        // 主窗口也可发起命令:远程模式下工作空间菜单需要 switchLocal 回到本地工作区
+        const fromWorkspaceWindow = !fromDialog && isWorkspaceWindowSender(event);
+        if (!fromDialog && !isFromWindow(event) && !fromWorkspaceWindow) {
             return {error: "Invalid connection manager sender"};
         }
         try {
