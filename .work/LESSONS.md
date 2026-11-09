@@ -1,0 +1,48 @@
+# LESSONS — SiYuan fork
+
+## 2026-11-09
+
+### 1. 前端 IPC 必须检查返回值,否则「点了没反应」
+
+`switchLocal` 菜单点了毫无反应,根因不是功能没实现,而是主进程返回
+`{error: "Invalid connection manager sender"}` 被前端直接丢弃。
+**规则**:凡是 `ipcRenderer.invoke` 的调用,必须 `then` 里检查 `result?.error` 并 `showMessage`。
+静默失败比报错更费时间——用户只能描述「没效果」。
+
+### 2. 连接切换的退出路径不能等渲染进程
+
+`app.quit()` 在远程模式下挂起:远程模式的前端来自对端内核,不参与
+`SIYUAN_SAVE_CLOSE` 握手,`before-quit` 里 `event.preventDefault()` 之后就再没人推进。
+**规则**:凡是「不打算保留当前会话」的退出(切换连接、切换工作区),直接在 before-quit
+里销毁窗口,不要走保存确认流程。判断依据就是 `state.exit.pendingConnectionArgs` 是否存在。
+
+### 3. sender 校验要覆盖真实调用方
+
+连接管理器的 `isFromWindow` 只认它自己的对话框窗口,而新命令来自工作空间主窗口。
+**规则**:给 IPC 加新命令前,先确认发送方属于哪个信任集合;校验逻辑要注入而不是
+在模块内硬编码,否则跨目录(remote/ 不能 import window/)就只能放弃校验或抄一份。
+
+### 4. 契约字段漏加会让功能静默失效
+
+`backupTab` 的保存流程逐字段转换到 `apicontract.BackupTarget`,而契约里没有 `schedule`,
+定时备份保存后字段被丢弃——UI 看起来保存成功,实际没存。
+**规则**:新增内核配置字段时,同时检查 `apicontract` 结构体 + `unmask*` 转换 + 前端
+readForm/saveForm 三处;只改其中一处等于没做。
+
+### 5. 语言文件插入按键名定位,不要按值
+
+`backupRestoreForceLabel` 在 22 个语言里值各不同,用英文值当锚点导致 18 个文件静默跳过。
+**规则**:插入 i18n 键时按键名 `findIndex(line.includes('"key"'))`,写完全量 python 校验
+22 文件里目标键存在;不要相信「脚本没报错就是成功」。
+
+### 6. 全模块构建才算验证内核
+
+`go build ./api/` 通过,但 CLI 包(`kernel/cli/cmd`)还调用旧签名,只有 `go build ./...`
+(Docker 构建用的就是它)才能发现。**规则**:内核改动一律跑 `go build ./...`,不要只 build 改动的包。
+
+### 7. 还原身份默认策略
+
+还原会把快照的 `conf.json` 一起铺下来,原样保留会让本地副本继承源实例的 `system.id`
+与锁屏口令——认领冲突、直接同步身份冲突、本地被远端口令锁住。
+**规则**:还原默认换新身份(`system.id` 重新生成 + `accessAuthCode` 清空),保留原样必须是
+显式勾选,且文案要写清「使用快照的系统标识与锁屏口令」而不是含糊的「保留」。

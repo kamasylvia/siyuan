@@ -56,6 +56,3 @@ muslbin/
 /.cache/ocr/
 /app/stage/ocr/models/
 /app/stage/ocr/runtime/
-
-# 本地任务台账(不入库,见 AGENTS.md §3)
-.work/
