@@ -65,3 +65,22 @@ readForm/saveForm 三处;只改其中一处等于没做。
 契约端点 `ResponseOptions{DataOnError: true}` + `FailureWithData` 让失败响应携带类型化
 data(生成器/schema/前端类型全链路);塞 msg 字符串前端只能展示不能分支。
 **规则**:失败时调用方需分支的数据一律 DataOnError,msg 只放人读文案。
+
+### 11. Infisical 拉取管线禁 `IFS='=' read`,尾 `=` 会被吞
+
+`while IFS='=' read -r k v` 读 `KEY=...=` 时 v 丢尾 `=`(47 vs 48 字符实证),
+Portainer token 缺 padding 报 401 Invalid JWT,误判成服务端轮换查半天。
+**规则**:改 `while IFS= read -r line; export "${line%%=*}...` 整行读 + 参数展开切首个 `=`。
+⚠️ 全局 AGENTS §2.3.2 同段管线有同 bug,待修全局(本机已验证修法)。
+
+### 12. skopeo 中转 NAS 标准三步(2026-11-09 .13 实测)
+
+`skopeo copy --override-arch amd64 --override-os linux --src-creds kamasylvia:$GITHUB_CLASSIC_PAT
+docker://ghcr.io/...:tag docker-archive:/tmp/x.tar:tag`(缺 override-os 报 OS darwin 无镜像)
+→ `POST /api/endpoints/1/docker/images/load`(Content-Type application/x-tar,33s/322MB)
+→ tag 丢失变 `tag:latest`,须 `POST /images/<错名>/tag?repo=...&tag=...`(201) 纠正
+→ PUT stack update(pullImage=false)→ 轮询 Status=1。直拉 Extracting 中途 curl 超时后服务端未必续传,miss 即转中转,勿死等。
+
+### 13. 本地单测内核启动三坑
+
+① 新 CLI 须 `serve` 子命令;② 必须在打包布局下起(同级 appearance/stage/guide,可用 /Applications 软链 farm);③ API 鉴权用 `Conf.Api.Token`(conf.json api.token),锁屏密码只过 BasicAuth 不认 `Authorization: Token`。

@@ -6,22 +6,22 @@
 ## 一、当前版本线
 
 - 上游线:upstream v3.8.10-alpha.7(客户端与容器严格版本匹配)
-- 最新已发布:**v3.8.10-alpha.7.12**(tag `622e3cefcc`,有 Docker 镜像 + DMG + release)
-- 已推送未发布:**`c8a50b2447`** — switchLocal 修复(sender 门 + quit 路径),已 GDM 实测通过,已在 origin/master(本机 2026-11-09 pull 验证),**尚未 tag/release**(下一版 stamp+tag 时带上)
+- 最新已发布:**v3.8.10-alpha.7.13**(tag `c0d13fa2a9`,含 P1 还原索引重建 `a952cabaca` + switchLocal 修 `c8a50b2447`;Docker 镜像已出,NAS stack 37 已部署,boot 100%)
+- 本机客户端仍 `.7` 落后(信任连接走 NAS 前端,备份页实测不受影响);DMG/release 发布待补
 - build script 版本自检:`scripts/fork-mac-build.sh` 会比对 `kernel/util/working.go` 的 Ver 与二进制内嵌串,不一致直接失败
 
 ## 二、下一步要做(按优先级)
 
-### P1. 还原后重建索引 + 前端整页重载(2026-11-09 已实现,未 tag/未部署)
+### P1. 还原后重建索引 + 前端整页重载(2026-11-09 已发布 .13 并实测通过)
 
-**实现**(工作区未提交):
+**实现**(`a952cabaca`,同上):
 1. 内核 `model/restore_reindex.go::ReindexRestoredWorkspace`:落盘后同步 `FullReindexDirect()` + `IndexRefs()` + `FlushQueue()` + `ResetVirtualBlockRefCache()`(增量同步保护内路径 `repository.go:2940` 同序列),`lockSync` 与云同步串行;失败集按 `DocumentMetadataState != ready` 判定(用户指南/未解锁加密笔记本沿启动语义跳过)
 2. 契约 `BackupRestoreData` 加 `reindexed` + `failedBoxes`,端点加 `DataOnError:true`;索引失败 → `FailureWithData(-1, msg, data)`(已落盘规模 + 失败笔记本,前端显错);成功 → `reindexed:true`
 3. 前端 `backupTab.ts`:成功后调 `/api/ui/reloadUI`(与数据导入同通道),toast 换 `backupRestoreReindexed`(×22);失败走存量 error toast
 4. CLI `backup restore`:dest 被运行内核锁定时 stderr 警告(重启或调 `/api/system/rebuildDataIndex`),不调索引
 5. 不做:conf 热重载(内核无此能力,快照 conf 下次启动生效);claim 身份读盘同理
 
-**验证**(2026-11-09 本机):`go build ./...` ✓ / `go vet` ✓ / `go test ./backup/ ./apicontract/` ✓ / api 回归(`TestRestoreReindexFailureCarriesWrittenPayload`) ✓ / `api:generate+check` ✓ / `check-lang-keys` ✓ / `typecheck` ✓ / `pnpm run lint` ✓ / 定向前端 25/25 ✓。待:stamp → tag → 发布 → NAS/客户端部署 → 用户按 P1 验收实测(还原后不重启可搜、反链正、索引失败显错)。
+**实测**(2026-11-09 本机,本地内核 + NAS PG 快照 `20261109T065340Z` 4524 文件/1.4GB → 本地空库):还原返回 `reindexed:true`(139s);不重启全文搜中「SiYuan Fork 备份功能进度」✓;refs 表 72 行 ✓;getBacklink2 回链 1 条 ✓;日志 `rebuilt database` + `resolved refs [8]` ✓。NAS 侧仅 dry-run(覆盖 4521/删除 0),未动生产库。
 
 ### P2. 备份子系统剩余待实测项(用户尚未逐项确认)
 
