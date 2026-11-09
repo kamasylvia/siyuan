@@ -489,6 +489,10 @@ var restoreBackupDryRun = contractHandler(apicontract.BackupRestoreDryRun, func(
 
 var restoreBackup = contractHandler(apicontract.BackupRestore, func(c *gin.Context,
 	req apicontract.BackupRestoreRequest) apicontract.Response[apicontract.BackupRestoreData] {
+	// 还原会整体改写工作空间文件,与备份、另一场还原互斥
+	if backup.RunState() != nil || backup.RestoreState() != nil {
+		return apicontract.Failure[apicontract.BackupRestoreData](-1, "a backup or restore is already running")
+	}
 	cfg, err := loadBackupConfigForAPI()
 	if err != nil {
 		return apicontract.Failure[apicontract.BackupRestoreData](-1, err.Error())

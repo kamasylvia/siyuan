@@ -21,6 +21,7 @@ type BackupTarget = {
     s3?: S3Config;
     webdav?: WebDAVConfig;
     retention?: Retention;
+    schedule?: {cron: string};
 };
 
 type BackupConfig = {
@@ -166,6 +167,9 @@ const render = () => {
             ${selectType("pg")}
             ${field("backupKeepLast", text("backupKeepLast", "Keep last"), "30", "number")}
             ${field("backupMaxAgeDays", text("backupMaxAgeDays", "Max age (days)"), "90", "number", 'placeholder="0 = unlimited"')}
+            ${field("backupScheduleCron", text("backupScheduleCron", "Scheduled backup (cron)"), "", "text", 'placeholder="0 2 * * *"')}
+            <div class="ft__on-surface" style="margin:-4px 0 6px;font-size:12px">${escapeHtmlTextAndAttr(text("backupScheduleCronTip",
+                "Standard 5-field cron; leave empty to disable. Example: 0 2 * * * = daily at 02:00. Runs on the kernel that stays up, such as the Docker container."))}</div>
             <div id="backupTypeFields"></div>
             <div class="fn__flex" style="gap:8px;margin-top:8px">
                 <button class="b3-button b3-button--outline" id="backupSave">${escapeHtmlTextAndAttr(window.siyuan.languages.save)}</button>
@@ -281,6 +285,7 @@ const openForm = (target: BackupTarget) => {
     (panelRoot?.querySelector("#backupTargetType") as HTMLSelectElement).value = target.type;
     (panelRoot?.querySelector("#backupKeepLast") as HTMLInputElement).value = String(target.retention?.keepLast ?? 30);
     (panelRoot?.querySelector("#backupMaxAgeDays") as HTMLInputElement).value = String(target.retention?.maxAgeDays ?? 90);
+    (panelRoot?.querySelector("#backupScheduleCron") as HTMLInputElement).value = target.schedule?.cron || "";
     const fields = panelRoot?.querySelector("#backupTypeFields");
     if (fields) {
         fields.innerHTML = typeFields(target);
@@ -307,6 +312,11 @@ const readForm = (): BackupTarget => {
             maxAgeDays: Number(value("backupMaxAgeDays")) || 0,
         },
     };
+    // 定时备份:标准 5 段 cron,留空表示不启用;格式由内核保存时校验
+    const cron = value("backupScheduleCron").trim();
+    if (cron) {
+        target.schedule = {cron};
+    }
     switch (target.type) {
         case "pg":
             target.pg = {
@@ -368,6 +378,22 @@ const loadPanel = async () => {
         }
         progressEl.classList.remove("fn__none");
     }
+    // 备份或还原进行中:动作按钮统一灰掉,防止并发操作
+    setBackupBusy(Boolean(run || restore));
+};
+
+// 备份或还原运行期间,顶部与行内的备份、还原、删除按钮全部禁用;
+// 快照管理、编辑、测试连接为只读或无害操作,保持可用
+const setBackupBusy = (on: boolean): void => {
+    panelRoot?.querySelectorAll("#backupRun, #backupDelete").forEach(button => {
+        (button as HTMLButtonElement).disabled = on;
+    });
+    panelRoot?.querySelectorAll("#backupTargetList [data-action]").forEach(button => {
+        const action = button.getAttribute("data-action");
+        if (action === "backup" || action === "restore" || action === "delete") {
+            (button as HTMLButtonElement).disabled = on;
+        }
+    });
 };
 
 const saveConfig = async () => {
@@ -450,13 +476,12 @@ const runBackup = async (targetIds?: string[], takeover = false): Promise<void> 
         showMessage(text("backupSelectTargets", "Select at least one backup target"), 6000, "error");
         return;
     }
-    // 备份是同步 HTTP,大工作空间要跑数分钟:点击即进 loading 态并轮询运行态,
-    // 防止重复点击与无反馈
-    const button = panelRoot?.querySelector("#backupRun") as HTMLButtonElement;
-    if (button?.hasAttribute("disabled")) {
+    // 备份是同步 HTTP,大工作空间要跑数分钟:点击即进入全面板 busy 态并轮询
+    // 运行态,防止重复点击与无反馈
+    if (panelRoot?.querySelector("#backupRun")?.hasAttribute("disabled")) {
         return;
     }
-    button?.setAttribute("disabled", "disabled");
+    setBackupBusy(true);
     const progressEl = panelRoot?.querySelector("#backupRunProgress") as HTMLElement;
     const startedTip = text("backupRunStarted", "Backup started; uploading snapshot");
     if (progressEl) {
@@ -509,7 +534,7 @@ const runBackup = async (targetIds?: string[], takeover = false): Promise<void> 
         }
     } finally {
         window.clearInterval(poll);
-        button?.removeAttribute("disabled");
+        setBackupBusy(false);
         if (progressEl) {
             progressEl.classList.add("fn__none");
             progressEl.textContent = "";
@@ -748,9 +773,10 @@ const openRestoreDialog = async (targetId: string) => {
             showMessage(text("backupRestoreNeedForce", "The workspace already has data; enable converge to restore"), 7000, "error");
             return;
         }
-        // 还原是同步 HTTP:面板进度行轮询内核还原状态,完成后回填面板
+        // 还原是同步 HTTP:面板进度行轮询内核还原状态,动作按钮全面灰掉,完成后回填面板
         const progressEl = panelRoot?.querySelector("#backupRunProgress") as HTMLElement;
         const restoreTip = text("backupRestoreStarted", "Restore started");
+        setBackupBusy(true);
         if (progressEl) {
             progressEl.classList.remove("fn__none");
             progressEl.textContent = restoreTip;
@@ -782,6 +808,7 @@ const openRestoreDialog = async (targetId: string) => {
             showMessage(message, 6000);
         } finally {
             window.clearInterval(poll);
+            setBackupBusy(false);
             if (progressEl) {
                 progressEl.classList.add("fn__none");
                 progressEl.textContent = "";
