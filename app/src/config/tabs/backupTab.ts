@@ -600,6 +600,18 @@ const openSnapshotsDialog = async (targetId: string) => {
                 <span class="ft__on-surface">${snapshot.files} files${snapshot.encrypted ? " · 🔒" : ""}</span></span>
             <button class="b3-button b3-button--outline backupSnapshotDelete" data-snapshot="${escapeHtmlTextAndAttr(snapshot.id)}">${escapeHtmlTextAndAttr(window.siyuan.languages.delete)}</button>
         </div>`;
+    let busy = false;
+    const setBusy = (on: boolean, message = ""): void => {
+        busy = on;
+        const busyEl = document.querySelector("#backupSnapshotBusy");
+        if (busyEl?.isConnected) {
+            busyEl.classList.toggle("fn__none", !on);
+            busyEl.textContent = on ? message : "";
+        }
+        document.querySelectorAll("#backupSnapshotList .backupSnapshotDelete").forEach(button => {
+            (button as HTMLButtonElement).disabled = on;
+        });
+    };
     const loadAndBind = async (): Promise<number> => {
         const listEl = document.querySelector("#backupSnapshotList");
         if (!listEl?.isConnected) {
@@ -613,21 +625,29 @@ const openSnapshotsDialog = async (targetId: string) => {
             : `<div class="b3-label__text">${escapeHtmlTextAndAttr(text("backupRestoreEmpty", "No snapshots on this target"))}</div>`;
         listEl.querySelectorAll(".backupSnapshotDelete").forEach(button => {
             button.addEventListener("click", (event) => {
+                if (busy) {
+                    return;
+                }
                 const snapshotId = (event.currentTarget as HTMLElement).getAttribute("data-snapshot") || "";
                 confirmDialog(text("backupSnapshotsTitle", "Snapshots"),
                     text("backupSnapshotDeleteConfirm", "This deletes snapshot ${x} and its blobs not referenced by other snapshots; this action cannot be undone.")
                         .replace("${x}", snapshotId),
                     async () => {
-                        const response = await fetchSyncPost("/api/backup/deleteSnapshot", {target: targetId, snapshot: snapshotId});
-                        const result = response.data as {blobs?: number} | undefined;
-                        if (response.code !== 0) {
-                            showMessage(`${text("backupDeleteCheckFailed", "Could not verify the selected targets")}: ${response.msg}`, 7000, "error");
-                            return;
+                        setBusy(true, text("backupWorking", "Working…"));
+                        try {
+                            const response = await fetchSyncPost("/api/backup/deleteSnapshot", {target: targetId, snapshot: snapshotId});
+                            const result = response.data as {blobs?: number} | undefined;
+                            if (response.code !== 0) {
+                                showMessage(`${text("backupSnapshotDeleteFailed", "Failed to delete the snapshot")}: ${response.msg}`, 7000, "error");
+                                return;
+                            }
+                            showMessage(text("backupSnapshotDeleteDone", "Snapshot deleted; ${x} blob(s) removed")
+                                .replace("${x}", String(result?.blobs || 0)), 3000);
+                            await loadAndBind();
+                            await loadPanel();
+                        } finally {
+                            setBusy(false);
                         }
-                        showMessage(text("backupSnapshotDeleteDone", "Snapshot deleted; ${x} blob(s) removed")
-                            .replace("${x}", String(result?.blobs || 0)), 3000);
-                        await loadAndBind();
-                        await loadPanel();
                     }, undefined, true);
             });
         });
@@ -635,6 +655,7 @@ const openSnapshotsDialog = async (targetId: string) => {
     };
     const dialogTitle = text("backupSnapshotsTitle", "Snapshots");
     const dialogHTML = `<div class="b3-dialog__content" style="padding:12px">
+    <div id="backupSnapshotBusy" class="ft__on-surface fn__none" style="margin-bottom:8px"></div>
     <div id="backupSnapshotList" style="max-height:320px;overflow:auto;min-width:320px"></div>
 </div>`;
     confirmDialog(dialogTitle, dialogHTML, async () => {
@@ -650,6 +671,8 @@ const openSnapshotsDialog = async (targetId: string) => {
             text("backupEmptyAllConfirm", "This deletes all ${x} snapshots and their data on the target; this action cannot be undone. The ownership marker is kept.")
                 .replace("${x}", String(snapshots.length)),
             async () => {
+                // 清空可能逐个删除大量数据块,耗时较长:先给进行中提示,结束后有成功/失败消息
+                showMessage(text("backupEmptyRunning", "Emptying: deleting data on the target storage…"), 30000);
                 const response = await fetchSyncPost("/api/backup/emptyTarget", {target: targetId});
                 const result = response.data as {snapshots?: number; blobs?: number} | undefined;
                 if (response.code !== 0) {
