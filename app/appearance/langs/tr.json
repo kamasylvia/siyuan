@@ -966,6 +966,7 @@
 	"trustRemoteExtensions": "Uzak eklentilere ve görünüme güven ve bunları yükle",
 	"trustRemoteExtensionsTip": "Uzak uzantılar yerel dosyaları okuyup yazabilir ve program çalıştırabilir. Yalnızca güvenilir sunuculara ve uzantılarının gelecekteki güncellemelerine güvenin. Güven ayarı her adres için yerel olarak kaydedilir ve sonraki bağlantıda geçerli olur",
 	"remoteConnectionHistory": "Uzak bağlantı geçmişi",
+	"switchToLocalWorkspace": "Switch to the local workspace",
 	"connectRemoteKernel": "Uzak çekirdeğe bağlan...",
 	"remoteConnection": "Uzak",
 	"switchConnectionRestartTip": "Bağlantı değiştirildiğinde mevcut çalışma alanları kaydedilip kapatılır ve masaüstü istemcisi yeniden başlatılır; uzak çekirdekler çalışmaya devam eder",

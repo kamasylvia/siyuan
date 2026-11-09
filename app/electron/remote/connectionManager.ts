@@ -10,6 +10,7 @@ import {pathToFileURL} from "node:url";
 import {normalizeRemoteKernelOrigin, getRemoteKernelVersionStatus, getUnsafeRemoteChromiumSwitchName} from "./remoteKernel";
 import {probeRemoteKernelAuthentication} from "./remoteKernelAuth";
 import {readConnections, writeConnections, remotePartition} from "./connectionStore";
+import {readLastWorkspace} from "../startup/lastWorkspace";
 import type {
     BrowserWindow as ElectronBrowserWindow,
     Event as ElectronEvent,
@@ -54,10 +55,12 @@ type ConnectionSession = Electron.Session;
 
 type RestartTarget = {
     mode: string;
-    origin: string;
+    origin?: string;
     lang: string;
     trustRemoteExtensions: boolean;
     sessionHandoff?: string;
+    // path 仅本地模式使用:带上最后一次使用的本地工作区,跳过普通启动的自动重连
+    path?: string;
 };
 
 type ConnectionManagerOptions = {
@@ -345,6 +348,18 @@ const createConnectionManager = ({confDir, languageDir, assetsDir = runtime.path
                 });
                 await restart({mode: "remote", origin, lang: language, trustRemoteExtensions,
                     sessionHandoff: await stageSession(origin)});
+                return {};
+            }
+
+            case "switchLocal": {
+                // 远程模式回到本地工作区:带上最后一次使用的本地工作区路径重启,
+                // 该参数会让普通启动跳过自动重连
+                const lastWorkspace = readLastWorkspace(confDir, log);
+                if (!lastWorkspace.lastWorkspacePath) {
+                    throw new Error(languages().remoteKernelConnectionFailed);
+                }
+                await restart({mode: "local", path: lastWorkspace.lastWorkspacePath, lang: language,
+                    trustRemoteExtensions: false});
                 return {};
             }
 

@@ -966,6 +966,7 @@
 	"trustRemoteExtensions": "Dôverovať vzdialeným doplnkom a vzhľadu a načítať ich",
 	"trustRemoteExtensionsTip": "Vzdialené rozšírenia môžu čítať a zapisovať lokálne súbory a spúšťať programy. Dôverujte iba spoľahlivým serverom a budúcim aktualizáciám ich rozšírení. Nastavenie sa ukladá lokálne pre každú adresu a platí od ďalšieho pripojenia",
 	"remoteConnectionHistory": "História vzdialených pripojení",
+	"switchToLocalWorkspace": "Switch to the local workspace",
 	"connectRemoteKernel": "Pripojiť k vzdialenému jadru...",
 	"remoteConnection": "Vzdialené",
 	"switchConnectionRestartTip": "Zmena pripojenia uloží a zatvorí aktuálne pracovné priestory a reštartuje desktopového klienta; vzdialené jadrá zostanú spustené",

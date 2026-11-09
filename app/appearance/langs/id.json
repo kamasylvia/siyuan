@@ -966,6 +966,7 @@
 	"trustRemoteExtensions": "Percayai dan muat plugin serta tampilan jarak jauh",
 	"trustRemoteExtensionsTip": "Ekstensi jarak jauh dapat membaca dan menulis berkas lokal serta menjalankan program. Hanya percayai server tepercaya dan pembaruan ekstensinya di masa mendatang. Pengaturan kepercayaan disimpan secara lokal per alamat dan berlaku pada koneksi berikutnya",
 	"remoteConnectionHistory": "Riwayat koneksi jarak jauh",
+	"switchToLocalWorkspace": "Switch to the local workspace",
 	"connectRemoteKernel": "Hubungkan ke kernel jarak jauh...",
 	"remoteConnection": "Jarak jauh",
 	"switchConnectionRestartTip": "Pergantian koneksi menyimpan dan menutup ruang kerja saat ini, lalu memulai ulang klien desktop; kernel jarak jauh tetap berjalan",

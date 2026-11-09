@@ -966,6 +966,7 @@
 	"trustRemoteExtensions": "信任并加载远程插件与外观",
 	"trustRemoteExtensionsTip": "远程扩展可以读写本机文件和执行程序，请仅信任可靠的服务器及其后续扩展更新。信任设置按地址保存在本机，下次连接时生效",
 	"remoteConnectionHistory": "远程连接历史",
+	"switchToLocalWorkspace": "切换到本地工作区",
 	"connectRemoteKernel": "连接远程内核...",
 	"remoteConnection": "远程",
 	"switchConnectionRestartTip": "切换连接会保存并关闭当前工作空间，然后自动重启桌面客户端；远程内核不受影响",

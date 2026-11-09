@@ -5,6 +5,7 @@ import {paths, writeLog} from "../shared/runtime";
 import {errorMessage} from "../shared/errors";
 import {beginRemoteExport, endRemoteExport, saveRemoteExport} from "../remote/remoteExport";
 import {readConnections} from "../remote/connectionStore";
+import {readLastWorkspace} from "../startup/lastWorkspace";
 import {getKernelConnection} from "../remote/remoteKernel";
 import type {BrowserWindow} from "electron";
 import type {GetHandler} from "./getContract";
@@ -22,6 +23,19 @@ const remoteConnections: GetHandler = ({kernelTarget, isMainFrame}) => {
 };
 
 const kernelConnection: GetHandler = ({kernelTarget}) => getKernelConnection(kernelTarget);
+
+// 远程内核模式下由主进程报告最后一次使用的本地工作区,供「切换到本地工作区」菜单使用
+const localWorkspace: GetHandler = ({kernelTarget, isMainFrame}) => {
+    if (!kernelTarget || kernelTarget.mode !== "remote" || !isMainFrame) {
+        return {path: ""};
+    }
+    try {
+        return {path: readLastWorkspace(paths.confDir, writeLog).lastWorkspacePath};
+    } catch (error) {
+        writeLog("read last workspace failed: " + errorMessage(error));
+        return {path: ""};
+    }
+};
 
 const saveRemoteExportHandler: GetHandler = async ({event, data, kernelTarget, isMainFrame, initialized}) => {
     if (!kernelTarget || !initialized || !isMainFrame || kernelTarget.mode !== "remote") {
@@ -55,6 +69,7 @@ const saveRemoteExportHandler: GetHandler = async ({event, data, kernelTarget, i
 const connectionHandlers: Record<string, GetHandler> = {
     "remoteConnections": remoteConnections,
     "kernelConnection": kernelConnection,
+    "localWorkspace": localWorkspace,
     "saveRemoteExport": saveRemoteExportHandler,
 };
 

@@ -966,6 +966,7 @@
 	"trustRemoteExtensions": "Veruj i učitaj udaljene dodatke i izgled",
 	"trustRemoteExtensionsTip": "Udaljena proširenja mogu da čitaju i upisuju lokalne fajlove i pokreću programe. Verujte samo pouzdanim serverima i njihovim budućim ažuriranjima proširenja. Poverenje se čuva lokalno po adresi i primenjuje se pri sledećem povezivanju",
 	"remoteConnectionHistory": "Istorija udaljenih veza",
+	"switchToLocalWorkspace": "Switch to the local workspace",
 	"connectRemoteKernel": "Poveži se sa udaljenim jezgrom...",
 	"remoteConnection": "Udaljeno",
 	"switchConnectionRestartTip": "Prebacivanje čuva i zatvara trenutne radne prostore, pa ponovo pokreće program na računaru; udaljena jezgra nastavljaju da rade",

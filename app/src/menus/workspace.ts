@@ -53,8 +53,14 @@ export const workspaceMenu = async (app: App, rect: DOMRect, openOnly = false, t
         toggle: !openOnly && Boolean(target),
         build: async (_menu, session) => {
             let remoteConnections: string[] = [];
+            let localWorkspacePath = "";
             /// #if !BROWSER
             remoteConnections = await ipcRenderer.invoke(Constants.SIYUAN_GET, {cmd: "remoteConnections"});
+            if (!getHostCapabilities().workspaces) {
+                // 远程内核模式没有本地工作区能力,由主进程报告最后一次使用的本地工作区
+                localWorkspacePath = ((await ipcRenderer.invoke(Constants.SIYUAN_GET,
+                    {cmd: "localWorkspace"})) as {path?: string}).path || "";
+            }
             if (!session.isCurrent()) {
                 return;
             }
@@ -131,6 +137,18 @@ export const workspaceMenu = async (app: App, rect: DOMRect, openOnly = false, t
                             });
                         }
                     }] : [];
+                    if (!getHostCapabilities().workspaces && localWorkspacePath) {
+                        // 远程内核模式:提供回到本地工作区的出口,重启后自动重连标记翻转为本地
+                        workspaceSubMenu.push({
+                            id: "switchToLocalWorkspace",
+                            label: window.siyuan.languages.switchToLocalWorkspace,
+                            icon: "iconFolder",
+                            click: () => {
+                                ipcRenderer.invoke("siyuan-connections", {cmd: "switchLocal"});
+                            },
+                        });
+                        workspaceSubMenu.push({id: "separator_local_1", type: "separator"});
+                    }
                     workspaceSubMenu.push({
                         id: "connectRemoteKernel",
                         label: window.siyuan.languages.connectRemoteKernel,

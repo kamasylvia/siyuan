@@ -966,6 +966,7 @@
 	"trustRemoteExtensions": "Confiar en los complementos y la apariencia remotos y cargarlos",
 	"trustRemoteExtensionsTip": "Las extensiones remotas pueden leer y escribir archivos locales y ejecutar programas. Confía solo en servidores fiables y en las futuras actualizaciones de sus extensiones. La confianza se guarda localmente por dirección y se aplica en la próxima conexión",
 	"remoteConnectionHistory": "Historial de conexiones remotas",
+	"switchToLocalWorkspace": "Switch to the local workspace",
 	"connectRemoteKernel": "Conectar a un núcleo remoto...",
 	"remoteConnection": "Remoto",
 	"switchConnectionRestartTip": "Al cambiar de conexión se guardan y cierran los espacios de trabajo actuales y se reinicia el cliente de escritorio; los núcleos remotos siguen funcionando",

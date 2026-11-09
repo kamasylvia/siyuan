@@ -966,6 +966,7 @@
 	"trustRemoteExtensions": "Considera attendibili e carica i plugin e l’aspetto remoti",
 	"trustRemoteExtensionsTip": "Le estensioni remote possono leggere e scrivere file locali ed eseguire programmi. Considera attendibili solo i server affidabili e i futuri aggiornamenti delle loro estensioni. La scelta viene salvata localmente per indirizzo e applicata alla connessione successiva",
 	"remoteConnectionHistory": "Cronologia delle connessioni remote",
+	"switchToLocalWorkspace": "Switch to the local workspace",
 	"connectRemoteKernel": "Connetti a un kernel remoto...",
 	"remoteConnection": "Remoto",
 	"switchConnectionRestartTip": "Il cambio di connessione salva e chiude gli spazi di lavoro attuali, poi riavvia il client desktop; i kernel remoti restano in esecuzione",

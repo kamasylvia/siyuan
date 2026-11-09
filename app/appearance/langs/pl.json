@@ -966,6 +966,7 @@
 	"trustRemoteExtensions": "Ufaj zdalnym wtyczkom i wyglądowi oraz je wczytuj",
 	"trustRemoteExtensionsTip": "Zdalne rozszerzenia mogą odczytywać i zapisywać pliki lokalne oraz uruchamiać programy. Ufaj tylko wiarygodnym serwerom i przyszłym aktualizacjom ich rozszerzeń. Ustawienie jest zapisywane lokalnie dla każdego adresu i obowiązuje od następnego połączenia",
 	"remoteConnectionHistory": "Historia połączeń zdalnych",
+	"switchToLocalWorkspace": "Switch to the local workspace",
 	"connectRemoteKernel": "Połącz ze zdalnym jądrem...",
 	"remoteConnection": "Zdalne",
 	"switchConnectionRestartTip": "Zmiana połączenia zapisuje i zamyka bieżące obszary robocze, a następnie uruchamia ponownie klienta; zdalne jądra nadal działają",

@@ -966,6 +966,7 @@
 	"trustRemoteExtensions": "Remote-Plugins und Erscheinungsbild vertrauen und laden",
 	"trustRemoteExtensionsTip": "Remote-Erweiterungen können lokale Dateien lesen und schreiben sowie Programme ausführen. Vertrauen Sie nur zuverlässigen Servern und ihren zukünftigen Erweiterungsupdates. Die Einstellung wird lokal je Adresse gespeichert und gilt ab der nächsten Verbindung",
 	"remoteConnectionHistory": "Verlauf der Remoteverbindungen",
+	"switchToLocalWorkspace": "Switch to the local workspace",
 	"connectRemoteKernel": "Mit entferntem Kernel verbinden...",
 	"remoteConnection": "Remote",
 	"switchConnectionRestartTip": "Beim Wechsel werden die aktuellen Arbeitsbereiche gespeichert und geschlossen und der Desktop-Client neu gestartet; entfernte Kernel laufen weiter",
