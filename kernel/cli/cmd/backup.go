@@ -138,6 +138,7 @@ var backupRestoreCmd = &cobra.Command{
 		snapshot, _ := cmd.Flags().GetString("snapshot")
 		dest, _ := cmd.Flags().GetString("dest")
 		force, _ := cmd.Flags().GetBool("force")
+		keepIdentity, _ := cmd.Flags().GetBool("keep-identity")
 		passphrase, _ := cmd.Flags().GetString("passphrase")
 		if passphrase == "" && cfg.Encryption != nil {
 			passphrase = cfg.Encryption.Passphrase
@@ -159,7 +160,7 @@ var backupRestoreCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		result, err := backup.Restore(context.Background(), target, snapshot, dest, force, passphrase)
+		result, err := backup.Restore(context.Background(), target, snapshot, dest, force, passphrase, keepIdentity)
 		if err != nil {
 			return err
 		}
@@ -220,5 +221,6 @@ func init() {
 	backupRestoreCmd.Flags().String("snapshot", "", "snapshot ID")
 	backupRestoreCmd.Flags().String("dest", "", "restore destination workspace")
 	backupRestoreCmd.Flags().Bool("force", false, "overwrite existing files and prune files outside the snapshot")
+	backupRestoreCmd.Flags().Bool("keep-identity", false, "keep the snapshot system.id and lock-screen passphrase in the restored workspace")
 	backupRestoreCmd.Flags().String("passphrase", "", "backup encryption passphrase")
 }
