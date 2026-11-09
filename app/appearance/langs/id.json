@@ -62,6 +62,8 @@
 	"backupRetention": "Retention",
 	"backupKeepLast": "Keep last",
 	"backupMaxAgeDays": "Max age (days)",
+	"backupScheduleCron": "Scheduled backup (cron)",
+	"backupScheduleCronTip": "Standard 5-field cron; leave empty to disable. Example: 0 2 * * * = daily at 02:00. Runs on the kernel that stays up, such as the Docker container.",
 	"backupPath": "Directory",
 	"backupDSN": "DSN",
 	"backupSchema": "Schema",

@@ -62,6 +62,8 @@
 	"backupRetention": "保留策略",
 	"backupKeepLast": "保留最近",
 	"backupMaxAgeDays": "最长保留天数",
+	"backupScheduleCron": "定时备份 (cron)",
+	"backupScheduleCronTip": "标准 5 段 cron 表达式，留空表示不启用；例：0 2 * * * = 每天 02:00。由常驻内核（如 Docker 容器）执行。",
 	"backupPath": "目录",
 	"backupDSN": "DSN",
 	"backupSchema": "Schema",

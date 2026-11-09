@@ -12,6 +12,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+
+	cronlib "github.com/robfig/cron/v3"
 	"path/filepath"
 	"strings"
 )
@@ -55,6 +57,13 @@ type Target struct {
 	S3        *S3        `json:"s3,omitempty"`
 	WebDAV    *WebDAV    `json:"webdav,omitempty"`
 	Retention *Retention `json:"retention,omitempty"`
+	// Schedule 定时备份:cron 为标准 5 段表达式(分 时 日 月 周),由内核调度器触发
+	Schedule *Schedule `json:"schedule,omitempty"`
+}
+
+// Schedule 定时备份计划;Cron 为空字符串或 nil 表示不启用
+type Schedule struct {
+	Cron string `json:"cron"`
 }
 
 type PG struct {
@@ -152,6 +161,14 @@ func (cfg *Config) Normalize() error {
 		}
 		if target.Retention.KeepLast <= 0 && target.Retention.MaxAgeDays <= 0 {
 			target.Retention.KeepLast = DefaultKeepLast
+		}
+		if target.Schedule != nil {
+			target.Schedule.Cron = strings.TrimSpace(target.Schedule.Cron)
+			if target.Schedule.Cron == "" {
+				target.Schedule = nil
+			} else if _, err := cronlib.ParseStandard(target.Schedule.Cron); err != nil {
+				return fmt.Errorf("backup target [%s] has invalid cron [%s]: %w", target.ID, target.Schedule.Cron, err)
+			}
 		}
 		switch target.Type {
 		case TypePG:

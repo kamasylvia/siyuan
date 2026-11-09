@@ -32,6 +32,7 @@ import (
 	"github.com/siyuan-note/logging"
 	"github.com/siyuan-note/siyuan/kernel/api"
 	"github.com/siyuan-note/siyuan/kernel/av"
+	"github.com/siyuan-note/siyuan/kernel/backup"
 	"github.com/siyuan-note/siyuan/kernel/cmd"
 	"github.com/siyuan-note/siyuan/kernel/heif"
 	"github.com/siyuan-note/siyuan/kernel/mcp"
@@ -131,6 +132,9 @@ func Serve(fastMode bool, cookieKey string) {
 	confAISnapshot := model.Conf.LoadAI()
 
 	confSystemSnapshot := model.Conf.LoadSystem()
+
+	// 定时备份守护:cron 到期自动执行,写入归属由备份认领机制去重
+	go backup.StartScheduler(util.WorkspaceDir, filepath.Join(util.ConfDir, "backup.json"))
 
 	gin.SetMode(gin.ReleaseMode)
 	ginServer := gin.New()
