@@ -6,7 +6,7 @@
 ## 一、当前版本线
 
 - 上游线:upstream v3.8.10-alpha.7(客户端与容器严格版本匹配)
-- 最新已发布:**v3.8.10-alpha.7.13**(tag `c0d13fa2a9`,含 P1 还原索引重建 `a952cabaca` + switchLocal 修 `c8a50b2447`;Docker 镜像已出,NAS stack 37 已部署,boot 100%)
+- 最新已发布:**v3.8.10-alpha.7.14**(tag `59509a4b7e`:还原/备份运行中禁止删快照与清空目标——内核 deleteSnapshot/emptyTarget 双 guard 加 RestoreState,面板 busy 态连 Snapshots 按钮一起置灰;.14 双端已部署,release 资产齐。前版 .13 见 git log)
 - 本机客户端已装 `.13`(2026-11-09 本地构建,forkBuild + 内核哈希双指纹验证);release v3.8.10-alpha.7.13 已补 dmg + SHA256SUMS
 - build script 版本自检:`scripts/fork-mac-build.sh` 会比对 `kernel/util/working.go` 的 Ver 与二进制内嵌串,不一致直接失败
 
