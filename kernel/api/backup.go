@@ -470,7 +470,7 @@ func backupTargetStoreForAPI(cfg *backup.Config, id string) (backup.Store, error
 // deleteBackupSnapshot 删除目标上的单个快照,共享数据块按引用计数保留
 var deleteBackupSnapshot = contractHandler(apicontract.BackupDeleteSnapshot, func(c *gin.Context,
 	req apicontract.BackupDeleteSnapshotRequest) apicontract.Response[apicontract.BackupDeleteSnapshotData] {
-	if backup.RunState() != nil {
+	if backup.RunState() != nil || backup.RestoreState() != nil {
 		return apicontract.Failure[apicontract.BackupDeleteSnapshotData](-1, "a backup or restore is running")
 	}
 	cfg, err := loadBackupConfigForAPI()
@@ -493,7 +493,7 @@ var deleteBackupSnapshot = contractHandler(apicontract.BackupDeleteSnapshot, fun
 // emptyBackupTarget 清空目标上的全部快照与数据块,保留归属标记
 var emptyBackupTarget = contractHandler(apicontract.BackupEmptyTarget, func(c *gin.Context,
 	req apicontract.BackupEmptyTargetRequest) apicontract.Response[apicontract.BackupEmptyTargetData] {
-	if backup.RunState() != nil {
+	if backup.RunState() != nil || backup.RestoreState() != nil {
 		return apicontract.Failure[apicontract.BackupEmptyTargetData](-1, "a backup or restore is running")
 	}
 	cfg, err := loadBackupConfigForAPI()

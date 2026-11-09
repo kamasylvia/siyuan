@@ -382,15 +382,15 @@ const loadPanel = async () => {
     setBackupBusy(Boolean(run || restore));
 };
 
-// 备份或还原运行期间,顶部与行内的备份、还原、删除按钮全部禁用;
-// 快照管理、编辑、测试连接为只读或无害操作,保持可用
+// 备份或还原运行期间,顶部与行内的备份、还原、删除、快照管理按钮全部禁用:
+// 快照管理里的删除与清空会动到正在读写的存储;编辑、测试连接保持可用
 const setBackupBusy = (on: boolean): void => {
-    panelRoot?.querySelectorAll("#backupRun, #backupDelete").forEach(button => {
+    panelRoot?.querySelectorAll("#backupRun, #backupDelete, #backupRestore").forEach(button => {
         (button as HTMLButtonElement).disabled = on;
     });
     panelRoot?.querySelectorAll("#backupTargetList [data-action]").forEach(button => {
         const action = button.getAttribute("data-action");
-        if (action === "backup" || action === "restore" || action === "delete") {
+        if (action === "backup" || action === "restore" || action === "delete" || action === "snapshots") {
             (button as HTMLButtonElement).disabled = on;
         }
     });
