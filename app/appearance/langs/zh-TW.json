@@ -64,6 +64,8 @@
 	"backupMaxAgeDays": "最長保留天數",
 	"backupScheduleCron": "定時備份 (cron)",
 	"backupScheduleCronTip": "標準 5 段 cron 表達式，留空表示不啟用；例：0 2 * * * = 每天 02:00。由常駐內核（如 Docker 容器）執行。",
+	"backupEditBlockedSnapshots": "仍有 ${x} 個快照；請在快照管理中清空，或保持指向同一儲存",
+	"backupEditBlockedUnreachable": "原目標無法連線，不能確認它已清空",
 	"backupPath": "目錄",
 	"backupDSN": "DSN",
 	"backupSchema": "Schema",

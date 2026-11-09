@@ -2025,6 +2025,10 @@ var BackupRestore = define[BackupRestoreRequest, BackupRestoreData]("restoreBack
 // 指纹相同(同一存储的重复配置)只要有一个可连接且已清空,其余不可达配置一并放行。
 var BackupDeleteCheck = define[BackupDeleteCheckRequest, BackupDeleteCheckData]("deleteCheckBackup", "/api/backup/deleteCheck", AuthenticatedAccess|AdminAccess, JSONBody, ResponseOptions{}, "POST")
 
+// 编辑连接门禁:连接信息变化时比较新旧存储指纹,同一存储或原存储确认已清空
+// 才放行保存,防止更换存储后遗留孤儿快照。
+var BackupEditCheck = define[BackupEditCheckRequest, BackupEditCheckData]("editCheckBackup", "/api/backup/editCheck", AuthenticatedAccess|AdminAccess, JSONBody, ResponseOptions{}, "POST")
+
 // 快照管理:删除单个快照(引用计数保护共享数据块)与清空目标全部快照;
 // 两者都要求目标可连接,备份或还原进行中时拒绝执行。
 var BackupDeleteSnapshot = define[BackupDeleteSnapshotRequest, BackupDeleteSnapshotData]("deleteBackupSnapshot", "/api/backup/deleteSnapshot", AuthenticatedAccess|AdminAccess|WritableAccess, JSONBody, ResponseOptions{}, "POST")

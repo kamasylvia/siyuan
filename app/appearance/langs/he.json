@@ -64,6 +64,8 @@
 	"backupMaxAgeDays": "Max age (days)",
 	"backupScheduleCron": "Scheduled backup (cron)",
 	"backupScheduleCronTip": "Standard 5-field cron; leave empty to disable. Example: 0 2 * * * = daily at 02:00. Runs on the kernel that stays up, such as the Docker container.",
+	"backupEditBlockedSnapshots": "Still has ${x} snapshots; empty them in snapshot management or keep pointing at the same storage",
+	"backupEditBlockedUnreachable": "The original target is unreachable; cannot verify it is emptied",
 	"backupPath": "Directory",
 	"backupDSN": "DSN",
 	"backupSchema": "Schema",

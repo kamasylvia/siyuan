@@ -17864,6 +17864,52 @@
       ],
       "additionalProperties": false
     },
+    "BackupEditCheckData": {
+      "type": "object",
+      "properties": {
+        "allowed": {
+          "type": "boolean"
+        },
+        "oldSnapshots": {
+          "type": "integer"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "sameStorage": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "allowed",
+        "oldSnapshots",
+        "sameStorage"
+      ],
+      "additionalProperties": false
+    },
+    "BackupEditCheckRequestInput": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BackupTargetInput"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "target"
+      ],
+      "additionalProperties": false
+    },
     "BackupEmptyTargetData": {
       "type": "object",
       "properties": {
@@ -18493,6 +18539,30 @@
       ],
       "additionalProperties": false
     },
+    "BackupSchedule": {
+      "type": "object",
+      "properties": {
+        "cron": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "cron"
+      ],
+      "additionalProperties": false
+    },
+    "BackupScheduleInput": {
+      "type": "object",
+      "properties": {
+        "cron": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "cron"
+      ],
+      "additionalProperties": false
+    },
     "BackupSetConfigRequestInput": {
       "type": "object",
       "properties": {
@@ -18607,6 +18677,9 @@
         "s3": {
           "$ref": "#/$defs/BackupS3"
         },
+        "schedule": {
+          "$ref": "#/$defs/BackupSchedule"
+        },
         "type": {
           "type": "string"
         },
@@ -18657,6 +18730,16 @@
           "anyOf": [
             {
               "$ref": "#/$defs/BackupS3Input"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "schedule": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BackupScheduleInput"
             },
             {
               "type": "null"
@@ -145925,6 +146008,85 @@
               },
               "data": {
                 "$ref": "#/$defs/BackupDeleteSnapshotData"
+              },
+              "msg": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "msg",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  -1
+                ]
+              },
+              "data": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "closeTimeout": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "closeTimeout"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "msg": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "msg",
+              "data"
+            ],
+            "additionalProperties": true
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/backup/editCheck",
+      "handler": "editCheckBackup",
+      "authorization": [
+        "authenticated",
+        "admin"
+      ],
+      "body": "json",
+      "request": {
+        "$ref": "#/$defs/BackupEditCheckRequestInput"
+      },
+      "response": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  0
+                ]
+              },
+              "data": {
+                "$ref": "#/$defs/BackupEditCheckData"
               },
               "msg": {
                 "type": "string"

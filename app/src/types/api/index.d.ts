@@ -766,6 +766,10 @@ export type BackupDeleteSnapshotData = { "blobs": number; };
 
 export type BackupDeleteSnapshotRequestInput = { "snapshot": string; "target": string; };
 
+export type BackupEditCheckData = { "allowed": boolean; "oldSnapshots": number; "reason"?: string; "sameStorage": boolean; };
+
+export type BackupEditCheckRequestInput = { "id": string; "target": BackupTargetInput | null; };
+
 export type BackupEmptyTargetData = { "blobs": number; "snapshots": number; };
 
 export type BackupEmptyTargetRequestInput = { "target": string; };
@@ -816,15 +820,19 @@ export type BackupS3 = { "accessKey"?: string; "bucket": string; "endpoint": str
 
 export type BackupS3Input = { "accessKey"?: string; "bucket": string; "endpoint": string; "pathStyle"?: boolean; "region"?: string; "secretKey"?: string; "skipTlsVerify"?: boolean; "timeout"?: number; };
 
+export type BackupSchedule = { "cron": string; };
+
+export type BackupScheduleInput = { "cron": string; };
+
 export type BackupSetConfigRequestInput = { "config": BackupConfigInput | null; };
 
 export type BackupSnapshotSummary = { "createdAt": string; "encrypted": boolean; "files": number; "id": string; "roots": Array<string> | null; "totalBytes": number; };
 
 export type BackupState = { "targets": Record<string, BackupTargetState | null> | null; "updatedAt"?: string; };
 
-export type BackupTarget = { "enabled": boolean; "id": string; "name"?: string; "pg"?: BackupPG; "retention"?: BackupRetention; "s3"?: BackupS3; "type": string; "webdav"?: BackupWebDAV; };
+export type BackupTarget = { "enabled": boolean; "id": string; "name"?: string; "pg"?: BackupPG; "retention"?: BackupRetention; "s3"?: BackupS3; "schedule"?: BackupSchedule; "type": string; "webdav"?: BackupWebDAV; };
 
-export type BackupTargetInput = { "enabled": boolean; "id": string; "name"?: string; "pg"?: BackupPGInput | null; "retention"?: BackupRetentionInput | null; "s3"?: BackupS3Input | null; "type": string; "webdav"?: BackupWebDAVInput | null; };
+export type BackupTargetInput = { "enabled": boolean; "id": string; "name"?: string; "pg"?: BackupPGInput | null; "retention"?: BackupRetentionInput | null; "s3"?: BackupS3Input | null; "schedule"?: BackupScheduleInput | null; "type": string; "webdav"?: BackupWebDAVInput | null; };
 
 export type BackupTargetState = { "lastError"?: string; "lastOk": boolean; "lastRun"?: string; "lastSnapshot"?: string; "uploadedBlobs": number; "uploadedBytes": number; };
 
@@ -4616,6 +4624,17 @@ export interface APIPOSTRoutes {
         body: "json";
         /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
         authorization?: readonly ["authenticated","admin","writable"];
+    };
+    /**
+     * 编辑连接门禁:连接信息变化时比较新旧存储指纹,同一存储或原存储确认已清空
+     * 才放行保存,防止更换存储后遗留孤儿快照。
+     */
+    "/api/backup/editCheck": {
+        request: BackupEditCheckRequestInput;
+        response: { "code": 0; "data": BackupEditCheckData; "msg": string; } | { "code": -1; "data": { "closeTimeout": number; } | null; "msg": string; };
+        body: "json";
+        /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
+        authorization?: readonly ["authenticated","admin"];
     };
     "/api/backup/emptyTarget": {
         request: BackupEmptyTargetRequestInput;

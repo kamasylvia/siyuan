@@ -433,6 +433,25 @@ const saveInclude = async () => {
 const saveForm = async () => {
     const target = readForm();
     currentConfig.enabled = true;
+    // 编辑模式下连接信息变化时先过存储门禁:同一物理存储或原存储已清空才放行,
+    // 防止更换存储后把有快照的存储留在无人认领的状态
+    if (editingID) {
+        const original = currentConfig.targets.find(item => item.id === editingID);
+        const storageOf = (item: BackupTarget): string =>
+            JSON.stringify({type: item.type, pg: item.pg, s3: item.s3, webdav: item.webdav});
+        if (original && storageOf(original) !== storageOf(target)) {
+            const response = await fetchSyncPost("/api/backup/editCheck", {id: editingID, target});
+            const result = response.data as {allowed?: boolean; reason?: string; oldSnapshots?: number} | undefined;
+            if (response.code !== 0 || !result?.allowed) {
+                const note = result?.reason === "snapshots"
+                    ? text("backupEditBlockedSnapshots", "Still has ${x} snapshots; empty them in snapshot management or keep pointing at the same storage")
+                        .replace("${x}", String(result?.oldSnapshots ?? 0))
+                    : text("backupEditBlockedUnreachable", "The original target is unreachable; cannot verify it is emptied");
+                showMessage(note, 7000, "error");
+                return;
+            }
+        }
+    }
     const index = currentConfig.targets.findIndex(item => item.id === target.id);
     if (index >= 0) {
         currentConfig.targets[index] = target;

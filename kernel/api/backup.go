@@ -132,69 +132,77 @@ func unmaskBackupConfig(cfg *apicontract.BackupConfig, old *backup.Config) *back
 		}
 	}
 	for _, item := range cfg.Targets {
-		target := &backup.Target{ID: item.ID, Name: item.Name, Type: item.Type, Enabled: item.Enabled}
-		if item.Retention != nil {
-			target.Retention = &backup.Retention{KeepLast: item.Retention.KeepLast, MaxAgeDays: item.Retention.MaxAgeDays}
-		}
-		previous := oldByID[item.ID]
-		if item.PG != nil {
-			dsn := item.PG.DSN
-			if strings.Contains(dsn, backupMasked) {
-				if previous != nil && previous.PG != nil {
-					dsn = previous.PG.DSN
-				} else {
-					dsn = ""
-				}
-			}
-			password := item.PG.Password
-			if password == "" || password == backupMasked {
-				if previous != nil && previous.PG != nil {
-					password = previous.PG.Password
-				} else if password == backupMasked {
-					password = ""
-				}
-			}
-			if dsn == "" && item.PG.Host == "" && previous != nil && previous.PG != nil && previous.PG.DSN != "" {
-				dsn = previous.PG.DSN
-			}
-			target.PG = &backup.PG{
-				DSN: dsn, Host: item.PG.Host, Port: item.PG.Port, User: item.PG.User,
-				Password: password, Database: item.PG.Database, SSLMode: item.PG.SSLMode,
-				Schema: item.PG.Schema, Timeout: item.PG.Timeout, ConcurrentReqs: item.PG.ConcurrentReqs,
-			}
-		}
-		if item.S3 != nil {
-			secret := item.S3.SecretKey
-			if secret == "" || secret == backupMasked {
-				if previous != nil && previous.S3 != nil {
-					secret = previous.S3.SecretKey
-				} else if secret == backupMasked {
-					secret = ""
-				}
-			}
-			target.S3 = &backup.S3{
-				Endpoint: item.S3.Endpoint, AccessKey: item.S3.AccessKey, SecretKey: secret,
-				Bucket: item.S3.Bucket, Region: item.S3.Region, PathStyle: item.S3.PathStyle,
-				SkipTLSVerify: item.S3.SkipTLSVerify, Timeout: item.S3.Timeout,
-			}
-		}
-		if item.WebDAV != nil {
-			password := item.WebDAV.Password
-			if password == "" || password == backupMasked {
-				if previous != nil && previous.WebDAV != nil {
-					password = previous.WebDAV.Password
-				} else if password == backupMasked {
-					password = ""
-				}
-			}
-			target.WebDAV = &backup.WebDAV{
-				Endpoint: item.WebDAV.Endpoint, Username: item.WebDAV.Username, Password: password,
-				SkipTLSVerify: item.WebDAV.SkipTLSVerify, Timeout: item.WebDAV.Timeout,
-			}
-		}
-		out.Targets = append(out.Targets, target)
+		out.Targets = append(out.Targets, backupTargetFromAPI(item, oldByID[item.ID]))
 	}
 	return out
+}
+
+// backupTargetFromAPI 把 API 提交的目标配置转换为内核目标;掩码密钥用 previous
+// 中保存的真实值回填
+func backupTargetFromAPI(item *apicontract.BackupTarget, previous *backup.Target) *backup.Target {
+	target := &backup.Target{ID: item.ID, Name: item.Name, Type: item.Type, Enabled: item.Enabled}
+	if item.Retention != nil {
+		target.Retention = &backup.Retention{KeepLast: item.Retention.KeepLast, MaxAgeDays: item.Retention.MaxAgeDays}
+	}
+	if item.Schedule != nil {
+		target.Schedule = &backup.Schedule{Cron: item.Schedule.Cron}
+	}
+	if item.PG != nil {
+		dsn := item.PG.DSN
+		if strings.Contains(dsn, backupMasked) {
+			if previous != nil && previous.PG != nil {
+				dsn = previous.PG.DSN
+			} else {
+				dsn = ""
+			}
+		}
+		password := item.PG.Password
+		if password == "" || password == backupMasked {
+			if previous != nil && previous.PG != nil {
+				password = previous.PG.Password
+			} else if password == backupMasked {
+				password = ""
+			}
+		}
+		if dsn == "" && item.PG.Host == "" && previous != nil && previous.PG != nil && previous.PG.DSN != "" {
+			dsn = previous.PG.DSN
+		}
+		target.PG = &backup.PG{
+			DSN: dsn, Host: item.PG.Host, Port: item.PG.Port, User: item.PG.User,
+			Password: password, Database: item.PG.Database, SSLMode: item.PG.SSLMode,
+			Schema: item.PG.Schema, Timeout: item.PG.Timeout, ConcurrentReqs: item.PG.ConcurrentReqs,
+		}
+	}
+	if item.S3 != nil {
+		secret := item.S3.SecretKey
+		if secret == "" || secret == backupMasked {
+			if previous != nil && previous.S3 != nil {
+				secret = previous.S3.SecretKey
+			} else if secret == backupMasked {
+				secret = ""
+			}
+		}
+		target.S3 = &backup.S3{
+			Endpoint: item.S3.Endpoint, AccessKey: item.S3.AccessKey, SecretKey: secret,
+			Bucket: item.S3.Bucket, Region: item.S3.Region, PathStyle: item.S3.PathStyle,
+			SkipTLSVerify: item.S3.SkipTLSVerify, Timeout: item.S3.Timeout,
+		}
+	}
+	if item.WebDAV != nil {
+		password := item.WebDAV.Password
+		if password == "" || password == backupMasked {
+			if previous != nil && previous.WebDAV != nil {
+				password = previous.WebDAV.Password
+			} else if password == backupMasked {
+				password = ""
+			}
+		}
+		target.WebDAV = &backup.WebDAV{
+			Endpoint: item.WebDAV.Endpoint, Username: item.WebDAV.Username, Password: password,
+			SkipTLSVerify: item.WebDAV.SkipTLSVerify, Timeout: item.WebDAV.Timeout,
+		}
+	}
+	return target
 }
 
 func backupStateForAPI() *apicontract.BackupState {
@@ -377,22 +385,7 @@ var deleteCheckBackup = contractHandler(apicontract.BackupDeleteCheck, func(c *g
 	}
 	checks := make([]backup.TargetCheck, 0, len(req.Targets))
 	for _, id := range req.Targets {
-		check := backup.TargetCheck{Target: id}
-		if targetConfig, targetErr := backupTargetByID(cfg, id); targetErr == nil {
-			if store, storeErr := backup.NewTarget(unmaskBackupTarget(cfg, targetConfig)); storeErr == nil {
-				ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
-				manifests, listErr := backup.ListSnapshots(ctx, store)
-				if listErr == nil {
-					check.Reachable = true
-					check.Snapshots = len(manifests)
-					if fingerprint, fingerprintErr := store.Fingerprint(ctx); fingerprintErr == nil {
-						check.Fingerprint = fingerprint
-					}
-				}
-				cancel()
-			}
-		}
-		checks = append(checks, check)
+		checks = append(checks, probeBackupTargetCheck(c.Request.Context(), cfg, id))
 	}
 	policy := backup.ApplyDeletionPolicy(checks)
 	out := apicontract.BackupDeleteCheckData{Results: make([]apicontract.BackupDeleteCheckItem, 0, len(policy))}
@@ -403,6 +396,65 @@ var deleteCheckBackup = contractHandler(apicontract.BackupDeleteCheck, func(c *g
 		})
 	}
 	return apicontract.Success(out)
+})
+
+// probeBackupTargetCheck 连接目标并列出快照,返回连通/快照数/物理指纹;连接
+// 或列举失败即视为不可达
+func probeBackupTargetCheck(ctx context.Context, cfg *backup.Config, id string) backup.TargetCheck {
+	check := backup.TargetCheck{Target: id}
+	targetConfig, err := backupTargetByID(cfg, id)
+	if err != nil {
+		return check
+	}
+	store, err := backup.NewTarget(unmaskBackupTarget(cfg, targetConfig))
+	if err != nil {
+		return check
+	}
+	manifests, err := backup.ListSnapshots(ctx, store)
+	if err != nil {
+		return check
+	}
+	check.Reachable = true
+	check.Snapshots = len(manifests)
+	if fingerprint, fingerprintErr := store.Fingerprint(ctx); fingerprintErr == nil {
+		check.Fingerprint = fingerprint
+	}
+	return check
+}
+
+// editCheckBackup 编辑连接门禁:连接信息变化时比较新旧存储指纹,同一存储或
+// 原存储确认已清空才放行保存
+var editCheckBackup = contractHandler(apicontract.BackupEditCheck, func(c *gin.Context,
+	req apicontract.BackupEditCheckRequest) apicontract.Response[apicontract.BackupEditCheckData] {
+	if strings.TrimSpace(req.ID) == "" || req.Target == nil {
+		return apicontract.Failure[apicontract.BackupEditCheckData](-1, "backup target id and edited target are required")
+	}
+	cfg, err := loadBackupConfigForAPI()
+	if err != nil {
+		return apicontract.Failure[apicontract.BackupEditCheckData](-1, err.Error())
+	}
+	oldTarget, err := backupTargetByID(cfg, req.ID)
+	if err != nil {
+		return apicontract.Failure[apicontract.BackupEditCheckData](-1, err.Error())
+	}
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 90*time.Second)
+	defer cancel()
+	oldCheck := probeBackupTargetCheck(ctx, cfg, req.ID)
+	newCheck := backup.TargetCheck{Target: req.ID}
+	if newStore, storeErr := backup.NewTarget(backupTargetFromAPI(req.Target, oldTarget)); storeErr == nil {
+		if manifests, listErr := backup.ListSnapshots(ctx, newStore); listErr == nil {
+			newCheck.Reachable = true
+			newCheck.Snapshots = len(manifests)
+			if fingerprint, fingerprintErr := newStore.Fingerprint(ctx); fingerprintErr == nil {
+				newCheck.Fingerprint = fingerprint
+			}
+		}
+	}
+	allowed, reason := backup.ApplyEditPolicy(oldCheck, newCheck)
+	sameStorage := oldCheck.Fingerprint != "" && oldCheck.Fingerprint == newCheck.Fingerprint
+	return apicontract.Success(apicontract.BackupEditCheckData{
+		Allowed: allowed, Reason: reason, OldSnapshots: oldCheck.Snapshots, SameStorage: sameStorage,
+	})
 })
 
 // backupTargetStoreForAPI 加载配置并构建目标存储;任一步失败返回错误

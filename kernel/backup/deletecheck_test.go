@@ -124,3 +124,57 @@ func TestLocalTargetFingerprintStable(t *testing.T) {
 		t.Fatalf("fingerprints for the same storage differ: %q vs %q", first, second)
 	}
 }
+
+func TestApplyEditPolicy(t *testing.T) {
+	const storage = "pg/7234569911919294541/appdb/public"
+	const other = "s3/bucket-b"
+	cases := []struct {
+		name    string
+		old     TargetCheck
+		new     TargetCheck
+		allowed bool
+		reason  string
+	}{
+		{
+			name:    "same storage via a different connection is allowed",
+			old:     TargetCheck{Target: "by-domain", Reachable: true, Snapshots: 4, Fingerprint: storage},
+			new:     TargetCheck{Target: "by-ip", Reachable: true, Snapshots: 4, Fingerprint: storage},
+			allowed: true,
+		},
+		{
+			name:    "emptied original storage allows switching to a different one",
+			old:     TargetCheck{Target: "old", Reachable: true, Snapshots: 0, Fingerprint: storage},
+			new:     TargetCheck{Target: "new", Reachable: true, Snapshots: 0, Fingerprint: other},
+			allowed: true,
+		},
+		{
+			name:    "original storage with snapshots blocks the switch",
+			old:     TargetCheck{Target: "old", Reachable: true, Snapshots: 6, Fingerprint: storage},
+			new:     TargetCheck{Target: "new", Reachable: true, Snapshots: 0, Fingerprint: other},
+			allowed: false, reason: "snapshots",
+		},
+		{
+			name:    "unreachable original cannot prove it is emptied",
+			old:     TargetCheck{Target: "old", Reachable: false, Fingerprint: storage},
+			new:     TargetCheck{Target: "new", Reachable: true, Snapshots: 0, Fingerprint: other},
+			allowed: false, reason: "unreachable",
+		},
+		{
+			name:    "unreachable new config with an emptied original still saves",
+			old:     TargetCheck{Target: "old", Reachable: true, Snapshots: 0, Fingerprint: storage},
+			new:     TargetCheck{Target: "new", Reachable: false},
+			allowed: true,
+		},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			allowed, reason := ApplyEditPolicy(testCase.old, testCase.new)
+			if allowed != testCase.allowed {
+				t.Errorf("allowed = %v, want %v", allowed, testCase.allowed)
+			}
+			if reason != testCase.reason {
+				t.Errorf("reason = %q, want %q", reason, testCase.reason)
+			}
+		})
+	}
+}

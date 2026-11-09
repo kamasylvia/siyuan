@@ -57,6 +57,13 @@ type BackupTarget struct {
 	S3        *BackupS3        `json:"s3,omitempty" api:"optional,nullable"`
 	WebDAV    *BackupWebDAV    `json:"webdav,omitempty" api:"optional,nullable"`
 	Retention *BackupRetention `json:"retention,omitempty" api:"optional,nullable"`
+	// Schedule 定时备份 cron 计划;nil 或空表达式表示不启用
+	Schedule *BackupSchedule `json:"schedule,omitempty" api:"optional,nullable"`
+}
+
+// BackupSchedule 定时备份计划
+type BackupSchedule struct {
+	Cron string `json:"cron"`
 }
 
 type BackupEncryption struct {
@@ -234,6 +241,22 @@ type BackupDeleteCheckItem struct {
 
 type BackupDeleteCheckData struct {
 	Results []BackupDeleteCheckItem `json:"results"`
+}
+
+type BackupEditCheckRequest struct {
+	// ID 是被编辑的目标配置 ID;Target 是编辑后的完整目标配置(掩码密钥可用)
+	ID     string        `json:"id"`
+	Target *BackupTarget `json:"target"`
+}
+
+type BackupEditCheckData struct {
+	// Allowed 为 true 表示允许保存编辑后的连接
+	Allowed bool `json:"allowed"`
+	// Reason 为拒绝原因: snapshots=原目标仍有快照, unreachable=原目标不可达且无法证明已清空
+	Reason string `json:"reason,omitempty"`
+	// OldSnapshots 是原目标上的快照数量,不可达时为 0
+	OldSnapshots int  `json:"oldSnapshots"`
+	SameStorage  bool `json:"sameStorage"`
 }
 
 type BackupDeleteSnapshotRequest struct {

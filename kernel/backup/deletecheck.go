@@ -51,3 +51,20 @@ func ApplyDeletionPolicy(checks []TargetCheck) []DeleteCheckResult {
 	}
 	return results
 }
+
+// ApplyEditPolicy 编辑连接门禁:同一物理存储(指纹一致,如 IP 与域名两种配置)
+// 或原存储确认已清空时放行;原目标仍有快照或不可达(无法证明已清空)时拒绝,
+// 防止更换存储后把有快照的存储留在无人认领的状态
+func ApplyEditPolicy(oldCheck, newCheck TargetCheck) (bool, string) {
+	if oldCheck.Reachable && newCheck.Reachable &&
+		oldCheck.Fingerprint != "" && oldCheck.Fingerprint == newCheck.Fingerprint {
+		return true, ""
+	}
+	if oldCheck.Reachable && oldCheck.Snapshots == 0 {
+		return true, ""
+	}
+	if oldCheck.Reachable {
+		return false, "snapshots"
+	}
+	return false, "unreachable"
+}
