@@ -6,7 +6,8 @@
 ## 一、当前版本线
 
 - 上游线:upstream v3.8.10 stable(已合并,fork 跟随上游 stable 纪元)
-- 最新已发布:**v3.8.10.2**(tag `96fb0edbd6`;含命名空间作用域 + PG 目标移除 + 整行灰 + 删除结果弹窗;Docker success,双端已部署 — NAS running v3.8.10.2 / 客户端已装,release 资产齐)
+- 最新已发布:**v3.8.10.3**(tag `1ae2743bea`;命名空间改内核自动分配 ULID——用户不再自定义/不可编辑的困惑消除,面板只读展示已分配值;分配一次后保持稳定,存量非法值仍拒;22 语言文案同步。双端已部署,release 资产齐)
+- 前版 **v3.8.10.2**(tag `96fb0edbd6`):命名空间作用域 + PG 目标移除 + 整行灰 + 删除结果弹窗
 - 发版实测:2026-11-10 本机全量验证(go test backup+apicontract 绿、lint 绿、契约 785 pairs 绿)
 - 设计文档:**issue #15「Backup subsystem: design, constraints and behavior」**——备份子系统全部
   设计与约束的权威记录,后续开发先读它
