@@ -5,9 +5,14 @@
 
 ## 一、当前版本线
 
-- 上游线:upstream v3.8.10-alpha.7(客户端与容器严格版本匹配)
-- 最新已发布:**v3.8.10-alpha.7.19**(tag `e78a747596`:快照管理行「导出 zip」补接线 + i18n;
-  Docker 5m43s,双端已部署 alpha.7.19,release 资产齐;.16/.17/.18 见 git log 与 release 列表)
+- 上游线:upstream v3.8.10 stable(已合并,fork 跟随上游 stable 纪元)
+- 最新已发布:**v3.8.10.1**(tag `b25fa83939..` 移签至 `baadd5db51` 依赖修复;Docker 10m24s,
+  双端已部署,release 资产齐;内容 = alpha.7.x 线全部功能 + 保存 zip 到本地 + 上游 v3.8.10 stable 合并)
+- 设计文档:**issue #15「Backup subsystem: design, constraints and behavior」**——备份子系统全部
+  设计与约束的权威记录,后续开发先读它
+- 其余功能 issue:#16 远程内核连接增强(设计与行为)、#17 查询嵌入渲染模式(raw SQL/最近浏览)、
+  #18 复制可读路径含笔记本名;#13 评论区有离线子系统 as-built 补记
+- 本机客户端已装 v3.8.10.1,远程模式连接正常
 - 设计文档:**issue #15「Backup subsystem: design, constraints and behavior」**——备份子系统全部
   设计与约束的权威记录,后续开发先读它
 - 其余功能 issue:#16 远程内核连接增强(设计与行为)、#17 查询嵌入渲染模式(raw SQL/最近浏览)、
