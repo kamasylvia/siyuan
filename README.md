@@ -15,15 +15,18 @@ This repository is a personal fork of [siyuan-note/siyuan](https://github.com/si
 
 ## Differences from upstream
 
-Based on upstream v3.8.8 stable:
+Based on upstream v3.8.10 stable:
 
+- **Backup subsystem** — multi-target backups (PostgreSQL, S3, WebDAV) with content-addressed, deduplicated snapshots, snapshot management (per-snapshot delete with reference-counted blob cleanup, clear-all, export zip), deletion and edit gates that prevent orphan snapshots, per-target cron scheduling, an offline "Save zip to local" exit, and restore with automatic data-index rebuild
+- **Maintenance read-only lock** — while a backup or restore runs, workspace writes are rejected kernel-side and editors flip to read-only until the lock releases
+- **Remote kernel connection enhancements** — connection manager with history and per-address trust, plain HTTP remote kernels and MCP OAuth over plain HTTP, auto-reconnect to the last remote workspace on plain launch, a switch-to-local-workspace exit, and remote exports saved through a native dialog
+- **Offline read-only for remote workspaces** — browsed documents stay readable offline (document cache, tree cache with graying, external-image caching, a cache manager, plugin resilience with auto-snooze and offline deferral)
 - **Query embed block table mode** — query embed blocks can render as a table with index, file name, and directory columns, and support raw SQL and recent-viewed render modes
-- **Document tree pagination** — pager controls with first and last page buttons
 - **Inline PDF preview** — PDF assets linked in documents preview inline via pdf.js
-- **Plain HTTP remote kernels** — connections to plain HTTP remote kernels and MCP OAuth endpoints are allowed
+- **Copy readable path with notebook name** — the copied readable path includes the notebook name
 - **Fork build pipeline** — every `v*` tag builds an unsigned (ad-hoc) arm64 macOS DMG through GitHub Actions and publishes multi-arch Docker images to GHCR
 
-Everything else matches upstream; the fork follows upstream stable releases.
+Everything else matches upstream; the fork follows upstream stable releases. The backup subsystem design, constraints and behavior are documented in issue #15; the remote kernel connection enhancements in issue #16.
 
 ## Installation
 
