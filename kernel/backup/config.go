@@ -12,14 +12,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
+	"regexp"
+	"slices"
+	"strings"
 
 	cronlib "github.com/robfig/cron/v3"
-	"path/filepath"
-	"strings"
 )
 
 const (
-	TypePG     = "pg"
 	TypeS3     = "s3"
 	TypeWebDAV = "webdav"
 
@@ -48,37 +49,28 @@ type Include struct {
 	LocalStorage bool `json:"localStorage"` // data/storage/local.json (UI/plugin runtime state)
 }
 
+// namespacePattern 限定命名空间字符集:字母/数字开头,字母数字/-/_,最长 64;
+// 禁止 "/" 与 "..",防止作用域键越界或与其它命名空间串拢
+var namespacePattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$`)
+
 type Target struct {
 	ID        string     `json:"id"`
 	Name      string     `json:"name"`
 	Type      string     `json:"type"`
 	Enabled   bool       `json:"enabled"`
-	PG        *PG        `json:"pg,omitempty"`
 	S3        *S3        `json:"s3,omitempty"`
 	WebDAV    *WebDAV    `json:"webdav,omitempty"`
 	Retention *Retention `json:"retention,omitempty"`
 	// Schedule 定时备份:cron 为标准 5 段表达式(分 时 日 月 周),由内核调度器触发
 	Schedule *Schedule `json:"schedule,omitempty"`
+	// Namespace 多实例共用同一存储时的作用域:各实例用不同命名空间隔离各自的
+	// 快照谱系与认领标记;空字符串 = 默认作用域(兼容存量快照)。创建后不可修改
+	Namespace string `json:"namespace,omitempty"`
 }
 
 // Schedule 定时备份计划;Cron 为空字符串或 nil 表示不启用
 type Schedule struct {
 	Cron string `json:"cron"`
-}
-
-type PG struct {
-	// DSN is a legacy/expert connection string. When set it wins over the
-	// structured fields below.
-	DSN            string `json:"dsn,omitempty"`
-	Host           string `json:"host,omitempty"`
-	Port           int    `json:"port,omitempty"`
-	User           string `json:"user,omitempty"`
-	Password       string `json:"password,omitempty"`
-	Database       string `json:"database,omitempty"`
-	SSLMode        string `json:"sslMode,omitempty"`
-	Schema         string `json:"schema,omitempty"`
-	Timeout        int    `json:"timeout,omitempty"`
-	ConcurrentReqs int    `json:"concurrentReqs,omitempty"`
 }
 
 type S3 struct {
@@ -139,6 +131,9 @@ func (cfg *Config) Normalize() error {
 	if cfg.Encryption != nil && cfg.Encryption.Enabled && strings.TrimSpace(cfg.Encryption.Passphrase) == "" {
 		return fmt.Errorf("backup encryption is enabled but the passphrase is empty")
 	}
+	// 迁移:PG 备份目标已移除,加载时直接丢弃存量 pg 目标(PG 库数据不动),
+	// 避免旧配置在无 pg 支持的构建上加载失败
+	cfg.Targets = slices.DeleteFunc(cfg.Targets, func(t *Target) bool { return t != nil && t.Type == "pg" })
 	seen := map[string]bool{}
 	identities := map[string]string{}
 	for i, target := range cfg.Targets {
@@ -171,27 +166,13 @@ func (cfg *Config) Normalize() error {
 				return fmt.Errorf("backup target [%s] has invalid cron [%s]: %w", target.ID, target.Schedule.Cron, err)
 			}
 		}
+		if target.Namespace != "" {
+			target.Namespace = strings.TrimSpace(target.Namespace)
+			if !namespacePattern.MatchString(target.Namespace) {
+				return fmt.Errorf("backup target [%s] has invalid namespace [%s]: use letters, digits, dash or underscore (max 64)", target.ID, target.Namespace)
+			}
+		}
 		switch target.Type {
-		case TypePG:
-			if target.PG == nil {
-				return fmt.Errorf("backup target [%s] requires pg settings", target.ID)
-			}
-			if strings.TrimSpace(target.PG.DSN) == "" &&
-				(strings.TrimSpace(target.PG.Host) == "" || strings.TrimSpace(target.PG.Database) == "") {
-				return fmt.Errorf("backup target [%s] requires pg.host and pg.database", target.ID)
-			}
-			if target.PG.Port == 0 {
-				target.PG.Port = 5432
-			}
-			if target.PG.SSLMode == "" {
-				target.PG.SSLMode = "disable"
-			}
-			if target.PG.Schema == "" {
-				target.PG.Schema = "public"
-			}
-			if !validIdentifier(target.PG.Schema) {
-				return fmt.Errorf("backup target [%s] has invalid pg.schema [%s]", target.ID, target.PG.Schema)
-			}
 		case TypeS3:
 			if target.S3 == nil || target.S3.Endpoint == "" || target.S3.Bucket == "" {
 				return fmt.Errorf("backup target [%s] requires s3.endpoint and s3.bucket", target.ID)
@@ -226,15 +207,6 @@ func storageIdentity(target *Target) (string, error) {
 		return value
 	}
 	switch target.Type {
-	case TypePG:
-		if strings.TrimSpace(target.PG.DSN) != "" {
-			return "pg|dsn|" + strings.TrimSpace(target.PG.DSN), nil
-		}
-		return fmt.Sprintf("pg|%s|%d|%s|%s",
-			strings.ToLower(strings.TrimSpace(target.PG.Host)),
-			target.PG.Port,
-			strings.ToLower(strings.TrimSpace(target.PG.Database)),
-			strings.ToLower(strings.TrimSpace(target.PG.Schema))), nil
 	case TypeS3:
 		return "s3|" + normalizeEndpoint(target.S3.Endpoint) + "|" + strings.ToLower(strings.TrimSpace(target.S3.Bucket)), nil
 	case TypeWebDAV:

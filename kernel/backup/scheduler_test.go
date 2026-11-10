@@ -14,11 +14,11 @@ import (
 func TestNormalizeScheduleCron(t *testing.T) {
 	cfg := NewConfig()
 	cfg.Include = Include{Data: true, Conf: true}
-	pg := &PG{Host: "db", Database: "app"}
+	s3 := &S3{Endpoint: "https://s3.example.com", Bucket: "backup"}
 	cfg.Targets = []*Target{
-		{ID: "ok", Type: TypePG, Enabled: true, PG: pg, Schedule: &Schedule{Cron: "0 2 * * *"}},
-		{ID: "blank", Type: TypePG, Enabled: true, PG: pg, Schedule: &Schedule{Cron: "   "}},
-		{ID: "bad", Type: TypePG, Enabled: true, PG: pg, Schedule: &Schedule{Cron: "not-a-cron"}},
+		{ID: "ok", Type: TypeS3, Enabled: true, S3: s3, Schedule: &Schedule{Cron: "0 2 * * *"}},
+		{ID: "blank", Type: TypeS3, Enabled: true, S3: s3, Schedule: &Schedule{Cron: "   "}},
+		{ID: "bad", Type: TypeS3, Enabled: true, S3: s3, Schedule: &Schedule{Cron: "not-a-cron"}},
 	}
 	if err := cfg.Normalize(); err == nil {
 		t.Fatal("expected an error for an invalid cron expression")

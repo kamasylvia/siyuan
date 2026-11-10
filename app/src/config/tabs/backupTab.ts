@@ -4,10 +4,9 @@ import {showMessage} from "../../dialog/message";
 import {escapeHtmlTextAndAttr} from "../../util/escape";
 import type {SettingTabBuilder} from "../setting/builder";
 
-type BackupType = "pg" | "s3" | "webdav";
+type BackupType = "s3" | "webdav";
 
 type Retention = {keepLast?: number; maxAgeDays?: number};
-type PGConfig = {host: string; port?: number; user?: string; password?: string; database: string; sslMode?: string; schema?: string; dsn?: string};
 type S3Config = {endpoint: string; accessKey?: string; secretKey?: string; bucket: string; region?: string;
     pathStyle?: boolean; skipTlsVerify?: boolean; timeout?: number};
 type WebDAVConfig = {endpoint: string; username?: string; password?: string; skipTlsVerify?: boolean; timeout?: number};
@@ -17,11 +16,12 @@ type BackupTarget = {
     name?: string;
     type: BackupType;
     enabled: boolean;
-    pg?: PGConfig;
     s3?: S3Config;
     webdav?: WebDAVConfig;
     retention?: Retention;
     schedule?: {cron: string};
+    // namespace 多实例共用同一存储时的作用域;创建后不可修改(编辑表单只读展示)
+    namespace?: string;
 };
 
 type BackupConfig = {
@@ -54,7 +54,6 @@ const text = (key: string, fallback: string): string =>
 
 const typeLabel = (type: BackupType): string => {
     switch (type) {
-        case "pg": return "PostgreSQL";
         case "s3": return "S3";
         case "webdav": return "WebDAV";
     }
@@ -66,7 +65,7 @@ const newTargetID = (): string =>
 const defaultTarget = (): BackupTarget => ({
     id: "",
     name: "",
-    type: "pg",
+    type: "s3",
     enabled: true,
     retention: {keepLast: 30, maxAgeDays: 90},
 });
@@ -87,7 +86,7 @@ let draft: BackupTarget = defaultTarget();
 let testedConnectionKey: string | null = null;
 
 const connectionKey = (target: BackupTarget): string =>
-    JSON.stringify({type: target.type, pg: target.pg, s3: target.s3, webdav: target.webdav});
+    JSON.stringify({type: target.type, s3: target.s3, webdav: target.webdav});
 let panelRoot: HTMLElement | null = null;
 
 const field = (id: string, label: string, value: string, type = "text", attrs = ""): string =>
@@ -106,25 +105,13 @@ const selectType = (value: BackupType): string =>
     `<label class="fn__flex b3-label" style="align-items:center;margin:0 0 6px 0">
         <span class="fn__flex-1">${escapeHtmlTextAndAttr(text("backupType", "Type"))}</span>
         <select id="backupTargetType" class="b3-select fn__flex-1">
-            ${(["pg", "s3", "webdav"] as BackupType[]).map(type =>
+            ${(["s3", "webdav"] as BackupType[]).map(type =>
                 `<option value="${type}" ${type === value ? "selected" : ""}>${typeLabel(type)}</option>`).join("")}
         </select>
     </label>`;
 
 const typeFields = (target: BackupTarget): string => {
     switch (target.type) {
-        case "pg":
-            return field("backupPGHost", "Host", target.pg?.host || "") +
-                field("backupPGPort", "Port", String(target.pg?.port || 5432), "number") +
-                field("backupPGUser", text("backupUsername", "Username"), target.pg?.user || "") +
-                field("backupPGPassword", text("backupPassword", "Password"), target.pg?.password || "", "password") +
-                field("backupPGDatabase", "Database", target.pg?.database || "") +
-                `<label class="fn__flex b3-label" style="align-items:center;margin:0 0 6px 0">
-                    <span class="fn__flex-1">${escapeHtmlTextAndAttr(text("backupSSLMode", "SSL mode"))}</span>
-                    <select id="backupPGSSLMode" class="b3-select fn__flex-1">
-                        ${["disable", "prefer", "require"].map(mode => `<option value="${mode}" ${(target.pg?.sslMode || "disable") === mode ? "selected" : ""}>${mode}</option>`).join("")}
-                    </select>
-                </label>`;
         case "s3":
             return field("backupS3Endpoint", text("backupEndpoint", "Endpoint"), target.s3?.endpoint || "") +
                 field("backupS3AccessKey", text("backupAccessKey", "Access key"), target.s3?.accessKey || "") +
@@ -174,12 +161,15 @@ const render = () => {
         <div class="b3-label__text" id="backupFormTitle"></div>
         <div style="margin-top:8px">
             ${field("backupTargetNote", text("backupTargetNote", "Note (optional)"), "")}
-            ${selectType("pg")}
+            ${selectType("s3")}
             ${field("backupKeepLast", text("backupKeepLast", "Keep last"), "30", "number")}
             ${field("backupMaxAgeDays", text("backupMaxAgeDays", "Max age (days)"), "90", "number", 'placeholder="0 = unlimited"')}
             ${field("backupScheduleCron", text("backupScheduleCron", "Scheduled backup (cron)"), "", "text", 'placeholder="0 2 * * *"')}
             <div class="ft__on-surface" style="margin:-4px 0 6px;font-size:12px">${escapeHtmlTextAndAttr(text("backupScheduleCronTip",
                 "Standard 5-field cron; leave empty to disable. Example: 0 2 * * * = daily at 02:00. Runs on the kernel that stays up, such as the Docker container."))}</div>
+            ${field("backupNamespace", text("backupNamespace", "Namespace"), "", "text", 'placeholder="e.g. nas-a"')}
+            <div class="ft__on-surface" style="margin:-4px 0 6px;font-size:12px">${escapeHtmlTextAndAttr(text("backupNamespaceTip",
+                "Optional. When several instances share one storage, give each a distinct namespace so their snapshots and ownership stay isolated. Leave empty for the default scope; cannot be changed after creation."))}</div>
             <div id="backupTypeFields"></div>
             <div class="fn__flex" style="gap:8px;margin-top:8px">
                 <button class="b3-button b3-button--outline" id="backupSave">${escapeHtmlTextAndAttr(window.siyuan.languages.save)}</button>
@@ -198,8 +188,6 @@ const targetLabel = (target: BackupTarget): string => {
         return target.name;
     }
     switch (target.type) {
-        case "pg":
-            return `PostgreSQL · ${target.pg?.host || ""}/${target.pg?.database || ""}`;
         case "s3":
             return `S3 · ${target.s3?.bucket || ""}`;
         case "webdav":
@@ -276,10 +264,8 @@ const bind = () => {
     });
     panelRoot.querySelector("#backupTargetType")?.addEventListener("change", (event) => {
         draft.type = (event.target as HTMLSelectElement).value as BackupType;
-        draft.pg = undefined;
         draft.s3 = undefined;
         draft.webdav = undefined;
-        if (draft.type === "pg") draft.pg = {host: "", port: 5432, user: "", password: "", database: "", sslMode: "disable"};
         if (draft.type === "s3") draft.s3 = {endpoint: "", bucket: "", region: "", pathStyle: true, timeout: 60};
         if (draft.type === "webdav") draft.webdav = {endpoint: "", username: "", password: "", timeout: 60};
         const container = panelRoot?.querySelector("#backupTypeFields");
@@ -341,6 +327,12 @@ const openForm = (target: BackupTarget) => {
     (panelRoot?.querySelector("#backupKeepLast") as HTMLInputElement).value = String(target.retention?.keepLast ?? 30);
     (panelRoot?.querySelector("#backupMaxAgeDays") as HTMLInputElement).value = String(target.retention?.maxAgeDays ?? 90);
     (panelRoot?.querySelector("#backupScheduleCron") as HTMLInputElement).value = target.schedule?.cron || "";
+    const namespaceInput = panelRoot?.querySelector("#backupNamespace") as HTMLInputElement | null;
+    if (namespaceInput) {
+        namespaceInput.value = target.namespace || "";
+        // 命名空间决定存储作用域,创建后修改会让既有快照失联,因此编辑态只读
+        namespaceInput.disabled = Boolean(editingID);
+    }
     const fields = panelRoot?.querySelector("#backupTypeFields");
     if (fields) {
         fields.innerHTML = typeFields(target);
@@ -363,7 +355,7 @@ const readForm = (): BackupTarget => {
     const target: BackupTarget = {
         id: editingID || draftID,
         name: value("backupTargetNote").trim(),
-        type: (panelRoot?.querySelector("#backupTargetType") as HTMLSelectElement)?.value as BackupType || "pg",
+        type: (panelRoot?.querySelector("#backupTargetType") as HTMLSelectElement)?.value as BackupType || "s3",
         enabled: true,
         retention: {
             keepLast: Number(value("backupKeepLast")) || 0,
@@ -375,15 +367,14 @@ const readForm = (): BackupTarget => {
     if (cron) {
         target.schedule = {cron};
     }
+    // 命名空间:编辑态保持原值(输入框已禁用),新增时取用户输入
+    const namespace = editingID
+        ? (currentConfig.targets.find(item => item.id === editingID)?.namespace || "")
+        : value("backupNamespace").trim();
+    if (namespace) {
+        target.namespace = namespace;
+    }
     switch (target.type) {
-        case "pg":
-            target.pg = {
-                host: value("backupPGHost").trim(), port: Number(value("backupPGPort")) || 5432,
-                user: value("backupPGUser").trim(), password: value("backupPGPassword"),
-                database: value("backupPGDatabase").trim(),
-                sslMode: (panelRoot?.querySelector("#backupPGSSLMode") as HTMLSelectElement)?.value || "disable",
-            };
-            break;
         case "s3":
             target.s3 = {
                 endpoint: value("backupS3Endpoint").trim(), accessKey: value("backupS3AccessKey").trim(),
@@ -477,12 +468,6 @@ const storageIdentityOf = (target: BackupTarget): string => {
     const endpoint = (value?: string) =>
         (value || "").trim().toLowerCase().replace(/\/+$/, "").replace(/^https?:\/\//, "");
     switch (target.type) {
-        case "pg":
-            if (target.pg?.dsn?.trim()) {
-                return "pg|dsn|" + target.pg.dsn.trim();
-            }
-            return ["pg", (target.pg?.host || "").trim().toLowerCase(), String(target.pg?.port || 5432),
-                (target.pg?.database || "").trim().toLowerCase(), (target.pg?.schema || "public").trim().toLowerCase()].join("|");
         case "s3":
             return "s3|" + endpoint(target.s3?.endpoint) + "|" + (target.s3?.bucket || "").trim().toLowerCase();
         case "webdav":
@@ -547,7 +532,7 @@ const saveForm = async () => {
     if (editingID) {
         const original = currentConfig.targets.find(item => item.id === editingID);
         const storageOf = (item: BackupTarget): string =>
-            JSON.stringify({type: item.type, pg: item.pg, s3: item.s3, webdav: item.webdav});
+            JSON.stringify({type: item.type, s3: item.s3, webdav: item.webdav});
         if (original && storageOf(original) !== storageOf(target)) {
             const response = await fetchSyncPost("/api/backup/editCheck", {id: editingID, target});
             const result = response.data as {allowed?: boolean; reason?: string; oldSnapshots?: number} | undefined;
@@ -868,6 +853,8 @@ const openSnapshotsDialog = async (targetId: string) => {
         document.querySelectorAll("#backupSnapshotList .backupSnapshotDelete, #backupSnapshotList .backupSnapshotExport").forEach(button => {
             (button as HTMLButtonElement).disabled = on;
         });
+        // 快照操作直接改写目标存储:期间该目标行全部按钮灰掉,防止并发写同一目标
+        setBackupBusy(on, on ? [targetId] : []);
     };
     const loadAndBind = async (): Promise<number> => {
         const listEl = document.querySelector("#backupSnapshotList");
@@ -929,13 +916,18 @@ const openSnapshotsDialog = async (targetId: string) => {
                             const response = await fetchSyncPost("/api/backup/deleteSnapshot", {target: targetId, snapshot: snapshotId});
                             const result = response.data as {blobs?: number} | undefined;
                             if (response.code !== 0) {
-                                showMessage(`${text("backupSnapshotDeleteFailed", "Failed to delete the snapshot")}: ${response.msg}`, 7000, "error");
+                                confirmDialog(text("backupSnapshotsTitle", "Snapshots"),
+                                    `${text("backupSnapshotDeleteFailed", "Failed to delete the snapshot")}: ${response.msg}`,
+                                    () => {}, undefined, true, undefined, window.siyuan.languages.confirm);
                                 return;
                             }
-                            showMessage(text("backupSnapshotDeleteDone", "Snapshot deleted; ${x} blob(s) removed")
-                                .replace("${x}", String(result?.blobs || 0)), 3000);
                             await loadAndBind();
                             await loadPanel();
+                            // 成功与失败都要明确弹窗,不用易消失的 toast
+                            confirmDialog(text("backupSnapshotsTitle", "Snapshots"),
+                                text("backupSnapshotDeleteDone", "Snapshot deleted; ${x} blob(s) removed")
+                                    .replace("${x}", String(result?.blobs || 0)), () => {},
+                                undefined, false, undefined, window.siyuan.languages.confirm);
                         } finally {
                             setBusy(false);
                         }

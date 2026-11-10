@@ -25,14 +25,23 @@ type Store interface {
 }
 
 func NewTarget(target *Target) (Store, error) {
+	var store Store
+	var err error
 	switch target.Type {
-	case TypePG:
-		return NewPGTarget(target.ID, target.PG.ConnectionString(), target.PG.Schema)
 	case TypeS3:
-		return NewS3Target(target)
+		store, err = NewS3Target(target)
 	case TypeWebDAV:
-		return NewWebDAVTarget(target)
+		store, err = NewWebDAVTarget(target)
 	default:
 		return nil, fmt.Errorf("backup target type [%s] is not available yet", target.Type)
 	}
+	if err != nil {
+		return nil, err
+	}
+	// 命名空间作用域:多实例共用同一物理存储时,各实例的快照谱系、认领标记
+	// 与保留策略隔离在各自前缀下;空命名空间 = 默认作用域(兼容存量快照)
+	if target.Namespace != "" {
+		store = NewScopedStore(store, target.Namespace)
+	}
+	return store, nil
 }

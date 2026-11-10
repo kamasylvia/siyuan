@@ -18267,78 +18267,6 @@
       },
       "additionalProperties": false
     },
-    "BackupPG": {
-      "type": "object",
-      "properties": {
-        "concurrentReqs": {
-          "type": "integer"
-        },
-        "database": {
-          "type": "string"
-        },
-        "dsn": {
-          "type": "string"
-        },
-        "host": {
-          "type": "string"
-        },
-        "password": {
-          "type": "string"
-        },
-        "port": {
-          "type": "integer"
-        },
-        "schema": {
-          "type": "string"
-        },
-        "sslMode": {
-          "type": "string"
-        },
-        "timeout": {
-          "type": "integer"
-        },
-        "user": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
-    },
-    "BackupPGInput": {
-      "type": "object",
-      "properties": {
-        "concurrentReqs": {
-          "type": "integer"
-        },
-        "database": {
-          "type": "string"
-        },
-        "dsn": {
-          "type": "string"
-        },
-        "host": {
-          "type": "string"
-        },
-        "password": {
-          "type": "string"
-        },
-        "port": {
-          "type": "integer"
-        },
-        "schema": {
-          "type": "string"
-        },
-        "sslMode": {
-          "type": "string"
-        },
-        "timeout": {
-          "type": "integer"
-        },
-        "user": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": false
-    },
     "BackupProgress": {
       "type": "object",
       "properties": {
@@ -18927,8 +18855,8 @@
         "name": {
           "type": "string"
         },
-        "pg": {
-          "$ref": "#/$defs/BackupPG"
+        "namespace": {
+          "type": "string"
         },
         "retention": {
           "$ref": "#/$defs/BackupRetention"
@@ -18965,15 +18893,8 @@
         "name": {
           "type": "string"
         },
-        "pg": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/BackupPGInput"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "namespace": {
+          "type": "string"
         },
         "retention": {
           "anyOf": [

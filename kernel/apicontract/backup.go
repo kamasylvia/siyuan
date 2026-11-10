@@ -18,19 +18,6 @@ type BackupRetention struct {
 	MaxAgeDays int `json:"maxAgeDays,omitempty" api:"optional"`
 }
 
-type BackupPG struct {
-	DSN            string `json:"dsn,omitempty" api:"optional"`
-	Host           string `json:"host,omitempty" api:"optional"`
-	Port           int    `json:"port,omitempty" api:"optional"`
-	User           string `json:"user,omitempty" api:"optional"`
-	Password       string `json:"password,omitempty" api:"optional"`
-	Database       string `json:"database,omitempty" api:"optional"`
-	SSLMode        string `json:"sslMode,omitempty" api:"optional"`
-	Schema         string `json:"schema,omitempty" api:"optional"`
-	Timeout        int    `json:"timeout,omitempty" api:"optional"`
-	ConcurrentReqs int    `json:"concurrentReqs,omitempty" api:"optional"`
-}
-
 type BackupS3 struct {
 	Endpoint      string `json:"endpoint"`
 	AccessKey     string `json:"accessKey,omitempty" api:"optional"`
@@ -55,12 +42,13 @@ type BackupTarget struct {
 	Name      string           `json:"name,omitempty" api:"optional"`
 	Type      string           `json:"type"`
 	Enabled   bool             `json:"enabled"`
-	PG        *BackupPG        `json:"pg,omitempty" api:"optional,nullable"`
 	S3        *BackupS3        `json:"s3,omitempty" api:"optional,nullable"`
 	WebDAV    *BackupWebDAV    `json:"webdav,omitempty" api:"optional,nullable"`
 	Retention *BackupRetention `json:"retention,omitempty" api:"optional,nullable"`
 	// Schedule 定时备份 cron 计划;nil 或空表达式表示不启用
 	Schedule *BackupSchedule `json:"schedule,omitempty" api:"optional,nullable"`
+	// Namespace 多实例共用同一存储时的作用域;空 = 默认作用域。创建后不可修改
+	Namespace string `json:"namespace,omitempty" api:"optional"`
 }
 
 // BackupSchedule 定时备份计划

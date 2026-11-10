@@ -23,7 +23,6 @@ import (
 
 const backupMasked = "***"
 
-var pgPasswordPattern = regexp.MustCompile(`(://[^:/@]+:)([^@]+)(@)`)
 var pgKeywordPasswordPattern = regexp.MustCompile(`(?i)(password=)\S+`)
 
 func backupConfigPath() string {
@@ -61,19 +60,16 @@ func maskBackupConfig(cfg *backup.Config) *apicontract.BackupConfig {
 	for _, target := range cfg.Targets {
 		item := &apicontract.BackupTarget{
 			ID: target.ID, Name: target.Name, Type: target.Type, Enabled: target.Enabled,
+			Namespace: target.Namespace,
 		}
 		if target.Retention != nil {
 			item.Retention = &apicontract.BackupRetention{
 				KeepLast: target.Retention.KeepLast, MaxAgeDays: target.Retention.MaxAgeDays,
 			}
 		}
-		if target.PG != nil {
-			item.PG = &apicontract.BackupPG{
-				DSN: maskDSN(target.PG.DSN), Host: target.PG.Host, Port: target.PG.Port,
-				User: target.PG.User, Password: maskSecret(target.PG.Password),
-				Database: target.PG.Database, SSLMode: target.PG.SSLMode, Schema: target.PG.Schema,
-				Timeout: target.PG.Timeout, ConcurrentReqs: target.PG.ConcurrentReqs,
-			}
+		// schedule 必须回传,否则前端编辑表单回显为空、再保存会把定时配置清掉
+		if target.Schedule != nil {
+			item.Schedule = &apicontract.BackupSchedule{Cron: target.Schedule.Cron}
 		}
 		if target.S3 != nil {
 			item.S3 = &apicontract.BackupS3{
@@ -100,11 +96,6 @@ func maskSecret(value string) string {
 		return ""
 	}
 	return backupMasked
-}
-
-func maskDSN(dsn string) string {
-	dsn = pgPasswordPattern.ReplaceAllString(dsn, "${1}"+backupMasked+"${3}")
-	return pgKeywordPasswordPattern.ReplaceAllString(dsn, "${1}"+backupMasked)
 }
 
 func unmaskBackupConfig(cfg *apicontract.BackupConfig, old *backup.Config) *backup.Config {
@@ -141,38 +132,13 @@ func unmaskBackupConfig(cfg *apicontract.BackupConfig, old *backup.Config) *back
 // backupTargetFromAPI 把 API 提交的目标配置转换为内核目标;掩码密钥用 previous
 // 中保存的真实值回填
 func backupTargetFromAPI(item *apicontract.BackupTarget, previous *backup.Target) *backup.Target {
-	target := &backup.Target{ID: item.ID, Name: item.Name, Type: item.Type, Enabled: item.Enabled}
+	target := &backup.Target{ID: item.ID, Name: item.Name, Type: item.Type, Enabled: item.Enabled,
+		Namespace: item.Namespace}
 	if item.Retention != nil {
 		target.Retention = &backup.Retention{KeepLast: item.Retention.KeepLast, MaxAgeDays: item.Retention.MaxAgeDays}
 	}
 	if item.Schedule != nil {
 		target.Schedule = &backup.Schedule{Cron: item.Schedule.Cron}
-	}
-	if item.PG != nil {
-		dsn := item.PG.DSN
-		if strings.Contains(dsn, backupMasked) {
-			if previous != nil && previous.PG != nil {
-				dsn = previous.PG.DSN
-			} else {
-				dsn = ""
-			}
-		}
-		password := item.PG.Password
-		if password == "" || password == backupMasked {
-			if previous != nil && previous.PG != nil {
-				password = previous.PG.Password
-			} else if password == backupMasked {
-				password = ""
-			}
-		}
-		if dsn == "" && item.PG.Host == "" && previous != nil && previous.PG != nil && previous.PG.DSN != "" {
-			dsn = previous.PG.DSN
-		}
-		target.PG = &backup.PG{
-			DSN: dsn, Host: item.PG.Host, Port: item.PG.Port, User: item.PG.User,
-			Password: password, Database: item.PG.Database, SSLMode: item.PG.SSLMode,
-			Schema: item.PG.Schema, Timeout: item.PG.Timeout, ConcurrentReqs: item.PG.ConcurrentReqs,
-		}
 	}
 	if item.S3 != nil {
 		secret := item.S3.SecretKey
@@ -676,9 +642,6 @@ var restoreBackup = contractHandler(apicontract.BackupRestore, func(c *gin.Conte
 func unmaskBackupTarget(cfg *backup.Config, targetConfig *backup.Target) *backup.Target {
 	for _, stored := range cfg.Targets {
 		if stored.ID == targetConfig.ID {
-			if targetConfig.PG != nil && stored.PG != nil && targetConfig.PG.Password == backupMasked {
-				targetConfig.PG.Password = stored.PG.Password
-			}
 			if targetConfig.S3 != nil && stored.S3 != nil && targetConfig.S3.SecretKey == backupMasked {
 				targetConfig.S3.SecretKey = stored.S3.SecretKey
 			}

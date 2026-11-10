@@ -800,10 +800,6 @@ export type BackupListSnapshotsRequestInput = { "target": string; };
 
 export type BackupLocalZipRequestInput = { "passphrase"?: string; };
 
-export type BackupPG = { "concurrentReqs"?: number; "database"?: string; "dsn"?: string; "host"?: string; "password"?: string; "port"?: number; "schema"?: string; "sslMode"?: string; "timeout"?: number; "user"?: string; };
-
-export type BackupPGInput = { "concurrentReqs"?: number; "database"?: string; "dsn"?: string; "host"?: string; "password"?: string; "port"?: number; "schema"?: string; "sslMode"?: string; "timeout"?: number; "user"?: string; };
-
 export type BackupProgress = { "backup"?: BackupRunProgress; "restore"?: BackupRestoreProgress; };
 
 export type BackupRestoreData = { "bytes": number; "dest": string; "failedBoxes"?: Array<string>; "files": number; "reindexed": boolean; "removed": number; "removedBytes": number; "snapshot": string; };
@@ -846,9 +842,9 @@ export type BackupSnapshotSummary = { "createdAt": string; "encrypted": boolean;
 
 export type BackupState = { "targets": Record<string, BackupTargetState | null> | null; "updatedAt"?: string; };
 
-export type BackupTarget = { "enabled": boolean; "id": string; "name"?: string; "pg"?: BackupPG; "retention"?: BackupRetention; "s3"?: BackupS3; "schedule"?: BackupSchedule; "type": string; "webdav"?: BackupWebDAV; };
+export type BackupTarget = { "enabled": boolean; "id": string; "name"?: string; "namespace"?: string; "retention"?: BackupRetention; "s3"?: BackupS3; "schedule"?: BackupSchedule; "type": string; "webdav"?: BackupWebDAV; };
 
-export type BackupTargetInput = { "enabled": boolean; "id": string; "name"?: string; "pg"?: BackupPGInput | null; "retention"?: BackupRetentionInput | null; "s3"?: BackupS3Input | null; "schedule"?: BackupScheduleInput | null; "type": string; "webdav"?: BackupWebDAVInput | null; };
+export type BackupTargetInput = { "enabled": boolean; "id": string; "name"?: string; "namespace"?: string; "retention"?: BackupRetentionInput | null; "s3"?: BackupS3Input | null; "schedule"?: BackupScheduleInput | null; "type": string; "webdav"?: BackupWebDAVInput | null; };
 
 export type BackupTargetState = { "lastError"?: string; "lastOk": boolean; "lastRun"?: string; "lastSnapshot"?: string; "uploadedBlobs": number; "uploadedBytes": number; };
 

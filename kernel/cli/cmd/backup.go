@@ -112,8 +112,6 @@ var backupTargetsCmd = &cobra.Command{
 		for _, target := range cfg.Targets {
 			location := ""
 			switch target.Type {
-			case backup.TypePG:
-				location = target.PG.Schema
 			case backup.TypeS3:
 				location = target.S3.Bucket
 			case backup.TypeWebDAV:
@@ -186,8 +184,8 @@ var backupSampleCmd = &cobra.Command{
 			Enabled: true,
 			Include: backup.Include{Data: true, Conf: true},
 			Targets: []*backup.Target{
-				{ID: "pg-1", Name: "PostgreSQL", Type: backup.TypePG, Enabled: false,
-					PG: &backup.PG{Host: "127.0.0.1", Port: 5432, User: "postgres", Password: "", Database: "siyuan", SSLMode: "disable"}},
+				{ID: "s3-1", Name: "S3", Type: backup.TypeS3, Enabled: false,
+					S3: &backup.S3{Endpoint: "https://s3.example.com", AccessKey: "", SecretKey: "", Bucket: "siyuan-backup", Region: "", Timeout: 60}},
 			},
 		}
 		data, _ := json.MarshalIndent(cfg, "", "  ")

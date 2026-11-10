@@ -308,30 +308,6 @@ func TestRestoreIdentityHandling(t *testing.T) {
 }
 
 func TestStorageIdentityUniqueness(t *testing.T) {
-	mkConfig := func(modify func(cfg *Config)) *Config {
-		cfg := &Config{
-			Enabled: true,
-			Include: Include{Data: true, Conf: true},
-			Targets: []*Target{
-				{ID: "t1", Type: TypePG, PG: &PG{Host: "10.0.0.5", Port: 5432, Database: "siyuan", Schema: "public"}},
-				{ID: "t2", Type: TypePG, PG: &PG{Host: "10.0.0.9", Port: 5433, Database: "other", Schema: "public"}},
-			},
-		}
-		modify(cfg)
-		return cfg
-	}
-	// 同 host/端口/库(即使换 IP 写法以外的大小写差异)拒绝
-	same := mkConfig(func(cfg *Config) {
-		cfg.Targets[1] = &Target{ID: "t2", Type: TypePG, PG: &PG{Host: "10.0.0.5", Port: 5432, Database: "Siyuan", Schema: "public"}}
-	})
-	if err := same.Normalize(); err == nil || !strings.Contains(err.Error(), "points to the same storage as [t1]") {
-		t.Fatalf("expected duplicate storage rejection, got %v", err)
-	}
-	// 不同库放行
-	distinct := mkConfig(func(cfg *Config) {})
-	if err := distinct.Normalize(); err != nil {
-		t.Fatal(err)
-	}
 	// S3 同 endpoint+bucket(尾斜杠与大小写差异)拒绝
 	s3 := &Config{Enabled: true, Include: Include{Data: true},
 		Targets: []*Target{

@@ -145,17 +145,14 @@ func TestBackupIncludeLocalStorage(t *testing.T) {
 
 func TestConfigValidation(t *testing.T) {
 	cfg := NewConfig()
-	cfg.Targets = []*Target{{ID: "x", Type: TypePG, Enabled: true}}
+	cfg.Targets = []*Target{{ID: "x", Type: TypeS3, Enabled: true}}
 	if err := cfg.Normalize(); err == nil {
-		t.Fatal("expected missing pg settings error")
+		t.Fatal("expected missing s3 settings error")
 	}
 	cfg = NewConfig()
-	cfg.Targets = []*Target{{ID: "x", Type: TypePG, Enabled: true, PG: &PG{DSN: "postgres://x"}}}
+	cfg.Targets = []*Target{{ID: "x", Type: TypeS3, Enabled: true, S3: &S3{Endpoint: "https://s3.example.com", Bucket: "b"}}}
 	if err := cfg.Normalize(); err != nil {
 		t.Fatal(err)
-	}
-	if cfg.Targets[0].PG.Schema != "public" {
-		t.Fatalf("expected default schema, got %s", cfg.Targets[0].PG.Schema)
 	}
 }
 
