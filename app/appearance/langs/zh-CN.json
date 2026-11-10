@@ -18,7 +18,7 @@
 	"backupRestoreTargetLabel": "备份目标",
 	"backupRestoreListFailed": "无法列出快照",
 	"backupRestoreEmpty": "该目标上暂无快照",
-	"backupRestoreNoTargets": "还原目标",
+	"backupRestoreNoTargets": "没有可还原的备份目标",
 	"backupRestorePassphrase": "口令(仅加密备份需要)",
 	"backupRestoreWarn": "还原会覆盖当前工作空间的 data/ 与 conf/;勾选覆盖还原后,工作空间会收敛为快照的精确副本,快照之外的文档与附件会被删除(备份凭证等排除项保留)",
 	"backupRestoreFailed": "还原失败",
