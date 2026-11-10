@@ -36,6 +36,8 @@
 	"backupAddTarget": "新增目標",
 	"backupEditTarget": "編輯目標",
 	"backupTestTarget": "測試連線",
+	"backupSaveNeedsTest": "儲存前需先通過「測試連線」",
+	"backupTestPassedHint": "連線測試已通過",
 	"backupRunNow": "備份",
 	"backupSnapshotsOne": "快照管理",
 	"backupSnapshotsTitle": "快照管理",

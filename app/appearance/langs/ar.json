@@ -36,6 +36,8 @@
 	"backupAddTarget": "Add target",
 	"backupEditTarget": "Edit target",
 	"backupTestTarget": "Test connection",
+	"backupSaveNeedsTest": "Run a connection test before saving",
+	"backupTestPassedHint": "Connection test passed",
 	"backupRunNow": "Back up",
 	"backupSnapshotsOne": "Snapshots",
 	"backupSnapshotsTitle": "Snapshots",

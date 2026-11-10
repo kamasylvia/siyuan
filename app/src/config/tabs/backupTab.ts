@@ -83,6 +83,11 @@ let currentState: BackupState = {targets: {}};
 let editingID: string | null = null;
 let draftID = "";
 let draft: BackupTarget = defaultTarget();
+// 连接测试门禁:记录通过测试时的连接指纹;连接字段一变即失效,未通过前不可保存
+let testedConnectionKey: string | null = null;
+
+const connectionKey = (target: BackupTarget): string =>
+    JSON.stringify({type: target.type, pg: target.pg, s3: target.s3, webdav: target.webdav});
 let panelRoot: HTMLElement | null = null;
 
 const field = (id: string, label: string, value: string, type = "text", attrs = ""): string =>
@@ -176,6 +181,7 @@ const render = () => {
                 <button class="b3-button b3-button--outline" id="backupTest">${escapeHtmlTextAndAttr(text("backupTestTarget", "Test connection"))}</button>
                 <button class="b3-button b3-button--outline" id="backupCancel">${escapeHtmlTextAndAttr(window.siyuan.languages.cancel)}</button>
             </div>
+            <div id="backupTestHint" class="ft__on-surface" style="margin:-2px 0 6px;font-size:12px"></div>
         </div>
     </div>
 </div>`;
@@ -264,8 +270,41 @@ const bind = () => {
         if (container) container.innerHTML = typeFields(draft);
     });
     panelRoot.querySelector("#backupSave")?.addEventListener("click", () => void saveForm());
-    panelRoot.querySelector("#backupTest")?.addEventListener("click", () => void testTarget(readForm()));
+    panelRoot.querySelector("#backupTest")?.addEventListener("click", () => void testFormTarget());
     panelRoot.querySelector("#backupCancel")?.addEventListener("click", () => closeForm());
+    // 连接字段变化使已通过的测试失效:委托到表单容器,类型字段重渲染后依然生效
+    const formContainer = panelRoot.querySelector("#backupForm");
+    formContainer?.addEventListener("input", () => applyTestGate());
+    formContainer?.addEventListener("change", () => applyTestGate());
+};
+
+// 测试门禁:保存按钮只在「连接测试已通过且连接字段未再变动」时可用
+const applyTestGate = (): void => {
+    const saveButton = panelRoot?.querySelector("#backupSave") as HTMLButtonElement | undefined;
+    const hint = panelRoot?.querySelector("#backupTestHint") as HTMLElement | undefined;
+    if (!saveButton || !hint) {
+        return;
+    }
+    const passed = testedConnectionKey !== null && testedConnectionKey === connectionKey(readForm());
+    saveButton.disabled = !passed;
+    hint.textContent = passed
+        ? text("backupTestPassedHint", "Connection test passed")
+        : text("backupSaveNeedsTest", "Run a connection test before saving");
+};
+
+// 表单内测试:结果写入门禁状态,行内「测试」按钮走 testTarget,不影响表单门禁
+const testFormTarget = async () => {
+    const target = readForm();
+    const response = await fetchSyncPost("/api/backup/testTarget", {target});
+    const data = response.data as {ok?: boolean; message?: string} | undefined;
+    if (response.code === 0 && data?.ok) {
+        testedConnectionKey = connectionKey(target);
+        showMessage(text("backupTestOK", "Target connection OK"), 3000);
+    } else {
+        testedConnectionKey = null;
+        showMessage(`${text("backupTestFailed", "Target test failed")}: ${data?.message || response.msg}`, 7000, "error");
+    }
+    applyTestGate();
 };
 
 const openForm = (target: BackupTarget) => {
@@ -290,6 +329,9 @@ const openForm = (target: BackupTarget) => {
     if (fields) {
         fields.innerHTML = typeFields(target);
     }
+    // 编辑且连接字段未动:视为已通过(存储在保存时已验证过);新增或改动连接必须重新测试
+    testedConnectionKey = editingID ? connectionKey(target) : null;
+    applyTestGate();
 };
 
 const closeForm = () => {
@@ -453,6 +495,11 @@ const saveInclude = async () => {
 
 const saveForm = async () => {
     const target = readForm();
+    // 兜底守卫:按钮禁用之外,拦截任何绕过测试门禁的保存路径
+    if (testedConnectionKey !== connectionKey(target)) {
+        showMessage(text("backupSaveNeedsTest", "Run a connection test before saving"), 7000, "error");
+        return;
+    }
     currentConfig.enabled = true;
     // 连接标识唯一性:同一 host/端口/库或桶不允许出现第二条配置
     const identity = storageIdentityOf(target);
