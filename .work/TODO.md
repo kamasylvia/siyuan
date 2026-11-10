@@ -6,15 +6,18 @@
 ## 一、当前版本线
 
 - 上游线:upstream v3.8.10-alpha.7(客户端与容器严格版本匹配)
-- 最新已发布:**v3.8.10-alpha.7.17**(tag `3adee4ddbd` 移签:并行备份模型 + 只读维护锁 + zip 三入口 +
-  逐行置灰修正;Docker 移签后重建 8m45s 成功,双端已部署 alpha.7.17,release 资产齐)
+- 最新已发布:**v3.8.10-alpha.7.18**(tag `334f4b99f2`:保存 zip 到本地一键按钮,LocalZipDir 配置移除;
+  Docker 10m41s,双端已部署,release 资产齐;.17 见 git log)
+- 设计文档:**issue #15「Backup subsystem: design, constraints and behavior」**——备份子系统全部
+  设计与约束的权威记录,后续开发先读它
+- 本机客户端已装 alpha.7.18,远程模式连接正常
 - 版本线历程:.13 = P1 还原后重建索引+重载(实测 139s/4524 文件,不重启即可搜索);.14 = 快照删除互斥;
   .15 = 逐目标 busy 锁定(restore progress 记 target id,置灰收窄到该行)+存储标识唯一(Normalize 按
   storageIdentity 查重,重复配置 setConfig/编辑直接拒绝);.16 = 保存前连接测试门禁(表单级,指纹绑定,
   连接字段一变即失效;名称/保留/定时改动不触发);.17 = 本轮(见「二」)
 - build script 版本自检:`scripts/fork-mac-build.sh` 会比对 `kernel/util/working.go` 的 Ver 与二进制内嵌串,不一致直接失败
 
-## 二、alpha.7.17 已实现,待逐项实测
+## 二、alpha.7.16–.18 已实现,待逐项实测
 
 ### A. 只读维护锁(用户定案:备份期间编辑不放行)
 
@@ -35,8 +38,8 @@
 
 ### C. zip 三入口(格式 = 存储对象集 manifest+blobs,纯 ASCII 条目名,零乱码,可回灌)
 
-1. 备份产 zip:Config.LocalZipDir 非空时每次备份落 `siyuan-backup-<id>.zip` 到该目录
-   (加密快照为密文 blob,还原需口令);**无已连目标也允许**(离线备份出口);结果带 ZipPath/ZipError
+1. 「保存 zip 到本地」按钮(alpha.7.18):内核即时全新快照 → zip 二进制流回客户端落盘,
+   零目标可用,本地/远程统一;原 LocalZipDir 自动产出配置已移除(按钮取代)
 2. 快照管理行「导出 zip」:把已连目标快照打包下载(契约 Data=BinaryContent,
    ResponseOptions{Output: BinaryOutput, ErrorStatus: 500},前端 blob 下载)
 3. 「从 zip 还原」:备份面板顶部按钮 → multipart 上传 `zipSnapshots` 解析 → 快照确认对话框
