@@ -161,7 +161,10 @@ const bootChild = async (sources) => {
     button.setAttribute("data-position", "north");
     document.body.append(tooltip, button);
     initTooltips();
-    const hover = element => element.dispatchEvent(new MouseEvent("mouseover", {bubbles: true}));
+    const hover = element => {
+        element.dispatchEvent(new PointerEvent("pointerover", {bubbles: true, pointerType: "mouse"}));
+        element.dispatchEvent(new MouseEvent("mouseover", {bubbles: true}));
+    };
     hover(button.querySelector("use"));
     check.equal(tooltip.classList.contains("fn__none"), false);
     check.equal(tooltip.innerHTML, '<b>Directory</b><img src="x">');
@@ -246,6 +249,8 @@ const runCases = async (sources) => {
         "../config/setting/windowDialog": fit, "../util/genID": {genUUID},
     });
     const wait = () => new Promise(resolve => setTimeout(resolve, 50));
+    const phase = name => ipcRenderer.send("test-settings-phase", name);
+    phase("legacy dialog and click controls");
     const legacy = new Setting({});
     legacy.open("Legacy");
     assert.equal(legacy.dialog.element.ownerDocument, document);
@@ -315,6 +320,7 @@ const runCases = async (sources) => {
     }, destroyCallback: () => destroyed++});
     setting.addItem({title: "Control", createActionElement: () => { created++; return panel; }});
     setting.open("Plugin");
+    phase("waiting for native settings window");
     await ipcRenderer.invoke("test-settings-wait");
     assert.equal(created, 1);
     assert.notEqual(control.ownerDocument, document);
@@ -373,10 +379,19 @@ const runCases = async (sources) => {
         await ipcRenderer.invoke("test-settings-size", 493, 376);
         await wait();
     }
+    phase("native theme and geometry checks");
     for (const theme of ["daylight", "midnight"]) {
         const link = childDocument.getElementById("fixtureTheme");
-        await new Promise(resolve => {
-            link.onload = resolve;
+        await new Promise((resolve, reject) => {
+            const finish = error => {
+                clearTimeout(timer);
+                link.onload = null;
+                link.onerror = null;
+                if (error) reject(error); else resolve();
+            };
+            const timer = setTimeout(() => finish(new Error("Theme load timed out: " + theme)), 15000);
+            link.onload = () => finish();
+            link.onerror = () => finish(new Error("Theme load failed: " + theme));
             link.href = "/fixture/" + theme + ".css?v=" + Date.now();
         });
         for (const fontSize of [14, 32]) {
@@ -425,6 +440,7 @@ const runCases = async (sources) => {
     assert.equal(setting.dialog, undefined);
 
     setting.open("Plugin");
+    phase("waiting for native settings window");
     await ipcRenderer.invoke("test-settings-wait");
     if (nativeControls) await ipcRenderer.invoke("test-settings-close");
     else if (process.platform === "darwin") setting.close();
@@ -435,6 +451,7 @@ const runCases = async (sources) => {
     const withoutSettings = Object.assign(new Plugin(), {name: "without-settings"});
     window.siyuan.ws.app.plugins.push(withoutSettings);
     await native.openNativeSettings(window.siyuan.ws.app, {tab: "appearance"});
+    phase("waiting for native settings window");
     await ipcRenderer.invoke("test-settings-wait");
     const builtinHost = await ipcRenderer.invoke("test-settings-token");
     const host = await new Promise(resolve => {
@@ -463,6 +480,7 @@ const runCases = async (sources) => {
     window.siyuan.ws.app.plugins.push({name: "modern", openSetting: () => modernSetting.open("Modern plugin")});
     const commandsBefore = (await ipcRenderer.invoke("test-settings-commands")).length;
     await host.openPluginSetting("modern");
+    phase("waiting for native settings window");
     await ipcRenderer.invoke("test-settings-wait");
     assert.notEqual(modernSetting.dialog.element.ownerDocument, document);
     assert.equal((await ipcRenderer.invoke("test-settings-commands")).length, commandsBefore);
@@ -473,6 +491,7 @@ const runCases = async (sources) => {
     await ipcRenderer.invoke("test-settings-other-dialog");
     assert.equal(await ipcRenderer.invoke("test-settings-window-count"), 0);
     await native.openNativeSettings(window.siyuan.ws.app, {tab: "editor"});
+    phase("waiting for native settings window");
     await ipcRenderer.invoke("test-settings-wait");
     assert.equal(await ipcRenderer.invoke("test-settings-other-dialog-closed"), true);
     const currentToken = await ipcRenderer.invoke("test-settings-token");
@@ -488,6 +507,7 @@ const runCases = async (sources) => {
     await currentHost.reopenSettings(true);
     assert.deepEqual(reopenedTabs, ["app"], "a closed host cannot reopen settings");
     await native.openNativeSettings(window.siyuan.ws.app, {tab: "app"});
+    phase("waiting for native settings window");
     await ipcRenderer.invoke("test-settings-wait");
 };
 
@@ -498,6 +518,20 @@ if (process.versions.electron && process.type === "browser") {
         const {updateTitleBarOverlay} = require("../electron/window/windowControlsOverlay");
     app.setPath("userData", process.argv[2]);
     app.whenReady().then(async () => {
+        const startedAt = Date.now();
+        const progress = name => console.log(`Settings window (${Date.now() - startedAt}ms): ${name}`);
+        const waitForLifecycle = async (promise, name) => {
+            progress(name + " started");
+            let timer;
+            try {
+                await Promise.race([promise, new Promise((_, reject) => {
+                    timer = setTimeout(() => reject(new Error(name + " did not complete within 15 seconds")), 15000);
+                })]);
+                progress(name + " completed");
+            } finally {
+                clearTimeout(timer);
+            }
+        };
         let owner;
         let code = 0;
         let ready = 0;
@@ -570,7 +604,7 @@ if (process.versions.electron && process.type === "browser") {
             }
             if (!child) response.setHeader("Set-Cookie", "settings-auth=authenticated; HttpOnly; SameSite=Strict; Path=/");
             response.end(`<html><head><link rel="stylesheet" href="/fixture/base.css"><link id="fixtureTheme" rel="stylesheet" href="/fixture/daylight.css"></head><body class="${child ? "body--settings" : ""}">${child ?
-                `<script>const loadRendererModule = ${loadRendererModule.toString()}; const rendererModules = ${rendererModules.toString()}; (${bootChild.toString()})(${JSON.stringify(sources)});</script>` : ""}</body></html>`);
+                `<script>const loadRendererModule = ${loadRendererModule.toString()}; const rendererModules = ${rendererModules.toString()}; (${bootChild.toString()})(${JSON.stringify(sources)}).catch(error => require("electron").ipcRenderer.send("test-settings-error", error.stack));</script>` : ""}</body></html>`);
         });
         await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
         const origin = "http://127.0.0.1:" + server.address().port;
@@ -593,7 +627,12 @@ if (process.versions.electron && process.type === "browser") {
                 if (process.platform !== "darwin") assert.equal(win.isMenuBarVisible(), false);
                 assert.equal(win.isVisible(), false);
                 win.on("closed", () => { children.delete(win); shown.delete(win); });
-            }, show(win) { shown.add(win); }, log() {}});
+            }, show(win) { shown.add(win); win.showInactive(); }, log() {}});
+        ipcMain.on("test-settings-phase", (_event, name) => progress(name));
+        ipcMain.on("test-settings-error", (_event, error) => {
+            console.error(error);
+            app.exit(1);
+        });
         ipcMain.handle("test-settings-initializing", event => {
             const win = [...children].find(child => child.webContents === event.sender);
             assert.ok(win);
@@ -605,7 +644,13 @@ if (process.versions.electron && process.type === "browser") {
             assert.equal(shown.has(win), true);
             if (waiting) { waiting(); waiting = undefined; } else ready++;
         });
-        ipcMain.handle("test-settings-wait", () => ready ? (--ready, Promise.resolve()) : new Promise(resolve => { waiting = resolve; }));
+        ipcMain.handle("test-settings-wait", () => ready ? (--ready, Promise.resolve()) : new Promise((resolve, reject) => {
+            const timer = setTimeout(() => {
+                waiting = undefined;
+                reject(new Error("Settings window did not become ready within 15 seconds"));
+            }, 15000);
+            waiting = () => { clearTimeout(timer); resolve(); };
+        }));
         ipcMain.handle("test-settings-window-count", () => children.size);
         ipcMain.handle("test-settings-other-dialog", async () => {
             const other = new BrowserWindow({show: false, webPreferences: {nodeIntegration: true, contextIsolation: false}});
@@ -655,8 +700,16 @@ if (process.versions.electron && process.type === "browser") {
         });
         ipcMain.handle("test-settings-native-state", async (_event, state) => {
             const child = [...children][0];
-            const transition = (event, action) => new Promise(resolve => {
-                child.once(event, resolve);
+            const transition = (event, action) => new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    child.removeListener(event, complete);
+                    reject(new Error(`Settings window did not emit ${event}`));
+                }, 10000);
+                const complete = () => {
+                    clearTimeout(timeout);
+                    resolve();
+                };
+                child.once(event, complete);
                 action();
             });
             if (child.isFullScreen()) {
@@ -695,30 +748,36 @@ if (process.versions.electron && process.type === "browser") {
             });
             await owner.loadURL(origin + "/stage/build/app/");
             const runRendererCases = () => owner.webContents.executeJavaScript(`const loadRendererModule = ${loadRendererModule.toString()}; const rendererModules = ${rendererModules.toString()}; (${runCases.toString()})(${JSON.stringify(sources)})`);
+            console.log("Settings window: initial lifecycle");
             await runRendererCases();
+            progress("renderer lifecycle completed");
             const previousTokens = new Set([...children].map(child => new URL(child.webContents.getURL()).searchParams.get("settingsWindowToken")));
             assert.ok(previousTokens.size > 0);
             const reloaded = new Promise(resolve => owner.webContents.once("did-finish-load", resolve));
             const closedForReload = [...children].map(child => new Promise(resolve => child.once("closed", resolve)));
             owner.reload();
-            await Promise.all([reloaded, ...closedForReload]);
+            await waitForLifecycle(Promise.all([reloaded, ...closedForReload]), "owner reload and child closure");
             await new Promise(resolve => setTimeout(resolve, 100));
             assert.equal(children.size, 0, "owner reload closes settings without restoring them");
             commands.length = 0;
             ready = 0;
+            console.log("Settings window: lifecycle after owner reload");
             await runRendererCases();
+            progress("renderer lifecycle completed");
             assert.ok(children.size > 0, "settings can be manually reopened after owner reload");
             for (const child of children) {
                 assert.equal(previousTokens.has(new URL(child.webContents.getURL()).searchParams.get("settingsWindowToken")), false);
             }
             const closed = [...children].map(child => new Promise(resolve => child.once("closed", resolve)));
+            progress("destroying owner");
             owner.destroy();
-            await Promise.all(closed);
+            await waitForLifecycle(Promise.all(closed), "owner destruction and child closure");
             assert.equal(children.size, 0);
         } catch (error) {
             console.error(error);
             code = 1;
         } finally {
+            progress("fixture cleanup");
             for (const child of children) child.destroy();
             for (const other of otherOwners) other.destroy();
             if (owner && !owner.isDestroyed()) owner.destroy();
@@ -730,7 +789,7 @@ if (process.versions.electron && process.type === "browser") {
     const {test} = require("node:test");
     const {execFile} = require("node:child_process");
     const {promisify} = require("node:util");
-    test("native settings preserve plugin controls, callbacks, default dialogs and owning-window lifecycle", {timeout: 180000}, async () => {
+    test("native settings preserve plugin controls, callbacks, default dialogs and owning-window lifecycle", {timeout: 250000}, async () => {
         const profile = fs.mkdtempSync(path.join(os.tmpdir(), "siyuan-settings-window-"));
         const env = {...process.env};
         delete env.ELECTRON_RUN_AS_NODE;
@@ -742,7 +801,7 @@ if (process.versions.electron && process.type === "browser") {
                     "-AssemblyPath", path.join(profile, "WindowHitTest.dll")], {windowsHide: true, timeout: 60000});
             }
             // 两轮窗口生命周期包含多个原生命中测试子进程，为 CI 启动开销预留时间。
-            await promisify(execFile)(require("electron"), [__filename, profile], {env, windowsHide: true, timeout: 110000});
+            await promisify(execFile)(require("electron"), [__filename, profile], {env, windowsHide: true, timeout: 180000});
         } finally {
             assert.equal(path.dirname(path.resolve(profile)), path.resolve(os.tmpdir()));
             fs.rmSync(profile, {recursive: true, force: true, maxRetries: 5, retryDelay: 100});

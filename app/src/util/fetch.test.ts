@@ -12,10 +12,15 @@ const loadFetchPost = (fetchImplementation: typeof fetch = () => new Promise(() 
                        processResponse: (response: IWebSocketData) => boolean = () => true,
                        options: {offline?: boolean, cachedDoc?: IWebSocketData, cachedId?: string,
                            cachedTree?: IWebSocketData, cachedTreePath?: string,
-                           templateRequest?: {signal: AbortSignal; headers: Record<string, string>; isCurrent: () => boolean; finish: () => void}} = {}) => {
+                           signal?: AbortSignal, headers?: Record<string, string>,
+                           isCurrent?: () => boolean, finish?: () => void,
+                           templateRequest?: {signal: AbortSignal; headers: Record<string, string>; isCurrent: () => boolean; finish: () => void},
+                           interactive?: boolean} = {},
+                       interactive = false) => {
     const sends: unknown[][] = [];
     const timeouts: number[] = [];
     const notifications: unknown[][] = [];
+    const scheduled: unknown[][] = [];
     let kernelChecks = 0;
     const exports: {
         fetchPost?: (...args: any[]) => Promise<void>;
@@ -29,7 +34,11 @@ const loadFetchPost = (fetchImplementation: typeof fetch = () => new Promise(() 
         require: (name: string) => {
             switch (name) {
                 case "./fetchWithAppId": return {fetchWithAppId: fetchImplementation};
-                case "../template/http": return {beginTemplateHTTPRequest: () => options.templateRequest};
+                case "../template/http": return {beginTemplateHTTPRequest: () => options.templateRequest || {
+                    headers: options.headers, signal: options.signal,
+                    isCurrent: options.isCurrent, finish: options.finish},
+                    getTemplateHTTPWindow: () => ({app: "app", session: "main"})};
+                case "../protyle/render/av/automaticHTTP": return {scheduleAutomaticHTTP: (jobs: unknown[]) => scheduled.push(jobs)};
                 case "../constants": return {Constants: {SIYUAN_QUIT: "quit"}};
                 case "electron": return {ipcRenderer: {send: (...args: unknown[]) => sends.push(args)}};
                 case "./processMessage": return {processMessage: processResponse};
@@ -64,15 +73,34 @@ const loadFetchPost = (fetchImplementation: typeof fetch = () => new Promise(() 
         location: {port: "6806"},
         navigator: {onLine: true},
         console: {warn: () => {}},
-        window: {siyuan: {languages: {
+        window: {siyuan: {ws: interactive ? {ws: {}} : undefined, languages: {
             transactionSaveUnconfirmed: "Save unconfirmed",
             offlineDocNotCached: "offlineDocNotCached",
             offlineTreeNotCached: "offlineTreeNotCached",
         }}},
     });
-    return {fetchPost: exports.fetchPost, fetchSyncPost: exports.fetchSyncPost, sends, timeouts, notifications,
+    return {fetchPost: exports.fetchPost, fetchSyncPost: exports.fetchSyncPost, sends, timeouts, notifications, scheduled,
         kernelChecks: () => kernelChecks};
 };
+
+it("editing transport attaches the live main window and schedules HTTP only after acknowledging the save", async () => {
+    const job = {id: "task", avID: "database", blockID: "carrier", sequence: 1};
+    const state = loadFetchPost(async (_url, options) => {
+        const headers = new Headers(options.headers);
+        assert.equal(headers.get("X-Siyuan-Template-App"), "app");
+        assert.equal(headers.get("X-Siyuan-Template-Session"), "main");
+        assert.equal(headers.get("X-Siyuan-Template-Execution"), null);
+        return new Response(JSON.stringify({code: 0, msg: "", data: [{doOperations: [], httpAutomationJobs: [job]}]}),
+            {headers: {"Content-Type": "application/json"}});
+    }, () => true, undefined, true);
+    let saved = false;
+    await state.fetchPost("/api/transactions", {transactions: []}, () => {
+        assert.equal(state.scheduled.length, 0);
+        saved = true;
+    });
+    assert.equal(saved, true);
+    assert.deepEqual(state.scheduled, [[job]]);
+});
 
 it("invokes the failure callback once when a request stalls", async () => {
     const {fetchPost, sends} = loadFetchPost();
@@ -109,6 +137,23 @@ it("checks template ownership synchronously before callbacks and sync response c
         assert.equal(finished, 1);
         assert.equal(controller.signal.aborted, true);
     }
+});
+
+it("manual automation transport carries confirmation identity and releases the execution", async () => {
+    const controller = new AbortController();
+    let finished = 0;
+    const headers = {"X-Siyuan-Template-Execution": "manual-execution"};
+    const state = loadFetchPost(async (url, options) => {
+        assert.equal(url, "/api/av/runAttributeViewAutomation");
+        assert.equal(options.headers, headers);
+        assert.equal(options.signal, controller.signal);
+        return new Response(JSON.stringify({code: 0, msg: "", data: null}));
+    }, () => true, {signal: controller.signal, headers, isCurrent: () => true, finish: () => {finished++;}});
+    const response = await state.fetchSyncPost("/api/av/runAttributeViewAutomation", {
+        avID: "database", blockID: "carrier", ruleID: "rule",
+    }, undefined, false, controller.signal);
+    assert.equal(response.code, 0);
+    assert.equal(finished, 1);
 });
 
 it("keeps positive business errors in the callback and filters negative errors", async () => {

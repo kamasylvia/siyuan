@@ -38,7 +38,7 @@ require (
 	github.com/gin-contrib/sse v1.1.1
 	github.com/gin-gonic/gin v1.12.0
 	github.com/go-ole/go-ole v1.3.0
-	github.com/gofrs/flock v0.13.0
+	github.com/gofrs/flock v0.13.2
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/gonutz/w32/v2 v2.12.1
 	github.com/google/uuid v1.6.0
@@ -74,7 +74,7 @@ require (
 	github.com/sashabaranov/go-openai v1.42.0
 	github.com/shirou/gopsutil/v4 v4.26.7
 	github.com/siyuan-note/dataparser v0.0.0-20260115084335-b57cb8bc7c17
-	github.com/siyuan-note/dejavu v0.0.0-20261106061425-1995b7fa5671
+	github.com/siyuan-note/dejavu v0.0.0-20261109165330-317610e0795e
 	github.com/siyuan-note/encryption v0.0.0-20260715062728-9cb8e9548044
 	github.com/siyuan-note/eventbus v0.0.0-20260530125927-d77c74260dce
 	github.com/siyuan-note/filelock v0.0.0-20261025032826-1ff24a81dda9
@@ -93,6 +93,7 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	github.com/xrash/smetrics v0.0.0-20250705151800-55b8f293f342
 	github.com/xuri/excelize/v2 v2.11.0
+	go.yaml.in/yaml/v4 v4.0.0
 	golang.org/x/mobile v0.0.0-20251209145715-2553ed8ce294
 	golang.org/x/mod v0.41.0
 	golang.org/x/net v0.59.0
@@ -100,12 +101,12 @@ require (
 	golang.org/x/sys v0.49.0
 	golang.org/x/text v0.43.0
 	golang.org/x/time v0.15.0
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
-	github.com/88250/lute v1.7.9-0.20261106040730-9df84d26c39e
+	github.com/88250/lute v1.7.9-0.20261109055119-18fb7e8f8a9f
 	github.com/lib/pq v1.10.9
+	github.com/robfig/cron/v3 v3.0.1
 )
 
 require (
@@ -117,9 +118,9 @@ require (
 	github.com/olekukonko/cat v0.0.0-20250911104152-50322a0618f6 // indirect
 	github.com/olekukonko/errors v1.3.0 // indirect
 	github.com/olekukonko/ll v0.1.8 // indirect
-	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/tphakala/simd v1.11.0 // indirect
 	go.mongodb.org/mongo-driver/v2 v2.8.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 require (
@@ -166,7 +167,7 @@ require (
 	github.com/ebitengine/purego v0.10.2 // indirect
 	github.com/fatih/set v0.2.1 // indirect
 	github.com/gigawattio/window v0.0.0-20180317192513-0f5467e35573 // indirect
-	github.com/go-jose/go-jose/v4 v4.1.6
+	github.com/go-jose/go-jose/v4 v4.1.9
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.30.3 // indirect
