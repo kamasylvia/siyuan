@@ -78,6 +78,16 @@ type BackupZipSnapshotsData struct {
 	Snapshots []BackupSnapshotSummary `json:"snapshots"`
 }
 
+type BackupLocalZipRequest struct {
+	// Passphrase 覆盖配置加密口令(仅本次 zip 生效);留空用配置值
+	Passphrase string `json:"passphrase" api:"optional"`
+}
+
+type BackupLocalZipData struct {
+	// Path 是 zip 在工作空间内的相对路径(temp 下),前端据此下载
+	Path string `json:"path"`
+}
+
 type BackupRestoreZipRequest struct {
 	ZipPath      string `json:"zipPath"`
 	Snapshot     string `json:"snapshot"`
@@ -113,8 +123,6 @@ type BackupConfig struct {
 	Include    BackupInclude     `json:"include"`
 	Targets    []*BackupTarget   `json:"targets"`
 	Encryption *BackupEncryption `json:"encryption,omitempty" api:"optional,nullable"`
-	// LocalZipDir 非空时每次备份同步落一份本地 zip 到该目录
-	LocalZipDir string `json:"localZipDir,omitempty" api:"optional"`
 }
 
 type BackupTargetState struct {

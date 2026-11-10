@@ -126,7 +126,6 @@ func unmaskBackupConfig(cfg *apicontract.BackupConfig, old *backup.Config) *back
 		}
 		out.Encryption = &backup.Encryption{Enabled: cfg.Encryption.Enabled, Passphrase: passphrase}
 	}
-	out.LocalZipDir = cfg.LocalZipDir
 	oldByID := map[string]*backup.Target{}
 	if old != nil {
 		for _, target := range old.Targets {
@@ -329,7 +328,6 @@ var runBackup = contractHandler(apicontract.RunBackup, func(c *gin.Context,
 	}
 	engine := backup.NewEngine(util.WorkspaceDir, cfg)
 	engine.Takeover = req.Takeover
-	engine.LocalZipDir = cfg.LocalZipDir
 	result, err := engine.Run(c.Request.Context(), req.Targets...)
 	if err != nil {
 		return apicontract.Failure[apicontract.BackupRunData](-1, err.Error())

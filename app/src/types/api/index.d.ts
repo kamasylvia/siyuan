@@ -752,9 +752,9 @@ export type BacklinkSourceFilterInput = { "dailyNote"?: string | null; "database
 
 export type BackmentionDocumentRequestInput = { "containChildren"?: boolean | null; "defID": string; "highlight"?: boolean | null; "keyword": string; "knownRevision"?: string | null; "notebook"?: string; "refTreeID": string; };
 
-export type BackupConfig = { "enabled": boolean; "encryption"?: BackupEncryption; "include": BackupInclude; "localZipDir"?: string; "targets": Array<BackupTarget | null> | null; };
+export type BackupConfig = { "enabled": boolean; "encryption"?: BackupEncryption; "include": BackupInclude; "targets": Array<BackupTarget | null> | null; };
 
-export type BackupConfigInput = { "enabled": boolean; "encryption"?: BackupEncryptionInput | null; "include": BackupIncludeInput; "localZipDir"?: string; "targets": Array<BackupTargetInput | null>; };
+export type BackupConfigInput = { "enabled": boolean; "encryption"?: BackupEncryptionInput | null; "include": BackupIncludeInput; "targets": Array<BackupTargetInput | null>; };
 
 export type BackupDeleteCheckData = { "results": Array<BackupDeleteCheckItem> | null; };
 
@@ -789,6 +789,8 @@ export type BackupIncludeInput = { "conf": boolean; "data": boolean; "history": 
 export type BackupListSnapshotsData = { "snapshots": Array<BackupSnapshotSummary> | null; "target": string; };
 
 export type BackupListSnapshotsRequestInput = { "target": string; };
+
+export type BackupLocalZipRequestInput = { "passphrase"?: string; };
 
 export type BackupPG = { "concurrentReqs"?: number; "database"?: string; "dsn"?: string; "host"?: string; "password"?: string; "port"?: number; "schema"?: string; "sslMode"?: string; "timeout"?: number; "user"?: string; };
 
@@ -4682,6 +4684,18 @@ export interface APIPOSTRoutes {
         body: "json";
         /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
         authorization?: readonly ["authenticated","admin"];
+    };
+    /**
+     * 保存 zip 到本地:对当前工作空间做一次全新快照并打包 zip 返回二进制,
+     * 不依赖任何已连目标(离线备份出口);加密按配置口令。
+     */
+    "/api/backup/localZip": {
+        request: BackupLocalZipRequestInput;
+        response: Blob | { "code": -1; "data": { "closeTimeout": number; } | null; "msg": string; };
+        body: "json";
+        /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
+        authorization?: readonly ["authenticated","admin","writable"];
+        output: "binary";
     };
     "/api/backup/restore": {
         request: BackupRestoreRequestInput;

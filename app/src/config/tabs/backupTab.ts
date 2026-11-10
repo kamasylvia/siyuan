@@ -29,7 +29,6 @@ type BackupConfig = {
     include: {data: boolean; conf: boolean; history: boolean; localStorage: boolean};
     targets: BackupTarget[];
     encryption?: {enabled: boolean; passphrase?: string};
-    localZipDir?: string;
 };
 
 type TargetState = {
@@ -166,10 +165,8 @@ const render = () => {
     <div id="backupRunProgress" class="ft__on-surface fn__none" style="margin-bottom:10px;font-size:12px"></div>
     <div class="fn__flex" style="align-items:center;gap:8px;margin-bottom:10px">
         <button class="b3-button b3-button--outline" id="backupZipRestore">${escapeHtmlTextAndAttr(text("backupZipRestore", "Restore from zip"))}</button>
+        <button class="b3-button b3-button--outline" id="backupSaveZipLocal">${escapeHtmlTextAndAttr(text("backupSaveZipLocal", "Save zip to local"))}</button>
         <input id="backupZipFile" type="file" accept=".zip" class="fn__none">
-        <span class="fn__flex-1"></span>
-        <label class="fn__flex" style="align-items:center;gap:4px;min-width:0;flex:2"><span class="ft__on-surface" style="white-space:nowrap">${escapeHtmlTextAndAttr(text("backupLocalZipDir", "Local zip dir"))}</span>
-        <input id="backupLocalZipDir" class="b3-text-field fn__flex-1" type="text" placeholder="${escapeHtmlTextAndAttr(text("backupLocalZipDirTip", "Empty = disabled; every backup also writes a zip snapshot here"))}" value="${escapeHtmlTextAndAttr(currentConfig.localZipDir || "")}"></label>
     </div>
     <div id="backupTargetList">${targets.length ? targets.map(targetRowHTML).join("") :
         `<div class="b3-label__text">${escapeHtmlTextAndAttr(text("backupNoTargets", "No backup targets configured"))}</div>`}</div>
@@ -240,7 +237,7 @@ const bind = () => {
     }
     panelRoot.querySelector("#backupEncryptionEnabled")?.addEventListener("change", () => void saveEncryption());
     panelRoot.querySelector("#backupEncryptionPassphrase")?.addEventListener("change", () => void saveEncryption());
-    panelRoot.querySelector("#backupLocalZipDir")?.addEventListener("change", () => void saveLocalZipDir());
+    panelRoot.querySelector("#backupSaveZipLocal")?.addEventListener("click", () => void saveZipToLocal());
     panelRoot.querySelector("#backupZipRestore")?.addEventListener("click", () => {
         (panelRoot.querySelector("#backupZipFile") as HTMLInputElement)?.click();
     });
@@ -510,11 +507,6 @@ const saveConfig = async () => {
     return true;
 };
 
-const saveLocalZipDir = async () => {
-    currentConfig.localZipDir = (panelRoot?.querySelector("#backupLocalZipDir") as HTMLInputElement)?.value.trim() || "";
-    await saveConfig();
-};
-
 const saveEncryption = async () => {
     currentConfig.encryption = {
         enabled: (panelRoot?.querySelector("#backupEncryptionEnabled") as HTMLInputElement)?.checked === true,
@@ -679,6 +671,48 @@ const runBackup = async (targetIds?: string[], takeover = false): Promise<void> 
             progressEl.textContent = "";
         }
         await loadPanel();
+    }
+};
+
+// 保存 zip 到本地:内核对当前工作空间做一次全新快照并打包 zip 返回二进制,
+// 前端以 blob 下载落盘;本地/远程统一走此通道
+const saveZipToLocal = async () => {
+    setBackupBusy(true);
+    const progressEl = panelRoot?.querySelector("#backupRunProgress") as HTMLElement;
+    if (progressEl) {
+        progressEl.classList.remove("fn__none");
+        progressEl.textContent = text("backupZipBuilding", "Building zip snapshot…");
+    }
+    try {
+        const response = await fetch("/api/backup/localZip", {
+            method: "POST", headers: {"Content-Type": "application/json"}, body: "{}",
+        });
+        if (!response.ok) {
+            let msg = "";
+            try {
+                msg = (JSON.parse(await response.text()) as {msg?: string}).msg || "";
+            } catch {
+                msg = response.statusText;
+            }
+            showMessage(`${text("backupSaveZipFailed", "Failed to build the zip snapshot")}: ${msg}`, 7000, "error");
+            return;
+        }
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = `siyuan-backup-${Date.now()}.zip`;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 30000);
+        showMessage(text("backupSaveZipDone", "Zip snapshot saved"), 3000);
+    } finally {
+        setBackupBusy(false);
+        if (progressEl) {
+            progressEl.classList.add("fn__none");
+            progressEl.textContent = "";
+        }
     }
 };
 

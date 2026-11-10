@@ -2034,6 +2034,10 @@ var BackupEditCheck = define[BackupEditCheckRequest, BackupEditCheckData]("editC
 // zip 内容是存储对象集(manifest + blobs),与存储类型解耦,可离线还原。
 var BackupZipSnapshots = define[BackupZipSnapshotsRequest, BackupZipSnapshotsData]("listZipSnapshots", "/api/backup/zipSnapshots", AuthenticatedAccess|AdminAccess, MultipartBody, ResponseOptions{}, "POST")
 var BackupRestoreZip = define[BackupRestoreZipRequest, BackupRestoreZipData]("restoreZip", "/api/backup/restoreZip", AuthenticatedAccess|AdminAccess|WritableAccess, JSONBody, ResponseOptions{}, "POST")
+
+// 保存 zip 到本地:对当前工作空间做一次全新快照并打包 zip 返回二进制,
+// 不依赖任何已连目标(离线备份出口);加密按配置口令。
+var BackupLocalZip = define[BackupLocalZipRequest, BinaryContent]("localZipBackup", "/api/backup/localZip", AuthenticatedAccess|AdminAccess|WritableAccess, JSONBody, ResponseOptions{Output: BinaryOutput, ErrorStatus: 500}, "POST")
 var BackupExportZip = define[BackupExportZipRequest, BinaryContent]("exportZip", "/api/backup/exportZip", AuthenticatedAccess|AdminAccess|WritableAccess, JSONBody, ResponseOptions{Output: BinaryOutput, ErrorStatus: 500}, "POST")
 
 // 快照管理:删除单个快照(引用计数保护共享数据块)与清空目标全部快照;

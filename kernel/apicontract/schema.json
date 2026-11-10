@@ -17704,9 +17704,6 @@
         "include": {
           "$ref": "#/$defs/BackupInclude"
         },
-        "localZipDir": {
-          "type": "string"
-        },
         "targets": {
           "anyOf": [
             {
@@ -17753,9 +17750,6 @@
         },
         "include": {
           "$ref": "#/$defs/BackupIncludeInput"
-        },
-        "localZipDir": {
-          "type": "string"
         },
         "targets": {
           "type": "array",
@@ -18099,6 +18093,15 @@
       "required": [
         "target"
       ],
+      "additionalProperties": false
+    },
+    "BackupLocalZipRequestInput": {
+      "type": "object",
+      "properties": {
+        "passphrase": {
+          "type": "string"
+        }
+      },
       "additionalProperties": false
     },
     "BackupPG": {
@@ -146570,6 +146573,69 @@
           }
         ]
       }
+    },
+    {
+      "method": "POST",
+      "path": "/api/backup/localZip",
+      "handler": "localZipBackup",
+      "authorization": [
+        "authenticated",
+        "admin",
+        "writable"
+      ],
+      "body": "json",
+      "request": {
+        "$ref": "#/$defs/BackupLocalZipRequestInput"
+      },
+      "response": {
+        "anyOf": [
+          {
+            "type": "string",
+            "format": "binary"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  -1
+                ]
+              },
+              "data": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "closeTimeout": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "closeTimeout"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "msg": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "msg",
+              "data"
+            ],
+            "additionalProperties": true
+          }
+        ]
+      },
+      "output": "binary",
+      "errorStatus": 500
     },
     {
       "method": "POST",

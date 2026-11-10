@@ -11,6 +11,7 @@ import (
 	"context"
 	"fmt"
 	"mime/multipart"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -55,6 +56,44 @@ var listZipSnapshots = contractHandler(apicontract.BackupZipSnapshots, func(c *g
 			TotalBytes: summary.TotalBytes, Encrypted: summary.Encrypted,
 		}},
 	})
+})
+
+// localZipBackup 对当前工作空间做一次全新快照并打包 zip 返回二进制;
+// 不依赖任何已连目标(离线备份出口),加密按配置口令
+var localZipBackup = contractHandler(apicontract.BackupLocalZip, func(c *gin.Context,
+	req apicontract.BackupLocalZipRequest) apicontract.Response[apicontract.BinaryContent] {
+	// zip 构建持有维护锁(引用计数),期间工作空间只读;与还原互斥
+	if backup.RestoreState() != nil {
+		return apicontract.Failure[apicontract.BinaryContent](http.StatusInternalServerError, "a restore is running")
+	}
+	cfg, err := loadBackupConfigForAPI()
+	if err != nil {
+		return apicontract.Failure[apicontract.BinaryContent](http.StatusInternalServerError, err.Error())
+	}
+	if req.Passphrase != "" {
+		if cfg.Encryption == nil {
+			cfg.Encryption = &backup.Encryption{Enabled: true}
+		}
+		cfg.Encryption.Enabled = true
+		cfg.Encryption.Passphrase = req.Passphrase
+	}
+	engine := backup.NewEngine(util.WorkspaceDir, cfg)
+	engine.LocalZipDir = filepath.Join(util.WorkspaceDir, "temp", "backup-export")
+	// 仅产 zip:哨兵目标 ID 不匹配任何配置目标,上传循环自然为空
+	result, err := engine.Run(c.Request.Context(), "__local_zip__")
+	if err != nil {
+		return apicontract.Failure[apicontract.BinaryContent](http.StatusInternalServerError, err.Error())
+	}
+	if result.ZipError != "" {
+		return apicontract.Failure[apicontract.BinaryContent](http.StatusInternalServerError, result.ZipError)
+	}
+	data, err := os.ReadFile(result.ZipPath)
+	if err != nil {
+		return apicontract.Failure[apicontract.BinaryContent](http.StatusInternalServerError, err.Error())
+	}
+	c.Header("Content-Disposition",
+		fmt.Sprintf("attachment; filename=siyuan-backup-%s.zip", result.Snapshot))
+	return apicontract.SuccessBinary("application/zip", data)
 })
 
 var restoreZip = contractHandler(apicontract.BackupRestoreZip, func(c *gin.Context,
