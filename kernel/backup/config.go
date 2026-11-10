@@ -34,6 +34,9 @@ type Config struct {
 	Include    Include     `json:"include"`
 	Targets    []*Target   `json:"targets"`
 	Encryption *Encryption `json:"encryption,omitempty"`
+	// LocalZipDir 非空时,每次备份把快照同步落一份本地 zip 到该目录;
+	// 这是离线(无 S3/WebDAV 连接)场景的备份出口
+	LocalZipDir string `json:"localZipDir,omitempty"`
 }
 
 type Encryption struct {
@@ -139,6 +142,7 @@ func (cfg *Config) Normalize() error {
 	if cfg.Encryption != nil && cfg.Encryption.Enabled && strings.TrimSpace(cfg.Encryption.Passphrase) == "" {
 		return fmt.Errorf("backup encryption is enabled but the passphrase is empty")
 	}
+	cfg.LocalZipDir = strings.TrimSpace(cfg.LocalZipDir)
 	seen := map[string]bool{}
 	identities := map[string]string{}
 	for i, target := range cfg.Targets {

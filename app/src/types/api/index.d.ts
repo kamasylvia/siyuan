@@ -752,9 +752,9 @@ export type BacklinkSourceFilterInput = { "dailyNote"?: string | null; "database
 
 export type BackmentionDocumentRequestInput = { "containChildren"?: boolean | null; "defID": string; "highlight"?: boolean | null; "keyword": string; "knownRevision"?: string | null; "notebook"?: string; "refTreeID": string; };
 
-export type BackupConfig = { "enabled": boolean; "encryption"?: BackupEncryption; "include": BackupInclude; "targets": Array<BackupTarget | null> | null; };
+export type BackupConfig = { "enabled": boolean; "encryption"?: BackupEncryption; "include": BackupInclude; "localZipDir"?: string; "targets": Array<BackupTarget | null> | null; };
 
-export type BackupConfigInput = { "enabled": boolean; "encryption"?: BackupEncryptionInput | null; "include": BackupIncludeInput; "targets": Array<BackupTargetInput | null>; };
+export type BackupConfigInput = { "enabled": boolean; "encryption"?: BackupEncryptionInput | null; "include": BackupIncludeInput; "localZipDir"?: string; "targets": Array<BackupTargetInput | null>; };
 
 export type BackupDeleteCheckData = { "results": Array<BackupDeleteCheckItem> | null; };
 
@@ -777,6 +777,8 @@ export type BackupEmptyTargetRequestInput = { "target": string; };
 export type BackupEncryption = { "enabled": boolean; "passphrase"?: string; };
 
 export type BackupEncryptionInput = { "enabled": boolean; "passphrase"?: string; };
+
+export type BackupExportZipRequestInput = { "snapshot": string; "target": string; };
 
 export type BackupGetConfigData = { "config": BackupConfig | null; "progress"?: BackupProgress; "state"?: BackupState; };
 
@@ -803,6 +805,10 @@ export type BackupRestoreDryRunRequestInput = { "force"?: boolean; "passphrase"?
 export type BackupRestoreProgress = { "done": number; "startedAt": number; "target": string; "total": number; };
 
 export type BackupRestoreRequestInput = { "force"?: boolean; "keepIdentity"?: boolean; "passphrase"?: string; "snapshot": string; "target": string; };
+
+export type BackupRestoreZipData = { "bytes": number; "failedBoxes"?: Array<string>; "files": number; "removed": number; };
+
+export type BackupRestoreZipRequestInput = { "force"?: boolean; "keepIdentity"?: boolean; "passphrase"?: string; "snapshot": string; "zipPath": string; };
 
 export type BackupRetention = { "keepLast"?: number; "maxAgeDays"?: number; };
 
@@ -843,6 +849,10 @@ export type BackupTestTargetRequestInput = { "target": BackupTargetInput | null;
 export type BackupWebDAV = { "endpoint": string; "password"?: string; "skipTlsVerify"?: boolean; "timeout"?: number; "username"?: string; };
 
 export type BackupWebDAVInput = { "endpoint": string; "password"?: string; "skipTlsVerify"?: boolean; "timeout"?: number; "username"?: string; };
+
+export type BackupZipSnapshotsData = { "snapshots": Array<BackupSnapshotSummary> | null; "zipPath": string; };
+
+export type BackupZipSnapshotsRequestInput = { "file"?: Blob; };
 
 export type BatchInsertBlockRequestInput = { "blocks": Array<BlockInsertInputInput>; };
 
@@ -4643,6 +4653,14 @@ export interface APIPOSTRoutes {
         /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
         authorization?: readonly ["authenticated","admin","writable"];
     };
+    "/api/backup/exportZip": {
+        request: BackupExportZipRequestInput;
+        response: Blob | { "code": -1; "data": { "closeTimeout": number; } | null; "msg": string; };
+        body: "json";
+        /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
+        authorization?: readonly ["authenticated","admin","writable"];
+        output: "binary";
+    };
     /**
      * 备份配置独立于同步配置；S3/WebDAV/PG 目标不经过同步 provider 或付费门控。
      */
@@ -4679,6 +4697,13 @@ export interface APIPOSTRoutes {
         /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
         authorization?: readonly ["authenticated","admin"];
     };
+    "/api/backup/restoreZip": {
+        request: BackupRestoreZipRequestInput;
+        response: { "code": 0; "data": BackupRestoreZipData; "msg": string; } | { "code": -1; "data": { "closeTimeout": number; } | null; "msg": string; };
+        body: "json";
+        /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
+        authorization?: readonly ["authenticated","admin","writable"];
+    };
     "/api/backup/run": {
         request: BackupRunRequestInput;
         response: { "code": 0; "data": BackupRunData; "msg": string; } | { "code": -1; "data": { "closeTimeout": number; } | null; "msg": string; };
@@ -4699,6 +4724,17 @@ export interface APIPOSTRoutes {
         body: "json";
         /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
         authorization?: readonly ["authenticated","admin","writable"];
+    };
+    /**
+     * 备份 zip:上传离线快照解析/还原,以及把已连目标快照导出为 zip 下载。
+     * zip 内容是存储对象集(manifest + blobs),与存储类型解耦,可离线还原。
+     */
+    "/api/backup/zipSnapshots": {
+        request: BackupZipSnapshotsRequestInput;
+        response: { "code": 0; "data": BackupZipSnapshotsData; "msg": string; } | { "code": -1; "data": { "closeTimeout": number; } | null; "msg": string; };
+        body: "multipart";
+        /** 服务器路由要求；资源权限与笔记本租约仍由内核校验 */
+        authorization?: readonly ["authenticated","admin"];
     };
     /**
      * 取消请求会停止当前下载及后续更新；已提交的包会保留并完成运行时刷新。

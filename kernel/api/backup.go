@@ -126,6 +126,7 @@ func unmaskBackupConfig(cfg *apicontract.BackupConfig, old *backup.Config) *back
 		}
 		out.Encryption = &backup.Encryption{Enabled: cfg.Encryption.Enabled, Passphrase: passphrase}
 	}
+	out.LocalZipDir = cfg.LocalZipDir
 	oldByID := map[string]*backup.Target{}
 	if old != nil {
 		for _, target := range old.Targets {
@@ -288,12 +289,17 @@ var testBackupTarget = contractHandler(apicontract.TestBackupTarget, func(c *gin
 
 var runBackup = contractHandler(apicontract.RunBackup, func(c *gin.Context,
 	req apicontract.BackupRunRequest) apicontract.Response[apicontract.BackupRunData] {
+	// 备份允许并行,但与还原互斥
+	if backup.RestoreState() != nil {
+		return apicontract.Failure[apicontract.BackupRunData](-1, "a restore is running")
+	}
 	cfg, err := backup.LoadConfig(backupConfigPath())
 	if err != nil {
 		return apicontract.Failure[apicontract.BackupRunData](-1, err.Error())
 	}
 	engine := backup.NewEngine(util.WorkspaceDir, cfg)
 	engine.Takeover = req.Takeover
+	engine.LocalZipDir = cfg.LocalZipDir
 	result, err := engine.Run(c.Request.Context(), req.Targets...)
 	if err != nil {
 		return apicontract.Failure[apicontract.BackupRunData](-1, err.Error())
@@ -457,6 +463,56 @@ var editCheckBackup = contractHandler(apicontract.BackupEditCheck, func(c *gin.C
 		Allowed: allowed, Reason: reason, OldSnapshots: oldCheck.Snapshots, SameStorage: sameStorage,
 	})
 })
+
+// maintenanceReadOnlyMiddleware 备份/还原进行中拒绝全部写入请求,保证快照
+// 一致性与还原落盘不被并发修改
+func MaintenanceReadOnlyMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if backup.MaintenanceLocked() && isMaintenanceWrite(c.FullPath()) {
+			c.AbortWithStatusJSON(503, gin.H{
+				"code": -1,
+				"msg":  "a backup or restore is running; the workspace is read-only",
+			})
+			return
+		}
+		c.Next()
+	}
+}
+
+// maintenanceWritePrefixes 是只读门禁拒绝的写入路由前缀:覆盖笔记编辑
+// (transactions)、笔记本/文档树/资源、插件与外观写入、设置、同步与存储视图。
+// 阅读类接口(列表/查询/导出)不在名单内,备份面板自身接口也不受限
+var maintenanceWritePrefixes = []string{
+	"/api/transactions",
+	"/api/notebook/",
+	"/api/filetree/",
+	"/api/asset/",
+	"/api/attr/",
+	"/api/setting/",
+	"/api/system/setConf",
+	"/api/sync/",
+	"/api/storage/set",
+	"/api/storage/remove",
+	"/api/storage/setCriterion",
+	"/api/format/",
+	"/api/clipboard/",
+	"/api/inbox/",
+	"/api/tag/",
+	"/api/export/",
+	"/ai/",
+	"/api/ai/",
+	"/api/mcp/",
+}
+
+// isMaintenanceWrite 判定请求路径是否落在写入前缀内
+func isMaintenanceWrite(fullPath string) bool {
+	for _, prefix := range maintenanceWritePrefixes {
+		if strings.HasPrefix(fullPath, prefix) {
+			return true
+		}
+	}
+	return false
+}
 
 // backupTargetStoreForAPI 加载配置并构建目标存储;任一步失败返回错误
 func backupTargetStoreForAPI(cfg *backup.Config, id string) (backup.Store, error) {

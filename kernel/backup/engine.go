@@ -5,6 +5,7 @@
 package backup
 
 import (
+	"archive/zip"
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
@@ -19,8 +20,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-
-	"github.com/gofrs/flock"
 )
 
 const (
@@ -56,6 +55,8 @@ type Engine struct {
 	InjectedRetention map[string]Retention
 	// Takeover 接管已被其它实例认领的目标归属
 	Takeover bool
+	// LocalZipDir 非空时把本次快照落一份本地 zip 到该目录(离线备份出口)
+	LocalZipDir string
 }
 
 type TargetResult struct {
@@ -79,6 +80,9 @@ type RunResult struct {
 	Files      int            `json:"files"`
 	TotalBytes int64          `json:"totalBytes"`
 	Targets    []TargetResult `json:"targets"`
+	// ZipPath 非空表示本次快照同步落了一份本地 zip;ZipError 为落盘失败原因
+	ZipPath  string `json:"zipPath,omitempty"`
+	ZipError string `json:"zipError,omitempty"`
 }
 
 type TargetState struct {
@@ -110,17 +114,10 @@ func (engine *Engine) Run(ctx context.Context, onlyTargets ...string) (*RunResul
 	if !engine.Config.Enabled {
 		return nil, errors.New("backup is disabled")
 	}
-	lock := flock.New(filepath.Join(engine.WorkspaceDir, "backup.lock"))
-	locked, err := lock.TryLock()
-	if err != nil {
-		return nil, err
-	}
-	if !locked {
-		return nil, errors.New("another backup is already running")
-	}
-	defer func() { _ = lock.Unlock() }()
-	MarkRunStarted()
-	defer MarkRunFinished()
+	// 备份是共享锁:并行备份互相独立(用户决策),进程内引用计数归零才解除只读;
+	// 收集阶段只读,并发快照互不污染
+	runID := AcquireRunSlot()
+	defer ReleaseRunSlot(runID)
 	selected := map[string]bool{}
 	for _, id := range onlyTargets {
 		selected[id] = true
@@ -147,7 +144,8 @@ func (engine *Engine) Run(ctx context.Context, onlyTargets ...string) (*RunResul
 		}
 		targets = append(targets, target)
 	}
-	if len(targets) == 0 {
+	// 本地 zip 是独立于目标的离线备份出口:目录已配置时,没有可用目标也允许运行
+	if len(targets) == 0 && engine.LocalZipDir == "" {
 		if len(initFailures) > 0 {
 			return nil, fmt.Errorf("no usable backup targets: %s", initFailures[0].Error)
 		}
@@ -171,7 +169,7 @@ func (engine *Engine) Run(ctx context.Context, onlyTargets ...string) (*RunResul
 	if err != nil {
 		return nil, err
 	}
-	MarkRunTotals(int64(len(entries)))
+	MarkRunTotals(runID, int64(len(entries)))
 	now := engine.now()
 	snapshotID := now.UTC().Format("20060102T150405Z") + "-" + randomSuffix()
 	manifest := Manifest{ID: snapshotID, CreatedAt: now.UTC(), Roots: roots, Files: entries, Encryption: encryptionInfo}
@@ -194,13 +192,83 @@ func (engine *Engine) Run(ctx context.Context, onlyTargets ...string) (*RunResul
 				ClaimedAt: d.Owner.ClaimedAt.Format(time.RFC3339)})
 			continue
 		}
-		MarkRunTarget(target.ID())
-		targetResult := engine.upload(ctx, target, snapshotID, manifest, entries, key)
+		MarkRunTarget(runID, target.ID())
+		targetResult := engine.upload(ctx, target, snapshotID, manifest, entries, key, runID)
 		result.Targets = append(result.Targets, targetResult)
+	}
+	// 本地 zip 落盘:加密时写入密文 blob(与目标存储一致),还原需要口令
+	if engine.LocalZipDir != "" {
+		if zipErr := engine.writeLocalZip(ctx, runID, snapshotID, manifest, entries, key); zipErr != nil {
+			result.ZipError = zipErr.Error()
+		} else {
+			result.ZipPath = filepath.Join(engine.LocalZipDir, "siyuan-backup-"+snapshotID+".zip")
+		}
 	}
 	result.FinishedAt = engine.now()
 	engine.saveState(result)
 	return result, nil
+}
+
+// writeLocalZip 把本次快照(manifest + 全部 blob)落成本地 zip,离线场景的
+// 备份出口;zip 与目标存储对象同构,可离线还原也可回灌目标
+func (engine *Engine) writeLocalZip(_ context.Context, runID int64, snapshotID string, manifest Manifest,
+	entries []Entry, key []byte) error {
+	if err := os.MkdirAll(engine.LocalZipDir, 0755); err != nil {
+		return err
+	}
+	zipPath := filepath.Join(engine.LocalZipDir, "siyuan-backup-"+snapshotID+".zip")
+	zipFile, err := os.Create(zipPath)
+	if err != nil {
+		return err
+	}
+	defer zipFile.Close()
+	archive := zip.NewWriter(zipFile)
+	defer archive.Close()
+	writeEntry := func(name string, data []byte) error {
+		writer, err := archive.Create(name)
+		if err != nil {
+			return err
+		}
+		_, err = writer.Write(data)
+		return err
+	}
+	manifestData, err := json.MarshalIndent(manifest, "", "  ")
+	if err != nil {
+		return err
+	}
+	if err = writeEntry(zipEntryDir+"/manifest.json", manifestData); err != nil {
+		return err
+	}
+	meta, _ := json.Marshal(zipMeta{Version: 1, SnapshotID: snapshotID,
+		CreatedAt: manifest.CreatedAt, Encrypted: len(key) > 0})
+	if err = writeEntry(zipEntryDir+"/meta.json", meta); err != nil {
+		return err
+	}
+	blobPrefix := BlobPrefix
+	if len(key) > 0 {
+		blobPrefix = EncryptedBlobPrefix
+	}
+	for _, entry := range entries {
+		content, err := os.ReadFile(filepath.Join(engine.WorkspaceDir, filepath.FromSlash(entry.Path)))
+		if err != nil {
+			return err
+		}
+		if len(key) > 0 {
+			content, err = sealBlob(content, key)
+			if err != nil {
+				return err
+			}
+		}
+		if err = writeEntry(blobPrefix+entry.Hash, content); err != nil {
+			return err
+		}
+		MarkRunTarget(runID, "zip")
+		AddRunDone(runID)
+	}
+	if err = archive.Close(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (engine *Engine) now() time.Time {
@@ -331,7 +399,7 @@ func (engine *Engine) encryption() ([]byte, *ManifestEncryption, error) {
 }
 
 func (engine *Engine) upload(ctx context.Context, target Store, snapshotID string, manifest Manifest,
-	entries []Entry, key []byte) TargetResult {
+	entries []Entry, key []byte, runID int64) TargetResult {
 	result := TargetResult{ID: target.ID()}
 	for _, entry := range entries {
 		if result.Error != "" {
@@ -348,7 +416,7 @@ func (engine *Engine) upload(ctx context.Context, target Store, snapshotID strin
 		}
 		if exists {
 			result.SkippedBlobs++
-			AddRunDone()
+			AddRunDone(runID)
 			continue
 		}
 		data, err := os.ReadFile(filepath.Join(engine.WorkspaceDir, filepath.FromSlash(entry.Path)))

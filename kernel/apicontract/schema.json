@@ -17704,6 +17704,9 @@
         "include": {
           "$ref": "#/$defs/BackupInclude"
         },
+        "localZipDir": {
+          "type": "string"
+        },
         "targets": {
           "anyOf": [
             {
@@ -17750,6 +17753,9 @@
         },
         "include": {
           "$ref": "#/$defs/BackupIncludeInput"
+        },
+        "localZipDir": {
+          "type": "string"
         },
         "targets": {
           "type": "array",
@@ -17965,6 +17971,22 @@
       },
       "required": [
         "enabled"
+      ],
+      "additionalProperties": false
+    },
+    "BackupExportZipRequestInput": {
+      "type": "object",
+      "properties": {
+        "snapshot": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "snapshot",
+        "target"
       ],
       "additionalProperties": false
     },
@@ -18327,6 +18349,57 @@
       "required": [
         "snapshot",
         "target"
+      ],
+      "additionalProperties": false
+    },
+    "BackupRestoreZipData": {
+      "type": "object",
+      "properties": {
+        "bytes": {
+          "type": "integer"
+        },
+        "failedBoxes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "files": {
+          "type": "integer"
+        },
+        "removed": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "bytes",
+        "files",
+        "removed"
+      ],
+      "additionalProperties": false
+    },
+    "BackupRestoreZipRequestInput": {
+      "type": "object",
+      "properties": {
+        "force": {
+          "type": "boolean"
+        },
+        "keepIdentity": {
+          "type": "boolean"
+        },
+        "passphrase": {
+          "type": "string"
+        },
+        "snapshot": {
+          "type": "string"
+        },
+        "zipPath": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "snapshot",
+        "zipPath"
       ],
       "additionalProperties": false
     },
@@ -18891,6 +18964,42 @@
       "required": [
         "endpoint"
       ],
+      "additionalProperties": false
+    },
+    "BackupZipSnapshotsData": {
+      "type": "object",
+      "properties": {
+        "snapshots": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/BackupSnapshotSummary"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "zipPath": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "snapshots",
+        "zipPath"
+      ],
+      "additionalProperties": false
+    },
+    "BackupZipSnapshotsRequestInput": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string",
+          "format": "binary"
+        }
+      },
       "additionalProperties": false
     },
     "BatchInsertBlockRequestInput": {
@@ -146237,6 +146346,69 @@
     },
     {
       "method": "POST",
+      "path": "/api/backup/exportZip",
+      "handler": "exportZip",
+      "authorization": [
+        "authenticated",
+        "admin",
+        "writable"
+      ],
+      "body": "json",
+      "request": {
+        "$ref": "#/$defs/BackupExportZipRequestInput"
+      },
+      "response": {
+        "anyOf": [
+          {
+            "type": "string",
+            "format": "binary"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  -1
+                ]
+              },
+              "data": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "closeTimeout": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "closeTimeout"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "msg": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "msg",
+              "data"
+            ],
+            "additionalProperties": true
+          }
+        ]
+      },
+      "output": "binary",
+      "errorStatus": 500
+    },
+    {
+      "method": "POST",
       "path": "/api/backup/getConfig",
       "handler": "getBackupConfig",
       "authorization": [
@@ -146557,6 +146729,86 @@
     },
     {
       "method": "POST",
+      "path": "/api/backup/restoreZip",
+      "handler": "restoreZip",
+      "authorization": [
+        "authenticated",
+        "admin",
+        "writable"
+      ],
+      "body": "json",
+      "request": {
+        "$ref": "#/$defs/BackupRestoreZipRequestInput"
+      },
+      "response": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  0
+                ]
+              },
+              "data": {
+                "$ref": "#/$defs/BackupRestoreZipData"
+              },
+              "msg": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "msg",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  -1
+                ]
+              },
+              "data": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "closeTimeout": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "closeTimeout"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "msg": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "msg",
+              "data"
+            ],
+            "additionalProperties": true
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
       "path": "/api/backup/run",
       "handler": "runBackup",
       "authorization": [
@@ -146741,6 +146993,85 @@
               },
               "data": {
                 "$ref": "#/$defs/BackupTestTargetData"
+              },
+              "msg": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "msg",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  -1
+                ]
+              },
+              "data": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "closeTimeout": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "closeTimeout"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "msg": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "msg",
+              "data"
+            ],
+            "additionalProperties": true
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/api/backup/zipSnapshots",
+      "handler": "listZipSnapshots",
+      "authorization": [
+        "authenticated",
+        "admin"
+      ],
+      "body": "multipart",
+      "request": {
+        "$ref": "#/$defs/BackupZipSnapshotsRequestInput"
+      },
+      "response": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "enum": [
+                  0
+                ]
+              },
+              "data": {
+                "$ref": "#/$defs/BackupZipSnapshotsData"
               },
               "msg": {
                 "type": "string"

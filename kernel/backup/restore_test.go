@@ -11,8 +11,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/gofrs/flock"
 )
 
 // prepareForceRestoreFixture 备份两个文件(data/box/doc.sy、conf/conf.json)并
@@ -155,23 +153,14 @@ func TestRunProgressLifecycle(t *testing.T) {
 	if RunState() != nil {
 		t.Fatal("progress must clear after run returns")
 	}
-	// 锁被占用时不产生运行态
+	// 并行备份:第二个备份允许开启(共享锁),结束后运行态仍清空
 	engine2 := NewEngine(workspace, engine.Config)
 	engine2.InjectedTargets = engine.InjectedTargets
-	lock := flock.New(filepath.Join(workspace, "backup.lock"))
-	locked, lockErr := lock.TryLock()
-	if lockErr != nil {
-		t.Fatal(lockErr)
-	}
-	if !locked {
-		t.Fatal("failed to acquire backup lock for the conflict test")
-	}
-	defer func() { _ = lock.Unlock() }()
-	if _, runErr := engine2.Run(context.Background()); runErr == nil {
-		t.Fatal("expected lock conflict error")
+	if _, runErr := engine2.Run(context.Background()); runErr != nil {
+		t.Fatalf("parallel backup should be allowed: %v", runErr)
 	}
 	if RunState() != nil {
-		t.Fatal("failed lock attempt must not leave progress running")
+		t.Fatal("progress must clear after all parallel runs return")
 	}
 	// 还原运行态:原子占位拒绝并发,结束后清零
 	if !MarkRestoreStarted(3, "local-1") {

@@ -29,6 +29,7 @@ type BackupConfig = {
     include: {data: boolean; conf: boolean; history: boolean; localStorage: boolean};
     targets: BackupTarget[];
     encryption?: {enabled: boolean; passphrase?: string};
+    localZipDir?: string;
 };
 
 type TargetState = {
@@ -163,6 +164,13 @@ const render = () => {
         <input id="backupEncryptionPassphrase" class="b3-text-field fn__flex-1" type="password" placeholder="${escapeHtmlTextAndAttr(text("backupPassphrase", "Passphrase"))}" value="${escapeHtmlTextAndAttr(currentConfig.encryption?.passphrase || "")}">
     </div>
     <div id="backupRunProgress" class="ft__on-surface fn__none" style="margin-bottom:10px;font-size:12px"></div>
+    <div class="fn__flex" style="align-items:center;gap:8px;margin-bottom:10px">
+        <button class="b3-button b3-button--outline" id="backupZipRestore">${escapeHtmlTextAndAttr(text("backupZipRestore", "Restore from zip"))}</button>
+        <input id="backupZipFile" type="file" accept=".zip" class="fn__none">
+        <span class="fn__flex-1"></span>
+        <label class="fn__flex" style="align-items:center;gap:4px;min-width:0;flex:2"><span class="ft__on-surface" style="white-space:nowrap">${escapeHtmlTextAndAttr(text("backupLocalZipDir", "Local zip dir"))}</span>
+        <input id="backupLocalZipDir" class="b3-text-field fn__flex-1" type="text" placeholder="${escapeHtmlTextAndAttr(text("backupLocalZipDirTip", "Empty = disabled; every backup also writes a zip snapshot here"))}" value="${escapeHtmlTextAndAttr(currentConfig.localZipDir || "")}"></label>
+    </div>
     <div id="backupTargetList">${targets.length ? targets.map(targetRowHTML).join("") :
         `<div class="b3-label__text">${escapeHtmlTextAndAttr(text("backupNoTargets", "No backup targets configured"))}</div>`}</div>
     <div id="backupForm" class="fn__none" style="margin-top:12px;border-top:1px solid var(--b3-border-color);padding-top:10px">
@@ -232,6 +240,17 @@ const bind = () => {
     }
     panelRoot.querySelector("#backupEncryptionEnabled")?.addEventListener("change", () => void saveEncryption());
     panelRoot.querySelector("#backupEncryptionPassphrase")?.addEventListener("change", () => void saveEncryption());
+    panelRoot.querySelector("#backupLocalZipDir")?.addEventListener("change", () => void saveLocalZipDir());
+    panelRoot.querySelector("#backupZipRestore")?.addEventListener("click", () => {
+        (panelRoot.querySelector("#backupZipFile") as HTMLInputElement)?.click();
+    });
+    panelRoot.querySelector("#backupZipFile")?.addEventListener("change", (event) => {
+        const file = (event.target as HTMLInputElement).files?.[0];
+        if (file) {
+            void openZipRestore(file);
+        }
+        (event.target as HTMLInputElement).value = "";
+    });
     panelRoot.querySelectorAll("#backupTargetList [data-action]").forEach(button => {
         button.addEventListener("click", (event) => {
             const row = (event.currentTarget as HTMLElement).closest("[data-id]") as HTMLElement;
@@ -475,6 +494,11 @@ const saveConfig = async () => {
     return true;
 };
 
+const saveLocalZipDir = async () => {
+    currentConfig.localZipDir = (panelRoot?.querySelector("#backupLocalZipDir") as HTMLInputElement)?.value.trim() || "";
+    await saveConfig();
+};
+
 const saveEncryption = async () => {
     currentConfig.encryption = {
         enabled: (panelRoot?.querySelector("#backupEncryptionEnabled") as HTMLInputElement)?.checked === true,
@@ -640,6 +664,64 @@ const runBackup = async (targetIds?: string[], takeover = false): Promise<void> 
         }
         await loadPanel();
     }
+};
+
+// 离线 zip 还原:上传备份 zip → 快照确认 → 还原到当前工作空间(内核重建索引
+// 后前端整页重载);与目标无关,离线场景的还原出口
+const openZipRestore = (file: File) => {
+    const upload = new FormData();
+    upload.append("file", file);
+    // multipart 上传走原生 fetch(fetchSyncPost 只发 JSON)
+    fetch("/api/backup/zipSnapshots", {method: "POST", body: upload})
+        .then(response => response.json())
+        .then((response: {code: number; msg: string; data?: {zipPath: string; snapshots: Array<{
+            id: string; createdAt: string; files: number; encrypted: boolean}>}}) => {
+        if (response.code !== 0 || !response.data?.snapshots?.length) {
+            showMessage(`${text("backupZipImportFailed", "Could not read the backup zip")}: ${response.msg}`, 7000, "error");
+            return;
+        }
+        const {zipPath, snapshots} = response.data;
+        const rows = snapshots.map(snapshot =>
+            `<label class="fn__flex" style="align-items:center;gap:6px;padding:4px 0;cursor:pointer">
+                <input type="radio" name="backupZipSnapshot" value="${escapeHtmlTextAndAttr(snapshot.id)}" checked>
+                <span>${escapeHtmlTextAndAttr(snapshot.createdAt)} · ${snapshot.files} files${snapshot.encrypted ? " · 🔒" : ""}</span>
+            </label>`).join("");
+        const dialogHTML = `<div class="b3-dialog__content" style="padding:12px">
+    <div style="max-height:220px;overflow:auto">${rows}</div>
+    <input id="backupZipPassphrase" type="password" class="b3-text-field fn__block" style="margin-top:8px"
+        placeholder="${escapeHtmlTextAndAttr(text("backupRestorePassphrase", "Passphrase (encrypted backups only)"))}">
+    <label class="fn__flex" style="align-items:center;gap:6px;margin-top:8px;cursor:pointer">
+        <input id="backupZipForce" type="checkbox" checked>
+        <span>${escapeHtmlTextAndAttr(text("backupRestoreForceLabel", "Converge workspace to the snapshot"))}</span>
+    </label>
+    <label class="fn__flex" style="align-items:center;gap:6px;margin-top:8px;cursor:pointer">
+        <input id="backupZipKeepIdentity" type="checkbox">
+        <span>${escapeHtmlTextAndAttr(text("backupRestoreKeepIdentity", "Use the snapshot's system identity and lock-screen passphrase"))}</span>
+    </label>
+    <div class="ft__on-surface" style="margin-top:8px;font-size:12px">${escapeHtmlTextAndAttr(text("backupRestoreWarn", "Restoring overwrites data/ and conf/ in the current workspace. With converge enabled the workspace becomes an exact copy of the snapshot: documents and assets not in the snapshot are deleted; excluded files such as backup credentials are kept"))}</div>
+</div>`;
+        confirmDialog(text("backupZipRestore", "Restore from zip"), dialogHTML, async () => {
+            const snapshot = (document.querySelector("input[name=backupZipSnapshot]:checked") as HTMLInputElement)?.value || "";
+            const passphrase = (document.querySelector("#backupZipPassphrase") as HTMLInputElement)?.value || "";
+            const force = (document.querySelector("#backupZipForce") as HTMLInputElement)?.checked || false;
+            const keepIdentity = (document.querySelector("#backupZipKeepIdentity") as HTMLInputElement)?.checked || false;
+            const response = await fetchSyncPost("/api/backup/restoreZip",
+                {zipPath, snapshot, passphrase, force, keepIdentity});
+            const result = response.data as {files?: number; removed?: number} | undefined;
+            if (response.code !== 0) {
+                showMessage(`${text("backupRestoreFailed", "Restore failed")}: ${response.msg}`, 7000, "error");
+                return;
+            }
+            let message = `${text("backupRestoreOK", "Restored")}: ${result?.files || 0} files`;
+            if ((result?.removed || 0) > 0) {
+                message += ", " + text("backupRestorePruned", "${x} stale files removed").replace("${x}", String(result?.removed));
+            }
+            showMessage(message, 6000);
+            await loadPanel();
+        }, undefined, true);
+    }).catch((error) => {
+        showMessage(`${text("backupZipImportFailed", "Could not read the backup zip")}: ${String(error)}`, 7000, "error");
+    });
 };
 
 // 删除是批量配置操作,但有删除门禁:仅确认已清空的目标可删,防止在存储上遗留

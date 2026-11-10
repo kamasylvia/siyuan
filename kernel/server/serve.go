@@ -135,6 +135,18 @@ func Serve(fastMode bool, cookieKey string) {
 
 	// 定时备份守护:cron 到期自动执行,写入归属由备份认领机制去重
 	go backup.StartScheduler(util.WorkspaceDir, filepath.Join(util.ConfDir, "backup.json"))
+	// 只读状态变化广播到前端:复用既有 readonly 通道翻转编辑器只读,
+	// 并推送维护提示(备份/还原完成后自动恢复编辑)
+	backup.SetMaintenanceChangeHook(func(active bool, kind string) {
+		util.BroadcastByType("main", "readonly", 0, "", active)
+		label := "backup"
+		if kind == "restore" {
+			label = "restore"
+		}
+		if active {
+			util.BroadcastByType("main", "msg", 0, "backup or restore is running; the workspace is read-only ("+label+")", nil)
+		}
+	})
 
 	gin.SetMode(gin.ReleaseMode)
 	ginServer := gin.New()
@@ -164,6 +176,8 @@ func Serve(fastMode bool, cookieKey string) {
 	// https://github.com/siyuan-note/siyuan/security/advisories/GHSA-hpj5-f7cj-vvwr
 	ginServer.Use(tlsEnforceMiddleware())
 	ginServer.Use(sessions.Sessions(util.SessionCookieName, sessionStore))
+	// 备份/还原进行中拒绝写入请求,工作空间进入只读状态
+	ginServer.Use(api.MaintenanceReadOnlyMiddleware())
 
 	serveDebug(ginServer)
 	serveAssets(ginServer)

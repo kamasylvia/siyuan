@@ -2030,6 +2030,12 @@ var BackupDeleteCheck = define[BackupDeleteCheckRequest, BackupDeleteCheckData](
 // 才放行保存,防止更换存储后遗留孤儿快照。
 var BackupEditCheck = define[BackupEditCheckRequest, BackupEditCheckData]("editCheckBackup", "/api/backup/editCheck", AuthenticatedAccess|AdminAccess, JSONBody, ResponseOptions{}, "POST")
 
+// 备份 zip:上传离线快照解析/还原,以及把已连目标快照导出为 zip 下载。
+// zip 内容是存储对象集(manifest + blobs),与存储类型解耦,可离线还原。
+var BackupZipSnapshots = define[BackupZipSnapshotsRequest, BackupZipSnapshotsData]("listZipSnapshots", "/api/backup/zipSnapshots", AuthenticatedAccess|AdminAccess, MultipartBody, ResponseOptions{}, "POST")
+var BackupRestoreZip = define[BackupRestoreZipRequest, BackupRestoreZipData]("restoreZip", "/api/backup/restoreZip", AuthenticatedAccess|AdminAccess|WritableAccess, JSONBody, ResponseOptions{}, "POST")
+var BackupExportZip = define[BackupExportZipRequest, BinaryContent]("exportZip", "/api/backup/exportZip", AuthenticatedAccess|AdminAccess|WritableAccess, JSONBody, ResponseOptions{Output: BinaryOutput, ErrorStatus: 500}, "POST")
+
 // 快照管理:删除单个快照(引用计数保护共享数据块)与清空目标全部快照;
 // 两者都要求目标可连接,备份或还原进行中时拒绝执行。
 var BackupDeleteSnapshot = define[BackupDeleteSnapshotRequest, BackupDeleteSnapshotData]("deleteBackupSnapshot", "/api/backup/deleteSnapshot", AuthenticatedAccess|AdminAccess|WritableAccess, JSONBody, ResponseOptions{}, "POST")

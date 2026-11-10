@@ -4,6 +4,8 @@
 
 package apicontract
 
+import "mime/multipart"
+
 type BackupInclude struct {
 	Data         bool `json:"data"`
 	Conf         bool `json:"conf"`
@@ -66,6 +68,41 @@ type BackupSchedule struct {
 	Cron string `json:"cron"`
 }
 
+type BackupZipSnapshotsRequest struct {
+	File *multipart.FileHeader `json:"file" api:"optional"`
+}
+
+type BackupZipSnapshotsData struct {
+	// ZipPath 是内核侧暂存路径,还原时原样传回
+	ZipPath   string                  `json:"zipPath"`
+	Snapshots []BackupSnapshotSummary `json:"snapshots"`
+}
+
+type BackupRestoreZipRequest struct {
+	ZipPath      string `json:"zipPath"`
+	Snapshot     string `json:"snapshot"`
+	Passphrase   string `json:"passphrase" api:"optional"`
+	Force        bool   `json:"force" api:"optional"`
+	KeepIdentity bool   `json:"keepIdentity" api:"optional"`
+}
+
+type BackupRestoreZipData struct {
+	Files   int   `json:"files"`
+	Bytes   int64 `json:"bytes"`
+	Removed int   `json:"removed"`
+	// FailedBoxes 是索引未就绪的笔记本 ID 列表;Reindexed 为 false 时定位陈旧范围
+	FailedBoxes []string `json:"failedBoxes,omitempty"`
+}
+
+type BackupExportZipRequest struct {
+	Target   string `json:"target"`
+	Snapshot string `json:"snapshot"`
+}
+
+type BackupExportZipData struct {
+	Path string `json:"path"`
+}
+
 type BackupEncryption struct {
 	Enabled    bool   `json:"enabled"`
 	Passphrase string `json:"passphrase,omitempty" api:"optional"`
@@ -76,6 +113,8 @@ type BackupConfig struct {
 	Include    BackupInclude     `json:"include"`
 	Targets    []*BackupTarget   `json:"targets"`
 	Encryption *BackupEncryption `json:"encryption,omitempty" api:"optional,nullable"`
+	// LocalZipDir 非空时每次备份同步落一份本地 zip 到该目录
+	LocalZipDir string `json:"localZipDir,omitempty" api:"optional"`
 }
 
 type BackupTargetState struct {
