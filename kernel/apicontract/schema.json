@@ -18481,6 +18481,12 @@
         "target": {
           "type": "string"
         },
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "total": {
           "type": "integer"
         }

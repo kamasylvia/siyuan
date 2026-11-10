@@ -15,6 +15,7 @@ import (
 // 实例字段跨请求不可见,故用包级注册表
 type runProgress struct {
 	startedAt int64
+	targetIDs []string
 	target    atomic.Value
 	done      atomic.Int64
 	total     atomic.Int64
@@ -39,13 +40,15 @@ var (
 	restoreTracker restoreProgress
 )
 
-// RunStateView 是备份在飞状态的只读快照;并行备份时为聚合视图
+// RunStateView 是备份在飞状态的只读快照;并行备份时为聚合视图。
+// Targets 是全部在飞任务占用的目标配置 ID:同 ID 的新备份被拒绝
 type RunStateView struct {
 	StartedAt int64
 	Target    string
 	Done      int64
 	Total     int64
 	Runs      int64
+	Targets   []string
 }
 
 // RestoreStateView 是还原在飞状态的只读快照
@@ -74,17 +77,30 @@ func notifyMaintenance(kind string, active bool) {
 	}
 }
 
-// AcquireRunSlot 登记一个并发备份任务并返回其运行 ID
-func AcquireRunSlot() int64 {
+// AcquireRunSlot 登记一个并发备份任务及其占用的目标 ID,返回运行 ID;
+// 占用持续到任务结束,期间同目标的新备份被拒绝
+func AcquireRunSlot(targetIDs []string) int64 {
 	runsMu.Lock()
 	defer runsMu.Unlock()
 	id := nextRunID.Add(1)
-	runs[id] = &runProgress{startedAt: time.Now().Unix()}
+	runs[id] = &runProgress{startedAt: time.Now().Unix(), targetIDs: targetIDs}
 	wasEmpty := len(runs) == 1
 	if wasEmpty {
 		go notifyMaintenance("backup", true)
 	}
 	return id
+}
+
+// BusyTargetIDs 返回全部在飞备份占用的目标配置 ID;还原独占时返回 nil,
+// 由调用方按 RestoreState 处理
+func BusyTargetIDs() []string {
+	runsMu.Lock()
+	defer runsMu.Unlock()
+	var ids []string
+	for _, run := range runs {
+		ids = append(ids, run.targetIDs...)
+	}
+	return ids
 }
 
 // ReleaseRunSlot 在备份任务返回前移除登记;最后一个任务结束即解除只读
@@ -142,6 +158,7 @@ func RunState() *RunStateView {
 		if run.startedAt < view.StartedAt {
 			view.StartedAt = run.startedAt
 		}
+		view.Targets = append(view.Targets, run.targetIDs...)
 		target, _ := run.target.Load().(string)
 		if target != "" {
 			if view.Target != "" {

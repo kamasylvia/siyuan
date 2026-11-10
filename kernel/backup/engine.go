@@ -114,10 +114,6 @@ func (engine *Engine) Run(ctx context.Context, onlyTargets ...string) (*RunResul
 	if !engine.Config.Enabled {
 		return nil, errors.New("backup is disabled")
 	}
-	// 备份是共享锁:并行备份互相独立(用户决策),进程内引用计数归零才解除只读;
-	// 收集阶段只读,并发快照互不污染
-	runID := AcquireRunSlot()
-	defer ReleaseRunSlot(runID)
 	selected := map[string]bool{}
 	for _, id := range onlyTargets {
 		selected[id] = true
@@ -145,6 +141,10 @@ func (engine *Engine) Run(ctx context.Context, onlyTargets ...string) (*RunResul
 		targets = append(targets, target)
 	}
 	// 本地 zip 是独立于目标的离线备份出口:目录已配置时,没有可用目标也允许运行
+	// 备份是共享锁:并行备份互相独立(用户决策),进程内引用计数归零才解除只读;
+	// 登记占用的目标 ID,同目标的新备份在内核被拒绝
+	runID := AcquireRunSlot(ownedTargetIDs(targets))
+	defer ReleaseRunSlot(runID)
 	if len(targets) == 0 && engine.LocalZipDir == "" {
 		if len(initFailures) > 0 {
 			return nil, fmt.Errorf("no usable backup targets: %s", initFailures[0].Error)
@@ -396,6 +396,15 @@ func (engine *Engine) encryption() ([]byte, *ManifestEncryption, error) {
 	}
 	info, key, err := newEncryptionInfo(engine.Config.Encryption.Passphrase)
 	return key, info, err
+}
+
+// ownedTargetIDs 收集本次运行占用的目标配置 ID
+func ownedTargetIDs(targets []Store) []string {
+	ids := make([]string, 0, len(targets))
+	for _, target := range targets {
+		ids = append(ids, target.ID())
+	}
+	return ids
 }
 
 func (engine *Engine) upload(ctx context.Context, target Store, snapshotID string, manifest Manifest,

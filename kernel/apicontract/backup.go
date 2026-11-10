@@ -150,6 +150,8 @@ type BackupRunProgress struct {
 	Target    string `json:"target"`
 	Done      int64  `json:"done"`
 	Total     int64  `json:"total"`
+	// Targets 是全部在飞备份占用的目标配置 ID;前端据此逐行置灰
+	Targets []string `json:"targets,omitempty"`
 }
 
 // BackupRestoreProgress 是在飞还原的进度:Total 为快照文件数

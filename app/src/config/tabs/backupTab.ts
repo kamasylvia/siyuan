@@ -44,7 +44,7 @@ type TargetState = {
 type BackupState = {updatedAt?: string; targets: Record<string, TargetState>};
 
 type BackupData = {config: BackupConfig; state?: BackupState; progress?: {
-    backup?: {startedAt: number; target: string; done: number; total: number};
+    backup?: {startedAt: number; target: string; targets?: string[]; done: number; total: number};
     restore?: {startedAt: number; target: string; done: number; total: number};
 }};
 
@@ -420,7 +420,7 @@ const loadPanel = async () => {
     const progressEl = panelRoot?.querySelector("#backupRunProgress") as HTMLElement;
     const run = data.progress?.backup;
     const restore = data.progress?.restore;
-    setBackupBusy(Boolean(run || restore), run?.target || restore?.target);
+    setBackupBusy(Boolean(run || restore), run?.targets || []);
     if (progressEl && (run || restore)) {
         if (restore) {
             const seconds = Math.max(1, Math.round(Date.now() / 1000) - restore.startedAt);
@@ -440,21 +440,37 @@ const loadPanel = async () => {
         }
         progressEl.classList.remove("fn__none");
     }
-    // 备份或还原进行中:动作按钮统一灰掉,防止并发操作
-    setBackupBusy(Boolean(run || restore));
+    // 备份或还原进行中:在飞目标行灰掉,防止并发操作
+    setBackupBusy(Boolean(run || restore), run?.targets || []);
 };
 
 // 备份或还原运行期间,运行中的目标行全部按钮(含编辑、测试连接、快照管理)
 // 无豁免禁用,顶部全局按钮同步禁用;其余目标行保持可用。targetID 省略时
 // 先禁用全部行,待进度回报运行目标后收窄
-const setBackupBusy = (on: boolean, targetID?: string): void => {
-    panelRoot?.querySelectorAll("#backupRun, #backupDelete, #backupRestore").forEach(button => {
+// on=true 且 busyTargets 为空:还原在飞(独占),全部动作灰掉;
+// busyTargets 非空:备份在飞(可并行),仅在飞目标行灰掉,其余行保持可用。
+// 顶部「备份」仅在还原时禁用(并行备份不受影响),「删除」在还原时禁用
+const setBackupBusy = (on: boolean, busyTargets: string[] = []): void => {
+    const restoreOnly = on && !busyTargets.length;
+    panelRoot?.querySelectorAll("#backupRun, #backupRestore").forEach(button => {
+        (button as HTMLButtonElement).disabled = on && restoreOnly;
+    });
+    panelRoot?.querySelectorAll("#backupDelete").forEach(button => {
         (button as HTMLButtonElement).disabled = on;
     });
     panelRoot?.querySelectorAll("#backupTargetList [data-action]").forEach(button => {
         const row = button.closest("[data-id]") as HTMLElement;
         const rowTarget = row?.getAttribute("data-id") || "";
-        (button as HTMLButtonElement).disabled = on && (!targetID || rowTarget === targetID);
+        const action = button.getAttribute("data-action");
+        let disabled: boolean;
+        if (action === "backup") {
+            disabled = on && (!busyTargets.length || busyTargets.includes(rowTarget));
+        } else if (action === "restore") {
+            disabled = on;
+        } else {
+            disabled = on && (!busyTargets.length || busyTargets.includes(rowTarget));
+        }
+        (button as HTMLButtonElement).disabled = disabled;
     });
 };
 
@@ -616,7 +632,7 @@ const runBackup = async (targetIds?: string[], takeover = false): Promise<void> 
         }
         const run = (response.data as BackupData)?.progress?.backup;
         if (run) {
-            setBackupBusy(true, run.target);
+            setBackupBusy(true, run.targets || selected.slice());
             if (progressEl) {
             const seconds = Math.max(1, Math.round(Date.now() / 1000) - run.startedAt);
             progressEl.textContent =
@@ -966,7 +982,7 @@ const openRestoreDialog = async (targetId: string) => {
             const response = await fetchSyncPost("/api/backup/getConfig", {});
             const restore = (response.data as BackupData)?.progress?.restore;
             if (restore) {
-                setBackupBusy(true, restore.target);
+                setBackupBusy(true);
                 if (progressEl) {
                     const seconds = Math.max(1, Math.round(Date.now() / 1000) - restore.startedAt);
                     progressEl.textContent =

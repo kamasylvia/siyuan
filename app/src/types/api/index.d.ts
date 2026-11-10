@@ -816,7 +816,7 @@ export type BackupRetentionInput = { "keepLast"?: number; "maxAgeDays"?: number;
 
 export type BackupRunData = { "files": number; "finishedAt": string; "snapshot": string; "startedAt": string; "targets": Array<BackupRunTarget> | null; "totalBytes": number; };
 
-export type BackupRunProgress = { "done": number; "startedAt": number; "target": string; "total": number; };
+export type BackupRunProgress = { "done": number; "startedAt": number; "target": string; "targets"?: Array<string>; "total": number; };
 
 export type BackupRunRequestInput = { "takeover"?: boolean; "targets"?: Array<string> | null; };
 

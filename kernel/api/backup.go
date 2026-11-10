@@ -289,9 +289,39 @@ var testBackupTarget = contractHandler(apicontract.TestBackupTarget, func(c *gin
 
 var runBackup = contractHandler(apicontract.RunBackup, func(c *gin.Context,
 	req apicontract.BackupRunRequest) apicontract.Response[apicontract.BackupRunData] {
-	// 备份允许并行,但与还原互斥
+	// 备份允许并行,但与还原互斥;已在飞的目标不可重复启动
 	if backup.RestoreState() != nil {
 		return apicontract.Failure[apicontract.BackupRunData](-1, "a restore is running")
+	}
+	busy := backup.BusyTargetIDs()
+	if len(busy) > 0 {
+		requested := map[string]bool{}
+		for _, id := range req.Targets {
+			if id == "" {
+				continue
+			}
+			requested[id] = true
+		}
+		if len(requested) == 0 {
+			cfgAll, cfgErr := backup.LoadConfig(backupConfigPath())
+			if cfgErr == nil {
+				for _, item := range cfgAll.Targets {
+					if item.Enabled {
+						requested[item.ID] = true
+					}
+				}
+			}
+		}
+		var clash []string
+		for _, id := range busy {
+			if requested[id] {
+				clash = append(clash, id)
+			}
+		}
+		if len(clash) > 0 {
+			return apicontract.Failure[apicontract.BackupRunData](-1,
+				"backup is already running for target(s): "+strings.Join(clash, ", "))
+		}
 	}
 	cfg, err := backup.LoadConfig(backupConfigPath())
 	if err != nil {
@@ -324,6 +354,7 @@ func backupProgressForAPI() *apicontract.BackupProgress {
 	if run := backup.RunState(); run != nil {
 		out.Backup = &apicontract.BackupRunProgress{
 			StartedAt: run.StartedAt, Target: run.Target, Done: run.Done, Total: run.Total,
+			Targets: run.Targets,
 		}
 	}
 	if restore := backup.RestoreState(); restore != nil {
