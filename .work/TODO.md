@@ -10,6 +10,9 @@
   Docker 5m43s,双端已部署 alpha.7.19,release 资产齐;.16/.17/.18 见 git log 与 release 列表)
 - 设计文档:**issue #15「Backup subsystem: design, constraints and behavior」**——备份子系统全部
   设计与约束的权威记录,后续开发先读它
+- 其余功能 issue:#16 远程内核连接增强(设计与行为)、#17 查询嵌入渲染模式(raw SQL/最近浏览)、
+  #18 复制可读路径含笔记本名;#13 评论区有离线子系统 as-built 补记
+- 文档树分页:上游已用新方案替代(v3.8.10+),fork 下次同步上游时移除自有分页跟随上游,不为分页单开 issue
 - 本机客户端已装 alpha.7.19,远程模式连接正常
 - 版本线历程:.13 = P1 还原后重建索引+重载(实测 139s/4524 文件,不重启即可搜索);.14 = 快照删除互斥;
   .15 = 逐目标 busy 锁定(restore progress 记 target id,置灰收窄到该行)+存储标识唯一(Normalize 按
