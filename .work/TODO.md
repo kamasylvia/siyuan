@@ -6,10 +6,8 @@
 ## 一、当前版本线
 
 - 上游线:upstream v3.8.10 stable(已合并,fork 跟随上游 stable 纪元)
-- 最新已发布:**v3.8.10.1**(tag `baadd5db51`;Docker 10m24s,双端已部署,release 资产齐)
-- **未发布待测(commit `287abb9b38`,已推送)**:命名空间作用域(多实例共存储隔离)+ **PG 目标彻底移除**
-  (Normalize 丢弃存量 pg 目标,PG 库数据不动)+ 快照删除/导出/清空期间目标行整行灰 + 删除结果改弹窗
-  + 掩码转换补回 schedule 回传。发版前需先在另一台机器构建部署(客户端 + Docker 双端)
+- 最新已发布:**v3.8.10.2**(tag `96fb0edbd6`;含命名空间作用域 + PG 目标移除 + 整行灰 + 删除结果弹窗;Docker success,双端已部署 — NAS running v3.8.10.2 / 客户端已装,release 资产齐)
+- 发版实测:2026-11-10 本机全量验证(go test backup+apicontract 绿、lint 绿、契约 785 pairs 绿)
 - 设计文档:**issue #15「Backup subsystem: design, constraints and behavior」**——备份子系统全部
   设计与约束的权威记录,后续开发先读它
 - 其余功能 issue:#16 远程内核连接增强(设计与行为)、#17 查询嵌入渲染模式(raw SQL/最近浏览)、
