@@ -1,20 +1,59 @@
 # TODO — SiYuan fork(备份子系统 + 远程客户端)
 
-> 更新于 2026-11-09。换机继续开发时先读本文件,再读 `LESSONS.md`。
+> 更新于 2026-11-10(mac 本机,发布 alpha.7.16/.17 后)。换机继续开发时先读本文件,再读 `LESSONS.md`。
 > 状态判据只认本文件;release 记录在 GitHub Releases。
 
 ## 一、当前版本线
 
 - 上游线:upstream v3.8.10-alpha.7(客户端与容器严格版本匹配)
-- 最新已发布:**v3.8.10-alpha.7.15**(tag `4ca51fbfab`:① 运行中目标行全部按钮无豁免置灰——restore progress 记 target id,面板从全面板灰收窄到该行,其余行可用;② 存储标识唯一——Normalize 按 storageIdentity(host|port|db|schema / DSN 串 / endpoint|bucket 归一化大小写尾斜杠)查重,重复配置 setConfig/编辑直接拒绝,表单本地同规则预检;.15 双端已部署(skopeo 中转 34s),release 资产齐。前版 .14 见 git log)
-- 本机客户端已装 `.13`(2026-11-09 本地构建,forkBuild + 内核哈希双指纹验证);release v3.8.10-alpha.7.13 已补 dmg + SHA256SUMS
+- 最新已发布:**v3.8.10-alpha.7.17**(tag `3adee4ddbd` 移签:并行备份模型 + 只读维护锁 + zip 三入口 +
+  逐行置灰修正;Docker 移签后重建 8m45s 成功,双端已部署 alpha.7.17,release 资产齐)
+- 版本线历程:.13 = P1 还原后重建索引+重载(实测 139s/4524 文件,不重启即可搜索);.14 = 快照删除互斥;
+  .15 = 逐目标 busy 锁定(restore progress 记 target id,置灰收窄到该行)+存储标识唯一(Normalize 按
+  storageIdentity 查重,重复配置 setConfig/编辑直接拒绝);.16 = 保存前连接测试门禁(表单级,指纹绑定,
+  连接字段一变即失效;名称/保留/定时改动不触发);.17 = 本轮(见「二」)
 - build script 版本自检:`scripts/fork-mac-build.sh` 会比对 `kernel/util/working.go` 的 Ver 与二进制内嵌串,不一致直接失败
 
-## 二、下一步要做(按优先级)
+## 二、alpha.7.17 已实现,待逐项实测
 
-### P1. 还原后重建索引 + 前端整页重载(2026-11-09 已发布 .13 并实测通过)
+### A. 只读维护锁(用户定案:备份期间编辑不放行)
 
-**实现**(`a952cabaca`,同上):
+- 备份 = 共享锁(引用计数,并行允许,`backup.lock` flock 已移除);还原 = 独占锁
+- 任一持有期间,gin 中间件拒绝全部写入路由(transactions/notebook/filetree/asset/attr/setting/
+  system setConf/sync/storage 写/storage setCriterion/format/clipboard/inbox/tag/export/ai/mcp),
+  消息 "a backup or restore is running; the workspace is read-only"
+- 锁状态变化经 `SetMaintenanceChangeHook` 广播:复用既有 `readonly` WS 通道翻转编辑器只读 +
+  `msg` 通道进入提示;退出自动恢复编辑
+- `runBackup` API 拒绝还原进行中;还原 handler 拒绝备份/还原进行中
+
+### B. cron 定时备份
+
+- Target.Schedule{cron},`Normalize()` 校验(无效拒绝/空白清 nil);内核 `StartScheduler`
+  每分钟检查,窗口内有触发表即到期执行;busy 时跳过本轮(错过不补跑,标准 cron 语义);
+  serve.go 挂载;前端表单「定时备份 (cron)」字段(留空=不启用)
+- 注意:UI 保存流程曾丢 schedule 字段(契约缺字段),alpha.7.11 已修复
+
+### C. zip 三入口(格式 = 存储对象集 manifest+blobs,纯 ASCII 条目名,零乱码,可回灌)
+
+1. 备份产 zip:Config.LocalZipDir 非空时每次备份落 `siyuan-backup-<id>.zip` 到该目录
+   (加密快照为密文 blob,还原需口令);**无已连目标也允许**(离线备份出口);结果带 ZipPath/ZipError
+2. 快照管理行「导出 zip」:把已连目标快照打包下载(契约 Data=BinaryContent,
+   ResponseOptions{Output: BinaryOutput, ErrorStatus: 500},前端 blob 下载)
+3. 「从 zip 还原」:备份面板顶部按钮 → multipart 上传 `zipSnapshots` 解析 → 快照确认对话框
+   (口令/收敛/身份勾选)→ `restoreZip` → 重建索引 → 前端重载,与 REST 还原同流程
+
+### D. 锁状态与前端联动
+
+- 契约 BackupRunProgress 加 `targets []string`(在飞备份占用的目标 ID)
+- 前端 `setBackupBusy(on, busyTargets)` 语义:还原在飞(busyTargets 空)→ 全部动作灰;
+  备份在飞 → 仅在飞目标行灰(备份/还原/删除/快照管理/编辑/测试连接),其余行备份亮(可并行);
+  顶部「备份」还原时灰、「删除」任何维护时灰
+- 内核 `runBackup` 拒绝与在飞目标交集非空的请求(消息列出冲突 ID);还原独占由
+  MarkRestoreStarted CAS + restoreBackup/restoreZip/runBackup 三个入口守卫
+
+## 三、P1. 还原后重建索引 + 前端整页重载(2026-11-09 已发布 .13 并实测通过)
+
+**实现**(`a952cabaca`):
 1. 内核 `model/restore_reindex.go::ReindexRestoredWorkspace`:落盘后同步 `FullReindexDirect()` + `IndexRefs()` + `FlushQueue()` + `ResetVirtualBlockRefCache()`(增量同步保护内路径 `repository.go:2940` 同序列),`lockSync` 与云同步串行;失败集按 `DocumentMetadataState != ready` 判定(用户指南/未解锁加密笔记本沿启动语义跳过)
 2. 契约 `BackupRestoreData` 加 `reindexed` + `failedBoxes`,端点加 `DataOnError:true`;索引失败 → `FailureWithData(-1, msg, data)`(已落盘规模 + 失败笔记本,前端显错);成功 → `reindexed:true`
 3. 前端 `backupTab.ts`:成功后调 `/api/ui/reloadUI`(与数据导入同通道),toast 换 `backupRestoreReindexed`(×22);失败走存量 error toast
@@ -23,40 +62,50 @@
 
 **实测**(2026-11-09 本机,本地内核 + NAS PG 快照 `20261109T065340Z` 4524 文件/1.4GB → 本地空库):还原返回 `reindexed:true`(139s);不重启全文搜中「SiYuan Fork 备份功能进度」✓;refs 表 72 行 ✓;getBacklink2 回链 1 条 ✓;日志 `rebuilt database` + `resolved refs [8]` ✓。NAS 侧仅 dry-run(覆盖 4521/删除 0),未动生产库。
 
-### P2. 备份子系统剩余待实测项(用户尚未逐项确认)
+## 四、P2. 备份子系统剩余待实测项(用户尚未逐项确认)
 
-已实现并发布在 alpha.7.11/7.12,但用户只确认过「页面能打开」,以下未逐项回归:
-
-- [ ] 备份运行中:顶部「备份」「删除」+ 行内「备份」「还原」「删除」全部置灰;面板重新打开时若任务在飞也置灰
+- [ ] 备份运行中:在飞目标行整行灰(.17 语义),其余行备份按钮亮(可并行);同目标重复启动被内核拒绝并列出 ID
+- [ ] 只读:备份/还原期间编辑文档 → 保存被拒并提示只读;编辑器进入只读态(readonly 广播);结束自动恢复
 - [ ] 快照管理:行内删除有「处理中…」状态 + 成功/失败独立提示;清空全部有两步确认与进行中提示
-- [ ] 删除门禁:目标有快照时拒绝删除配置;手动清空后放行;IP/域名双配置同指纹互相放行
-- [ ] 编辑门禁:改连接信息时原存储有快照则拒绝;同指纹(IP↔域名)放行;只改名称/保留/定时则跳探测
-- [ ] cron 定时备份:表单填 `0 2 * * *` 保存后能回显(契约字段曾丢失,已在 alpha.7.11 修复);到点是否真的触发
+- [ ] 删除门禁:目标有快照时拒绝删除配置;手动清空后放行;同指纹互放行(alpha.7.15 起 unique storage identity 规则变化:同存储双配置新建会被 setConfig 拒绝,已有双配置编辑走指纹放行——两规则并存,注意用户反馈)
+- [ ] 编辑门禁:改连接信息时原存储有快照则拒绝;同指纹放行;只改名称/保留/定时则跳探测
+- [ ] cron 定时备份:表单填 `0 2 * * *` 保存后能回显;到点是否真的触发
+- [ ] zip 三入口:目录配置后备份产 zip;行内导出 zip 下载;从 zip 还原(口令/收敛/身份勾选)→ 不重启可搜索
 - [ ] 还原身份勾选:默认换新 system.id + 清锁屏口令;勾选「使用快照的系统标识与锁屏口令」时原样保留
-- [ ] 单源还原:还原入口只在目标行内,对话框源目标钉死不���切换
+- [ ] 单源还原:还原入口只在目标行内,对话框源目标钉死不允切换
+- [ ] switchLocal:工作空间菜单「切换到本地工作区」远程模式生效(修复提交 c8a50b2447,已实测,待用户复测)
 
-### P3. 可选/待评估(不要未经确认就做)
+## 五、可选/待评估(不要未经确认就做)
 
-- **定时还原**:用户问过「定时还原是否等于定时同步」。已给出结论:**不建议**实现到活动工作区
-  (覆盖式单向写入会删掉快照后的本地编辑;与原生双向同步语义完全不同)。若将来要做,形态应是
-  还原到非活动目录 / 仅在空工作区灾难恢复场景自动还原。**做之前必须先跟用户对齐**
-- `backupRestoreNoTargets` 的中文文案是错的(zh-CN 写作「还原目标」,语义应为「没有可还原的目标」),顺手可修
+- **定时还原**:结论已给出——不做活动工作区的自动还原(覆盖式破坏,会删快照后的本地编辑;与原生
+  双向块级合并同步完全不同)。若将来要做,形态应为还原到非活动目录 / 仅空工作区灾难恢复。
+  **做之前必须先跟用户对齐**
+- zip 目录的「列表+下载」UI(远程实例 zip 在容器卷内,目前经 exportZip 下载目标快照可用;
+  zip 目录本身的列表/下载列为可选)
+- `backupRestoreNoTargets` 中文文案错译(zh-CN「还原目标」→ 应为「没有可还原的目标」),顺手可修
 
-## 三、环境与操作备忘
+## 六、环境与操作备忘
 
-- 客户端构建:macOS arm64 上跑 `scripts/fork-mac-build.sh <tag>`,DMG 在 `app/build/`(构建机需 go / node / python3)
-- 发布链(已验证多次):commit → stamp `app/package.json` forkBuild → tag → push → 等 `Docker Image (fork)`
-  workflow → Portainer 上的 fork stack 预拉镜像 + stack update → 装 DMG → `gh release create` 带 DMG + SHA256SUMS
-- 容器侧:镜像 `ghcr.io/kamasylvia/siyuan:v<tag>`;部署必须走 Portainer stack update,不能裸 recreate 容器
-- 凭据:一律从 Infisical 取(具体项目/路径见本机 `~/.agents/config.toml` 的 `[infisical]` 段);本文件不记录任何 token
-- 部署目标与远程内核地址:见本机配置,不在本文件记录
-- 本地工作区路径:见本机 `~/.config/siyuan/workspace.json` 的最后一个条目
-- 连接标记:`~/.config/siyuan/connections.json` 的 `lastMode` / `lastRemoteOrigin`;普通启动读到 remote 就走自动重连
-- 远程模式回本地:工作空间菜单 →「切换到本地工作区」(alpha.7.12 起;修复提交 c8a50b2447 未发布)
+- 客户端构建:macOS arm64 上 `scripts/fork-mac-build.sh <tag>`,DMG 在 `app/build/`(需 go/node/python3)
+- 发布链:commit → stamp forkBuild → tag → push → 等 `Docker Image (fork)` → Portainer fork stack
+  预拉镜像 + stack update → 装 DMG → `gh release create` 带 DMG + SHA256SUMS
+- 容器侧:镜像 `ghcr.io/kamasylvia/siyuan:v<tag>`;必须 Portainer stack update,不能裸 recreate
+- 凭据:一律 Infisical(本机 `~/.agents/config.toml` [infisical] 段);本文件不记录 token
+- 部署目标与远程内核地址:见本机配置,不入库
+- 本地工作区路径:本机 `~/.config/siyuan/workspace.json` 最后条目
+- 连接标记:`~/.config/siyuan/connections.json` `lastMode`/`lastRemoteOrigin`;普通启动读到 remote 即自动重连
+- 远程模式回本地:工作空间菜单 →「切换到本地工作区」(重启带 --workspace,标记翻转为本地)
 
-## 四、已知坑
+## 七、已知坑
 
-- `go build ./api/` 通过不代表全模块通过 —— Docker 构建跑 `go build ./...`,历史上 CLI 包漏改导致镜像构建失败
-- 语言文件是全量 22 个;**用锚点值匹配可能失效**(各语言值不同),插入键一律按键名定位;每次改完用 python 全量校验 22 文件
+- `go build ./api/` 过 ≠ 全模块过 —— 一律 `go build ./...`(CLI 包历史上漏过,alpha.7.10 Docker 失败根因)
+- 跨包调用必须带包限定符:serve.go(package server)无限名调用 api 包函数报 undefined,易误判为构建缓存问题
+- 语言文件 22 个;插入 i18n 键一律按键名定位(**不要按值锚点**,各语言值不同);每次改完 python 全量校验 22 文件
+- 前端 `ipcRenderer.invoke` 必须检查返回值里的 error,否则静默失败(switchLocal 首版教训)
+- 连接切换的退出路径不能等渲染进程:远程模式前端来自对端,不参与保存握手;before-quit 里按
+  `state.exit.pendingConnectionArgs` 直接销毁窗口
+- 契约字段漏加会让功能静默失效(schedule 曾被 UI 保存流程丢弃):内核配置字段新增时同步检查
+  apicontract 结构体 + unmask 转换 + 前端 readForm/saveForm 三处
 - `npx pnpm run lint` 必须走 `npx -y pnpm@12.6.0`,本机 PATH 上的 pnpm 版本太老(`packages field missing or empty`)
 - 本地 electron 测试基线:connectionStore 2 个 + rendererProcess 1 个在未改动基线上也失败,不是回归
+- tag 移签:`git tag -f` + `git push --force-with-lease=refs/tags/<tag>:<旧值>`(轻量 tag 远端值为旧 commit)
