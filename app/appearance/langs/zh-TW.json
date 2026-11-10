@@ -49,6 +49,7 @@
 	"backupSnapshotsTitle": "快照管理",
 	"backupSnapshotDeleteConfirm": "將刪除快照 ${x} 及其不再被其它快照引用的資料塊，該操作不可撤銷。",
 	"backupSnapshotDeleteDone": "快照已刪除，清理 ${x} 個資料塊",
+	"backupExportZip": "匯出 zip",
 	"backupEmptyAll": "清空全部",
 	"backupEmptyAllConfirm": "將刪除該目標上的全部 ${x} 個快照及其資料，該操作不可撤銷；歸屬標記保留。",
 	"backupEmptyDone": "已清空 ${x} 個快照、${y} 個資料塊",

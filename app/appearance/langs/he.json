@@ -49,6 +49,7 @@
 	"backupSnapshotsTitle": "Snapshots",
 	"backupSnapshotDeleteConfirm": "This deletes snapshot ${x} and its blobs not referenced by other snapshots; this action cannot be undone.",
 	"backupSnapshotDeleteDone": "Snapshot deleted; ${x} blob(s) removed",
+	"backupExportZip": "Export zip",
 	"backupEmptyAll": "Empty all",
 	"backupEmptyAllConfirm": "This deletes all ${x} snapshots and their data on the target; this action cannot be undone. The ownership marker is kept.",
 	"backupEmptyDone": "Emptied ${x} snapshot(s) and ${y} blob(s)",

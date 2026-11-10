@@ -854,6 +854,7 @@ const openSnapshotsDialog = async (targetId: string) => {
         `<div class="fn__flex" data-snapshot="${escapeHtmlTextAndAttr(snapshot.id)}" style="align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--b3-border-color)">
             <span class="fn__flex-1">${escapeHtmlTextAndAttr(snapshot.createdAt)}
                 <span class="ft__on-surface">${snapshot.files} files${snapshot.encrypted ? " · 🔒" : ""}</span></span>
+            <button class="b3-button b3-button--outline backupSnapshotExport" data-snapshot="${escapeHtmlTextAndAttr(snapshot.id)}">${escapeHtmlTextAndAttr(text("backupExportZip", "Export zip"))}</button>
             <button class="b3-button b3-button--outline backupSnapshotDelete" data-snapshot="${escapeHtmlTextAndAttr(snapshot.id)}">${escapeHtmlTextAndAttr(window.siyuan.languages.delete)}</button>
         </div>`;
     let busy = false;
@@ -864,7 +865,7 @@ const openSnapshotsDialog = async (targetId: string) => {
             busyEl.classList.toggle("fn__none", !on);
             busyEl.textContent = on ? message : "";
         }
-        document.querySelectorAll("#backupSnapshotList .backupSnapshotDelete").forEach(button => {
+        document.querySelectorAll("#backupSnapshotList .backupSnapshotDelete, #backupSnapshotList .backupSnapshotExport").forEach(button => {
             (button as HTMLButtonElement).disabled = on;
         });
     };
@@ -879,6 +880,40 @@ const openSnapshotsDialog = async (targetId: string) => {
             : [];
         listEl.innerHTML = snapshots.length ? snapshots.map(snapshotRow).join("")
             : `<div class="b3-label__text">${escapeHtmlTextAndAttr(text("backupRestoreEmpty", "No snapshots on this target"))}</div>`;
+        listEl.querySelectorAll(".backupSnapshotExport").forEach(button => {
+            button.addEventListener("click", (event) => {
+                if (busy) {
+                    return;
+                }
+                const snapshotId = (event.currentTarget as HTMLElement).getAttribute("data-snapshot") || "";
+                setBusy(true, text("backupZipBuilding", "Building zip snapshot…"));
+                // 导出是二进制响应(契约 BinaryContent),不能用 fetchSyncPost
+                fetch("/api/backup/exportZip?target=" + encodeURIComponent(targetId) +
+                    "&snapshot=" + encodeURIComponent(snapshotId), {method: "POST"})
+                    .then(async (response) => {
+                        if (!response.ok) {
+                            showMessage(`${text("backupExportZipFailed", "Failed to export the snapshot zip")}: ${await response.text()}`, 7000, "error");
+                            return;
+                        }
+                        const blob = await response.blob();
+                        const url = URL.createObjectURL(blob);
+                        const anchor = document.createElement("a");
+                        anchor.href = url;
+                        anchor.download = `siyuan-backup-${snapshotId}.zip`;
+                        document.body.appendChild(anchor);
+                        anchor.click();
+                        anchor.remove();
+                        setTimeout(() => URL.revokeObjectURL(url), 30000);
+                    })
+                    .catch((error) => {
+                        showMessage(`${text("backupExportZipFailed", "Failed to export the snapshot zip")}: ${String(error)}`, 7000, "error");
+                    })
+                    .finally(() => {
+                        setBusy(false);
+                    });
+            });
+        });
+        // 单快照删除:确认后调 deleteSnapshot,共享 blob 按引用计数保留
         listEl.querySelectorAll(".backupSnapshotDelete").forEach(button => {
             button.addEventListener("click", (event) => {
                 if (busy) {
