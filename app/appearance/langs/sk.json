@@ -76,7 +76,7 @@
 	"backupScheduleCron": "Scheduled backup (cron)",
 	"backupScheduleCronTip": "Standard 5-field cron; leave empty to disable. Example: 0 2 * * * = daily at 02:00. Runs on the kernel that stays up, such as the Docker container.",
 	"backupNamespace": "Namespace",
-	"backupNamespaceTip": "Optional. When several instances share one storage, give each a distinct namespace so their snapshots and ownership stay isolated. Leave empty for the default scope; cannot be changed after creation.",
+	"backupNamespaceTip": "Prideľuje sa automaticky pri vytvorení cieľa; oddeľuje snímky a vlastníctvo, keď viacero inštancií zdieľa jedno úložisko",
 	"backupEditBlockedSnapshots": "Still has ${x} snapshots; empty them in snapshot management or keep pointing at the same storage",
 	"backupEditBlockedUnreachable": "The original target is unreachable; cannot verify it is emptied",
 	"backupPath": "Directory",

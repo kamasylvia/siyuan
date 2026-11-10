@@ -167,9 +167,14 @@ const render = () => {
             ${field("backupScheduleCron", text("backupScheduleCron", "Scheduled backup (cron)"), "", "text", 'placeholder="0 2 * * *"')}
             <div class="ft__on-surface" style="margin:-4px 0 6px;font-size:12px">${escapeHtmlTextAndAttr(text("backupScheduleCronTip",
                 "Standard 5-field cron; leave empty to disable. Example: 0 2 * * * = daily at 02:00. Runs on the kernel that stays up, such as the Docker container."))}</div>
-            ${field("backupNamespace", text("backupNamespace", "Namespace"), "", "text", 'placeholder="e.g. nas-a"')}
-            <div class="ft__on-surface" style="margin:-4px 0 6px;font-size:12px">${escapeHtmlTextAndAttr(text("backupNamespaceTip",
-                "Optional. When several instances share one storage, give each a distinct namespace so their snapshots and ownership stay isolated. Leave empty for the default scope; cannot be changed after creation."))}</div>
+            <div id="backupNamespaceRow" class="fn__none" style="margin:0 0 6px">
+                <div class="fn__flex" style="align-items:center;gap:8px">
+                    <span class="fn__flex-center ft__on-surface">${escapeHtmlTextAndAttr(text("backupNamespace", "Namespace"))}</span>
+                    <span id="backupNamespaceValue" class="fn__flex-1" style="font-family:var(--b3-font-family-code);font-size:12px"></span>
+                </div>
+                <div class="ft__on-surface" style="font-size:12px">${escapeHtmlTextAndAttr(text("backupNamespaceTip",
+                    "Assigned automatically when the target is created; it scopes snapshots and ownership so several instances can share one storage")).replace(/[.。]$/, "")}</div>
+            </div>
             <div id="backupTypeFields"></div>
             <div class="fn__flex" style="gap:8px;margin-top:8px">
                 <button class="b3-button b3-button--outline" id="backupSave">${escapeHtmlTextAndAttr(window.siyuan.languages.save)}</button>
@@ -327,11 +332,13 @@ const openForm = (target: BackupTarget) => {
     (panelRoot?.querySelector("#backupKeepLast") as HTMLInputElement).value = String(target.retention?.keepLast ?? 30);
     (panelRoot?.querySelector("#backupMaxAgeDays") as HTMLInputElement).value = String(target.retention?.maxAgeDays ?? 90);
     (panelRoot?.querySelector("#backupScheduleCron") as HTMLInputElement).value = target.schedule?.cron || "";
-    const namespaceInput = panelRoot?.querySelector("#backupNamespace") as HTMLInputElement | null;
-    if (namespaceInput) {
-        namespaceInput.value = target.namespace || "";
-        // 命名空间决定存储作用域,创建后修改会让既有快照失联,因此编辑态只读
-        namespaceInput.disabled = Boolean(editingID);
+    // 命名空间由内核自动分配,仅在编辑已有目标时只读展示,不给用户改
+    const namespaceRow = panelRoot?.querySelector("#backupNamespaceRow") as HTMLElement | null;
+    const namespaceValue = panelRoot?.querySelector("#backupNamespaceValue") as HTMLElement | null;
+    if (namespaceRow && namespaceValue) {
+        const namespace = target.namespace || "";
+        namespaceRow.classList.toggle("fn__none", !namespace);
+        namespaceValue.textContent = namespace;
     }
     const fields = panelRoot?.querySelector("#backupTypeFields");
     if (fields) {
@@ -367,10 +374,10 @@ const readForm = (): BackupTarget => {
     if (cron) {
         target.schedule = {cron};
     }
-    // 命名空间:编辑态保持原值(输入框已禁用),新增时取用户输入
+    // 命名空间由内核自动分配:编辑态沿用原值,新增留空
     const namespace = editingID
         ? (currentConfig.targets.find(item => item.id === editingID)?.namespace || "")
-        : value("backupNamespace").trim();
+        : "";
     if (namespace) {
         target.namespace = namespace;
     }

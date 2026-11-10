@@ -76,7 +76,7 @@
 	"backupScheduleCron": "定時備份 (cron)",
 	"backupScheduleCronTip": "標準 5 段 cron 表達式，留空表示不啟用；例：0 2 * * * = 每天 02:00。由常駐內核（如 Docker 容器）執行。",
 	"backupNamespace": "命名空間",
-	"backupNamespaceTip": "可選。多個實例共用一個儲存時，為每個實例設定不同的命名空間，快照與歸屬互不干擾；留空使用預設作用域。建立後不可修改。",
+	"backupNamespaceTip": "建立目標時自動分配;用於隔離多個實例共用同一儲存時的快照與歸屬",
 	"backupEditBlockedSnapshots": "仍有 ${x} 個快照；請在快照管理中清空，或保持指向同一儲存",
 	"backupEditBlockedUnreachable": "原目標無法連線，不能確認它已清空",
 	"backupPath": "目錄",

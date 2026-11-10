@@ -166,11 +166,13 @@ func (cfg *Config) Normalize() error {
 				return fmt.Errorf("backup target [%s] has invalid cron [%s]: %w", target.ID, target.Schedule.Cron, err)
 			}
 		}
-		if target.Namespace != "" {
-			target.Namespace = strings.TrimSpace(target.Namespace)
-			if !namespacePattern.MatchString(target.Namespace) {
-				return fmt.Errorf("backup target [%s] has invalid namespace [%s]: use letters, digits, dash or underscore (max 64)", target.ID, target.Namespace)
-			}
+		// 命名空间由内核自动分配:空值即新目标,生成 ULID;已有值(存量配置或
+		// 再次保存)保持不变,保证快照谱系稳定
+		target.Namespace = strings.TrimSpace(target.Namespace)
+		if target.Namespace == "" {
+			target.Namespace = NewNamespaceID()
+		} else if !namespacePattern.MatchString(target.Namespace) {
+			return fmt.Errorf("backup target [%s] has invalid namespace [%s]: use letters, digits, dash or underscore (max 64)", target.ID, target.Namespace)
 		}
 		switch target.Type {
 		case TypeS3:
