@@ -52,6 +52,17 @@ type DeleteCheckResult = {target: string; deletable: boolean; reason?: string; s
 const text = (key: string, fallback: string): string =>
     (window.siyuan.languages as unknown as Record<string, string>)[key] || fallback;
 
+// 内核返回 RFC3339 UTC 时间戳,展示时转浏览器本地时区(快照 ID 本身仍是 UTC 标识符,不改)
+const formatSnapshotTime = (createdAt: string): string => {
+    const time = new Date(createdAt);
+    if (isNaN(time.getTime())) {
+        return createdAt;
+    }
+    const pad = (value: number) => String(value).padStart(2, "0");
+    return `${time.getFullYear()}-${pad(time.getMonth() + 1)}-${pad(time.getDate())} ` +
+        `${pad(time.getHours())}:${pad(time.getMinutes())}:${pad(time.getSeconds())}`;
+};
+
 const typeLabel = (type: BackupType): string => {
     switch (type) {
         case "s3": return "S3";
@@ -726,7 +737,7 @@ const openZipRestore = (file: File) => {
         const rows = snapshots.map(snapshot =>
             `<label class="fn__flex" style="align-items:center;gap:6px;padding:4px 0;cursor:pointer">
                 <input type="radio" name="backupZipSnapshot" value="${escapeHtmlTextAndAttr(snapshot.id)}" checked>
-                <span>${escapeHtmlTextAndAttr(snapshot.createdAt)} · ${snapshot.files} files${snapshot.encrypted ? " · 🔒" : ""}</span>
+                <span>${escapeHtmlTextAndAttr(formatSnapshotTime(snapshot.createdAt))} · ${snapshot.files} files${snapshot.encrypted ? " · 🔒" : ""}</span>
             </label>`).join("");
         const dialogHTML = `<div class="b3-dialog__content" style="padding:12px">
     <div style="max-height:220px;overflow:auto">${rows}</div>
@@ -844,7 +855,7 @@ const openSnapshotsDialog = async (targetId: string) => {
     }
     const snapshotRow = (snapshot: {id: string; createdAt: string; files: number; encrypted: boolean}): string =>
         `<div class="fn__flex" data-snapshot="${escapeHtmlTextAndAttr(snapshot.id)}" style="align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--b3-border-color)">
-            <span class="fn__flex-1">${escapeHtmlTextAndAttr(snapshot.createdAt)}
+            <span class="fn__flex-1">${escapeHtmlTextAndAttr(formatSnapshotTime(snapshot.createdAt))}
                 <span class="ft__on-surface">${snapshot.files} files${snapshot.encrypted ? " · 🔒" : ""}</span></span>
             <button class="b3-button b3-button--outline backupSnapshotExport" data-snapshot="${escapeHtmlTextAndAttr(snapshot.id)}">${escapeHtmlTextAndAttr(text("backupExportZip", "Export zip"))}</button>
             <button class="b3-button b3-button--outline backupSnapshotDelete" data-snapshot="${escapeHtmlTextAndAttr(snapshot.id)}">${escapeHtmlTextAndAttr(window.siyuan.languages.delete)}</button>
@@ -987,7 +998,7 @@ const openRestoreDialog = async (targetId: string) => {
     // 快照列表按该目标拉取
     const snapshotOptionsHTML = (snapshots: Array<{id: string; createdAt: string; files: number; encrypted: boolean}>) =>
         snapshots.map(snapshot =>
-            `<option value="${escapeHtmlTextAndAttr(snapshot.id)}">${escapeHtmlTextAndAttr(snapshot.createdAt)} · ${snapshot.files} files${snapshot.encrypted ? " · 🔒" : ""}</option>`).join("");
+            `<option value="${escapeHtmlTextAndAttr(snapshot.id)}">${escapeHtmlTextAndAttr(formatSnapshotTime(snapshot.createdAt))} · ${snapshot.files} files${snapshot.encrypted ? " · 🔒" : ""}</option>`).join("");
     const loadSnapshots = async (id: string): Promise<string> => {
         const listResponse = await fetchSyncPost("/api/backup/listSnapshots", {target: id});
         if (listResponse.code !== 0) {
