@@ -79,6 +79,10 @@ Portainer token 缺 padding 报 401 Invalid JWT,误判成服务端轮换查半�
 docker://ghcr.io/...:tag docker-archive:/tmp/x.tar:tag`(缺 override-os 报 OS darwin 无镜像)
 → `POST /api/endpoints/1/docker/images/load`(Content-Type application/x-tar,33s/322MB)
 → tag 丢失变 `tag:latest`,须 `POST /images/<错名>/tag?repo=...&tag=...`(201) 纠正
+→ 纠正时留下的 `tag:latest` 畸形残根与新 tag 共存 = 双 repository 引用,Portainer 按 ID 删镜像
+  必失败(force 也压不住:「cannot be forced) - image is referenced in multiple repositories」),
+  须逐 tag `DELETE /images/<repo:tag>`,最后一个 tag 摘除时镜像层才回收(2026-11-11 alpha.7.13
+  残根 335MB 实测)
 → PUT stack update(pullImage=false)→ 轮询 Status=1。直拉 Extracting 中途 curl 超时后服务端未必续传,miss 即转中转,勿死等。
 
 ### 13. 本地单测内核启动三坑
