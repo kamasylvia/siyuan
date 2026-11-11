@@ -112,6 +112,17 @@
 - 连接标记:`~/.config/siyuan/connections.json` `lastMode`/`lastRemoteOrigin`;普通启动读到 remote 即自动重连
 - 远程模式回本地:工作空间菜单 →「切换到本地工作区」(重启带 --workspace,标记翻转为本地)
 
+### 发布产物清理(2026-11-11)
+
+- Release 保留锚点制:当前线全保(`v3.8.10.1/.2/.3`)+ 各已终结版本线末代(alpha.7.19 / 3.8.9.6 / 3.8.8.23);
+  中间版本删 release 时带 `--cleanup-tag` 一并删远端 tag(39 → 6,回收 ~8.9GB)
+- GHCR 清理**必须先算保护 digest**:保留 tag 的镜像都是 OCI index,含 4 个 child
+  (amd64/arm64 manifest + 2 attestation),这些 child 在 versions API 里就是 untagged/平台 tag 版本;
+  盲删 untagged 会打坏 `latest`。做法:对每个保留 tag 拉 `/v2/<repo>/manifests/<tag>` 收集 child digest
+  → 与 736 个 version 全集比对 → 删除非保护项(736 → 33,零失败),删完逐个 tag 验 HTTP 200
+- 远端仍有 22 个从未建 release 的 orphan tag(`v3.8.8.3/.4/.6` 等),不占存储,保留不动;
+  本地只删远端已不存在的 33 个残 tag
+
 ## 七、已知坑
 
 - `go build ./api/` 过 ≠ 全模块过 —— 一律 `go build ./...`(CLI 包历史上漏过,alpha.7.10 Docker 失败根因)
