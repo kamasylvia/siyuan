@@ -808,10 +808,21 @@ func selectBlocksRawStmtWithQuery(stmt string, page, limit int, boxID string, qu
 		return
 	}
 	defer rows.Close()
+	// 扫描失败按查询级失败处理：用户的 embed SQL 可能是任意投影（如
+	// SELECT 'label', COUNT(*) FROM blocks），固定 21 列的 scanBlockRows
+	// 对每行都会失败——逐行重试只会为同一查询刷 N 条带堆栈的 ERROR（NAS
+	// 实例上每 10 分钟的 cron 渲染刷屏根因）。首败即停。
+	var scanFailed bool
 	for rows.Next() {
 		if block := scanBlockRows(rows); nil != block {
 			ret = append(ret, block)
+		} else {
+			scanFailed = true
+			break
 		}
+	}
+	if scanFailed && 0 == len(ret) {
+		logging.LogWarnf("raw sql query [%s] returned incompatible columns; embed renders empty", stmt)
 	}
 	return
 }

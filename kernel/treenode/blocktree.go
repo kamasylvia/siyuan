@@ -54,10 +54,30 @@ func initDatabase(forceRebuild bool) {
 		}
 	}
 	if !forceRebuild {
-		// 校验块树表是否可用，避免因上次重建被中断导致数据库文件存在但表缺失
+		// 校验块树表是否可用，避免因上次重建被中断导致数据库文件存在但表缺失。
+		// 注意区分「表确实不存在」与「数据库暂时不可读」：一个卡死的写事务会让
+		// sqlite_master 查询报 locked/busy，若误判为缺表直接 DROP 重建，会在活
+		// 跃写入者之下清空表（2026-11-15 NAS 实例双重重置事故的根因——两个并
+		// 发调用者同时误判，reinit 日志同一秒出现两次）。非 ErrNoRows 的错误
+		// 按瞬态处理：短暂退避重试；重试仍不明则保留原库交由下次启动再判，
+		// 绝不在错误原因未知时 DROP。
 		var table string
-		if err := db.QueryRow("SELECT name FROM sqlite_master WHERE type = ? AND name = ?", "table", "blocktrees").Scan(&table); nil != err {
-			logging.LogWarnf("blocktrees table missing or unreadable [%s], will rebuild blocktree database", err)
+		tableErr := db.QueryRow("SELECT name FROM sqlite_master WHERE type = ? AND name = ?", "table", "blocktrees").Scan(&table)
+		if tableErr != nil && !errors.Is(tableErr, sql.ErrNoRows) {
+			for range 5 {
+				time.Sleep(200 * time.Millisecond)
+				tableErr = db.QueryRow("SELECT name FROM sqlite_master WHERE type = ? AND name = ?", "table", "blocktrees").Scan(&table)
+				if tableErr == nil || errors.Is(tableErr, sql.ErrNoRows) {
+					break
+				}
+			}
+			if tableErr != nil && !errors.Is(tableErr, sql.ErrNoRows) {
+				logging.LogErrorf("blocktrees table check keeps failing [%s]; keep existing database instead of rebuilding", tableErr)
+				return
+			}
+		}
+		if errors.Is(tableErr, sql.ErrNoRows) {
+			logging.LogWarnf("blocktrees table missing, will rebuild blocktree database")
 			forceRebuild = true
 		}
 	}
