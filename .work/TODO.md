@@ -6,9 +6,16 @@
 ## 一、当前版本线
 
 - 上游线:upstream v3.8.10 stable(已合并,fork 跟随上游 stable 纪元)
-- 最新已发布:**v3.8.10.4**(tag `dbc1a92cec`;快照时间改浏览器本地时区显示——修「设了 02:00
-  cron 却看不到凌晨快照」的误读,快照 ID 仍 UTC;`backupRestoreNoTargets` 错译修正。双端已部署,
-  DMG 280MB 已装本机,release 为 Latest,资产 2 个)
+- 最新已发布:**v3.8.10.5**(tag `3a2a66e179`;内核修 blocktree 瞬态错误误判重建——只有
+  `sql.ErrNoRows` 才重建,locked/busy 退避重试后保留原库,修 2026-11-15 NAS 事故「MCP 导出
+  全空」根因;embed 自定义投影扫描首败即停,不再逐行刷带堆栈 ERROR。DMG 已装本机,release
+  为 Latest,资产 2 个)
+- **容器部署实况**:NAS 上跑的 `ghcr.nju.edu.cn/kamasylvia/siyuan:v3.8.10.5`(ImageID
+  `4baf99ecc3bb`)构建于 2026-11-15 15:23,即修复提交后 8 分钟由另一台机器应急构建部署、
+  当时未打 git tag。已 grep 容器内 `/opt/siyuan/kernel` 确认含修复串,故本次**未重启容器**
+  (stack update PUT 因正则只匹配 ghcr.io 前缀返回 400,反而避免了无谓重启)
+- 前版 **v3.8.10.4**(tag `dbc1a92cec`):快照时间改浏览器本地时区显示(修「设了 02:00 cron
+  却看不到凌晨快照」的误读,快照 ID 仍 UTC);`backupRestoreNoTargets` 错译修正
 - 前版 **v3.8.10.3**(tag `1ae2743bea`):命名空间改内核自动分配 ULID(面板只读展示已分配值;
   分配后稳定,存量非法值仍拒;22 语言同步)
 - 前版 **v3.8.10.2**(tag `96fb0edbd6`):命名空间作用域 + PG 目标移除 + 整行灰 + 删除结果弹窗
@@ -17,7 +24,7 @@
   设计与约束的权威记录,后续开发先读它
 - 其余功能 issue:#16 远程内核连接增强(设计与行为)、#17 查询嵌入渲染模式(raw SQL/最近浏览)、
   #18 复制可读路径含笔记本名;#13 评论区有离线子系统 as-built 补记
-- 本机客户端已装 v3.8.10.4,远程模式连接正常(2026-11-11 验证:app.log got remote kernel version 3.8.10)
+- 本机客户端已装 v3.8.10.5,远程模式连接正常(2026-11-23 验证:app.log got remote kernel version 3.8.10)
 - 设计文档:**issue #15「Backup subsystem: design, constraints and behavior」**——备份子系统全部
   设计与约束的权威记录,后续开发先读它
 - 其余功能 issue:#16 远程内核连接增强(设计与行为)、#17 查询嵌入渲染模式(raw SQL/最近浏览)、
