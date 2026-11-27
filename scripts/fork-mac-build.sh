@@ -49,7 +49,6 @@ UA = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"}
 root = Path.cwd()
 manifest = json.loads((root / "scripts/ocr-assets.json").read_text(encoding="utf-8"))
 stage = root / "app/stage/ocr"
-cache = root / ".cache/ocr"
 
 def fetch(url):
     url = url.replace("https://huggingface.co/", "https://hf-mirror.com/")
@@ -69,15 +68,8 @@ for entry in manifest["models"]:
     dest.write_bytes(data)
     print("model:", entry["path"])
 
-runtime = manifest["runtime"]["darwin-arm64"]
-cache_dest = cache / runtime["url"].rsplit("/", 1)[1]
-cache.mkdir(parents=True, exist_ok=True)
-if not (cache_dest.is_file() and hashlib.sha256(cache_dest.read_bytes()).hexdigest() == runtime["sha256"]):
-    data = fetch(runtime["url"])
-    got = hashlib.sha256(data).hexdigest()
-    assert got == runtime["sha256"], f"checksum mismatch runtime: {got}"
-    cache_dest.write_bytes(data)
-print("runtime cache ok")
+# 运行库不在此处预取:上游 onnxruntime 归档可能缺失(如 v1.24.3 无 osx-arm64 产物),
+# 由 prepare-ocr.py 直连下载,失败时从官方发布的安装包恢复(均经 sha256 校验)
 PY
 python3 scripts/prepare-ocr.py --runtime darwin-arm64
 
@@ -86,6 +78,8 @@ cd "$ROOT/app"
 PNPM12_DIR="$(mktemp -d)"
 npm install --prefix "$PNPM12_DIR" pnpm@12.6.0 --no-save --silent
 export PATH="$PNPM12_DIR/node_modules/.bin:$PATH"
+# 本机 CLT 无法链接 x86_64 Swift,fork 只发 arm64:QuickLook 扩展仅编 arm64 切片
+export SIYUAN_QUICKLOOK_ARCHS=arm64
 npx electron-builder --arm64 --mac --config electron-builder-fork-darwin-arm64.yml --publish=never
 rm -rf "$PNPM12_DIR"
 

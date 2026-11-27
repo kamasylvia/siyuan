@@ -9,7 +9,8 @@ const appRoot = path.resolve(__dirname, "..");
 const extensionName = "SiYuanQuickLook.appex";
 const extensionEntitlements = path.join(appRoot, "quicklook/entitlements.plist");
 const minimumVersion = "12.0";
-const architectures = ["x86_64", "arm64"];
+// fork: 本机 CLT 缺 x86_64 Swift 兼容库时经 SIYUAN_QUICKLOOK_ARCHS 覆盖单架构,缺省仍编双架构
+const architectures = (process.env.SIYUAN_QUICKLOOK_ARCHS || "x86_64,arm64").split(",").map(arch => arch.trim()).filter(Boolean);
 const katexPath = "vditor/dist/js/katex/";
 const highlightPath = "vditor/dist/js/highlight.js/";
 const scripts = ["lute.min.js", "vditor/dist/js/highlight.js/highlight.min.js",
