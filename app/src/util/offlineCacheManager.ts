@@ -76,11 +76,11 @@ export const openOfflineCacheManager = () => {
                 item.addEventListener("click", (event) => {
                     const action = (event.target as HTMLElement).closest("[data-action]") as HTMLElement;
                     if (action?.getAttribute("data-action") === "delete") {
-                        confirmDialog(window.siyuan.languages.offlineCacheTitle,
-                            window.siyuan.languages.offlineCacheDeleteConfirm.replace("{title}",
-                                entry?.title || window.siyuan.languages.offlineUntitledDoc), () => {
+                        confirmDialog({title: window.siyuan.languages.offlineCacheTitle,
+                            text: window.siyuan.languages.offlineCacheDeleteConfirm.replace("{title}",
+                                entry?.title || window.siyuan.languages.offlineUntitledDoc), confirm: () => {
                                 void deleteDocCache(docId).then(() => renderList(element, emptyText));
-                            });
+                            }});
                         return;
                     }
                     if (action?.getAttribute("data-action") === "preview") {
@@ -111,9 +111,9 @@ export const openOfflineCacheManager = () => {
     const element = dialog.element;
     renderList(element, window.siyuan.languages.offlineCacheEmpty);
     element.querySelector("[data-action=clear]").addEventListener("click", () => {
-        confirmDialog(window.siyuan.languages.offlineCacheTitle,
-            window.siyuan.languages.offlineCacheClearConfirm, () => {
+        confirmDialog({title: window.siyuan.languages.offlineCacheTitle,
+            text: window.siyuan.languages.offlineCacheClearConfirm, confirm: () => {
                 void clearDocCache().then(() => renderList(element, window.siyuan.languages.offlineCacheEmpty));
-            });
+            }});
     });
 };

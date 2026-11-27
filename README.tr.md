@@ -15,7 +15,7 @@ Bu depo, [siyuan-note/siyuan](https://github.com/siyuan-note/siyuan) projesinin 
 
 ## Upstream'den farklar
 
-Upstream v3.8.10 stable tabanlıdır:
+Upstream v3.8.12 stable tabanlıdır:
 
 - **Yedekleme alt sistemi** — çok hedefli yedekleme (PostgreSQL, S3, WebDAV), içerik adresli ve tekrarsız anlık görüntüler, anlık görüntü yönetimi (referans sayımlı blob temizliğiyle tekil anlık görüntü silme, tümünü temizleme, zip dışa aktarma), yetim anlık görüntüleri önleyen silme ve düzenleme kapıları, hedef başına cron zamanlamalı yedekleme, çevrimdışı "Zip'i yerelde sakla" çıkışı ve otomatik veri indeksi yeniden oluşturma ile geri yükleme
 - **Bakım salt okunur kilidi** — yedekleme veya geri yükleme sürerken çekirdek çalışma alanı yazmalarını reddeder ve kilit serbest bırakılana kadar düzenleyiciler salt okunur moda geçer

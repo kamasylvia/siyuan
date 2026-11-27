@@ -15,7 +15,7 @@ This repository is a personal fork of [siyuan-note/siyuan](https://github.com/si
 
 ## Differences from upstream
 
-Based on upstream v3.8.10 stable:
+Based on upstream v3.8.12 stable:
 
 - **Backup subsystem** — multi-target backups (PostgreSQL, S3, WebDAV) with content-addressed, deduplicated snapshots, snapshot management (per-snapshot delete with reference-counted blob cleanup, clear-all, export zip), deletion and edit gates that prevent orphan snapshots, per-target cron scheduling, an offline "Save zip to local" exit, and restore with automatic data-index rebuild
 - **Maintenance read-only lock** — while a backup or restore runs, workspace writes are rejected kernel-side and editors flip to read-only until the lock releases

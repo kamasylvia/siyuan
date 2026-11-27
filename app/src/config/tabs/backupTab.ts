@@ -651,15 +651,15 @@ const runBackup = async (targetIds?: string[], takeover = false): Promise<void> 
             // 归属被其它实例占用:确认后接管重试(最后配置的实例生效)
             const claimed = failed.find(target => target.claimedBy);
             if (claimed && !takeover) {
-                confirmDialog(text("backupRunFailed", "Backup failed"),
-                    `<div class="b3-dialog__content" style="padding:12px">${escapeHtmlTextAndAttr(
+                confirmDialog({title: text("backupRunFailed", "Backup failed"),
+                    text: `<div class="b3-dialog__content" style="padding:12px">${escapeHtmlTextAndAttr(
                         text("backupTargetClaimed", "Backup target \${target} is already used by instance \${instance} on \${host}. Take over so backups run from this instance?")
                             .replace("\${target}", currentConfig.targets.find(item => item.id === claimed.id)?.name || claimed.id)
                             .replace("\${instance}", claimed.claimedBy || "")
                             .replace("\${host}", claimed.claimedHost || ""))}</div>`,
-                    () => {
+                    confirm: () => {
                         void runBackup([claimed.id], true);
-                    });
+                    }});
                 return;
             }
             showMessage(`${text("backupRunFailed", "Backup failed")}: ${failed.map(target => target.error).join("; ")}`, 7000, "error");
@@ -753,7 +753,7 @@ const openZipRestore = (file: File) => {
     </label>
     <div class="ft__on-surface" style="margin-top:8px;font-size:12px">${escapeHtmlTextAndAttr(text("backupRestoreWarn", "Restoring overwrites data/ and conf/ in the current workspace. With converge enabled the workspace becomes an exact copy of the snapshot: documents and assets not in the snapshot are deleted; excluded files such as backup credentials are kept"))}</div>
 </div>`;
-        confirmDialog(text("backupZipRestore", "Restore from zip"), dialogHTML, async () => {
+        confirmDialog({title: text("backupZipRestore", "Restore from zip"), text: dialogHTML, confirm: async () => {
             const snapshot = (document.querySelector("input[name=backupZipSnapshot]:checked") as HTMLInputElement)?.value || "";
             const passphrase = (document.querySelector("#backupZipPassphrase") as HTMLInputElement)?.value || "";
             const force = (document.querySelector("#backupZipForce") as HTMLInputElement)?.checked || false;
@@ -771,7 +771,7 @@ const openZipRestore = (file: File) => {
             }
             showMessage(message, 6000);
             await loadPanel();
-        }, undefined, true);
+        }, isDelete: true});
     }).catch((error) => {
         showMessage(`${text("backupZipImportFailed", "Could not read the backup zip")}: ${String(error)}`, 7000, "error");
     });
@@ -826,14 +826,14 @@ const deleteTargets = async () => {
         "Only emptied targets can be deleted; targets that still have snapshots or cannot be reached stay locked to prevent orphan snapshots."))}</div>
     ${data.results.map(verdictLine).join("")}
 </div>`;
-    confirmDialog(stepTitle, step1HTML, async () => {
+    confirmDialog({title: stepTitle, text: step1HTML, confirm: async () => {
         // 第二步确认:最终列出将删除的目标,红色确认按钮
         const step2HTML = `<div class="b3-dialog__content" style="padding:12px">
     <div class="ft__on-surface" style="margin-bottom:8px">${escapeHtmlTextAndAttr(text("backupDeleteStep2Body",
         "This removes the backup configuration of the listed targets (no data on the storage is touched). Please confirm these targets are already emptied; this action cannot be undone."))}</div>
     ${deletable.map(verdictLine).join("")}
 </div>`;
-        confirmDialog(stepTitle, step2HTML, async () => {
+        confirmDialog({title: stepTitle, text: step2HTML, confirm: async () => {
             const deletedIds = new Set(deletable.map(result => result.target));
             currentConfig.targets = currentConfig.targets.filter(target => !deletedIds.has(target.id));
             if (await saveConfig()) {
@@ -841,8 +841,8 @@ const deleteTargets = async () => {
                     .replace("${x}", String(deletable.length)), 3000);
                 await loadPanel();
             }
-        }, undefined, true);
-    }, undefined, true);
+        }, isDelete: true});
+    }, isDelete: true});
 };
 
 // 快照管理:展示目标上的快照列表,支持删除单个快照(共享数据块按引用计数
@@ -925,31 +925,31 @@ const openSnapshotsDialog = async (targetId: string) => {
                     return;
                 }
                 const snapshotId = (event.currentTarget as HTMLElement).getAttribute("data-snapshot") || "";
-                confirmDialog(text("backupSnapshotsTitle", "Snapshots"),
-                    text("backupSnapshotDeleteConfirm", "This deletes snapshot ${x} and its blobs not referenced by other snapshots; this action cannot be undone.")
+                confirmDialog({title: text("backupSnapshotsTitle", "Snapshots"),
+                    text: text("backupSnapshotDeleteConfirm", "This deletes snapshot ${x} and its blobs not referenced by other snapshots; this action cannot be undone.")
                         .replace("${x}", snapshotId),
-                    async () => {
+                    confirm: async () => {
                         setBusy(true, text("backupWorking", "Working…"));
                         try {
                             const response = await fetchSyncPost("/api/backup/deleteSnapshot", {target: targetId, snapshot: snapshotId});
                             const result = response.data as {blobs?: number} | undefined;
                             if (response.code !== 0) {
-                                confirmDialog(text("backupSnapshotsTitle", "Snapshots"),
-                                    `${text("backupSnapshotDeleteFailed", "Failed to delete the snapshot")}: ${response.msg}`,
-                                    () => {}, undefined, true, undefined, window.siyuan.languages.confirm);
+                                confirmDialog({title: text("backupSnapshotsTitle", "Snapshots"),
+                                    text: `${text("backupSnapshotDeleteFailed", "Failed to delete the snapshot")}: ${response.msg}`,
+                                    confirm: () => {}, isDelete: true, confirmLabel: window.siyuan.languages.confirm});
                                 return;
                             }
                             await loadAndBind();
                             await loadPanel();
                             // 成功与失败都要明确弹窗,不用易消失的 toast
-                            confirmDialog(text("backupSnapshotsTitle", "Snapshots"),
-                                text("backupSnapshotDeleteDone", "Snapshot deleted; ${x} blob(s) removed")
-                                    .replace("${x}", String(result?.blobs || 0)), () => {},
-                                undefined, false, undefined, window.siyuan.languages.confirm);
+                            confirmDialog({title: text("backupSnapshotsTitle", "Snapshots"),
+                                text: text("backupSnapshotDeleteDone", "Snapshot deleted; ${x} blob(s) removed")
+                                    .replace("${x}", String(result?.blobs || 0)), confirm: () => {},
+                                isDelete: false, confirmLabel: window.siyuan.languages.confirm});
                         } finally {
                             setBusy(false);
                         }
-                    }, undefined, true);
+                    }, isDelete: true});
             });
         });
         return snapshots.length;
@@ -959,7 +959,7 @@ const openSnapshotsDialog = async (targetId: string) => {
     <div id="backupSnapshotBusy" class="ft__on-surface fn__none" style="margin-bottom:8px"></div>
     <div id="backupSnapshotList" style="max-height:320px;overflow:auto;min-width:320px"></div>
 </div>`;
-    confirmDialog(dialogTitle, dialogHTML, async () => {
+    confirmDialog({title: dialogTitle, text: dialogHTML, confirm: async () => {
         // 确认按钮 = 清空全部:先取当前快照数,空目标直接提示
         const listResponse = await fetchSyncPost("/api/backup/listSnapshots", {target: targetId});
         const snapshots = listResponse.code === 0
@@ -968,10 +968,10 @@ const openSnapshotsDialog = async (targetId: string) => {
             showMessage(text("backupEmptyAlready", "The target storage is already empty"), 3000);
             return;
         }
-        confirmDialog(dialogTitle,
-            text("backupEmptyAllConfirm", "This deletes all ${x} snapshots and their data on the target; this action cannot be undone. The ownership marker is kept.")
+        confirmDialog({title: dialogTitle,
+            text: text("backupEmptyAllConfirm", "This deletes all ${x} snapshots and their data on the target; this action cannot be undone. The ownership marker is kept.")
                 .replace("${x}", String(snapshots.length)),
-            async () => {
+            confirm: async () => {
                 // 清空可能逐个删除大量数据块,耗时较长:先给进行中提示,结束后有成功/失败消息
                 showMessage(text("backupEmptyRunning", "Emptying: deleting data on the target storage…"), 30000);
                 const response = await fetchSyncPost("/api/backup/emptyTarget", {target: targetId});
@@ -983,8 +983,8 @@ const openSnapshotsDialog = async (targetId: string) => {
                 showMessage(text("backupEmptyDone", "Emptied ${x} snapshot(s) and ${y} blob(s)")
                     .replace("${x}", String(result?.snapshots || 0)).replace("${y}", String(result?.blobs || 0)), 4000);
                 await loadPanel();
-            }, undefined, true, undefined, text("backupEmptyAll", "Empty all"));
-    }, undefined, true, undefined, text("backupEmptyAll", "Empty all"));
+            }, isDelete: true, confirmLabel: text("backupEmptyAll", "Empty all")});
+    }, isDelete: true, confirmLabel: text("backupEmptyAll", "Empty all")});
     await loadAndBind();
 };
 
@@ -1030,7 +1030,7 @@ const openRestoreDialog = async (targetId: string) => {
     <div class="ft__on-surface" style="margin-top:4px;font-size:12px">${escapeHtmlTextAndAttr(text("backupRestoreKeepIdentityTip", "By default the restored copy gets a fresh system identity and no lock-screen passphrase to avoid clashing with the source instance; check this only when migrating the whole instance."))}</div>
     <div class="ft__on-surface" style="margin-top:8px;font-size:12px">${escapeHtmlTextAndAttr(text("backupRestoreWarn", "Restoring overwrites data/ and conf/ in the current workspace. With converge enabled the workspace becomes an exact copy of the snapshot: documents and assets not in the snapshot are deleted; excluded files such as backup credentials are kept"))}</div>
 </div>`;
-    confirmDialog(text("backupRestoreTitle", "Restore from backup"), dialogHTML, async () => {
+    confirmDialog({title: text("backupRestoreTitle", "Restore from backup"), text: dialogHTML, confirm: async () => {
         const snapshot = (document.querySelector("#backupRestoreSnapshot") as HTMLSelectElement)?.value || "";
         if (!snapshot) {
             showMessage(text("backupRestoreEmpty", "No snapshots on this target"), 6000, "error");
@@ -1097,7 +1097,7 @@ const openRestoreDialog = async (targetId: string) => {
             }
             await loadPanel();
         }
-    });
+    }});
 };
 
 export const refreshBackupPanel = () => {

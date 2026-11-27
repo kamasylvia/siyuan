@@ -201,6 +201,7 @@ declare namespace Config {
      */
     export interface IEditing {
         modelId: string;
+        reasoningEffort: string;
         maxHistoryMessages: number;
         temperature: number;
         maxCompletionTokens: number;
@@ -689,6 +690,8 @@ declare namespace Config {
          * Whether to show database attributes at the top of the document
          */
         databaseAttrShow: boolean;
+        databaseShowIcon: boolean;
+        databaseShowRelationIcon: boolean;
         /**
          * Behavior when clicking a database badge
          * - `0`: Focus the block and expand the database panel
@@ -729,6 +732,8 @@ declare namespace Config {
         embedBlockBreadcrumb: boolean;
         /** 是否将笔记本、文档和块路径合并为一条面包屑，默认关闭 */
         globalBreadcrumb: boolean;
+        /** 隐藏面包屑中有文字的路径项图标，独立于全局面包屑，默认关闭。 */
+        hideBreadcrumbIcons: boolean;
         embedBlockBreadcrumbParentPath: boolean;
         /**
          * Whether PDF asset links are previewed inline in the document; when off, clicking opens the asset tab as upstream
@@ -1060,6 +1065,7 @@ declare namespace Config {
          * Defaults to true; does not affect the main window.
          */
         closeWindowOnLastTabClosed: boolean;
+        restoreDocPosition: boolean;
         /**
          * The storage path of the new document created using block references
          */
@@ -1685,6 +1691,8 @@ declare namespace Config {
      * SiYuan search related configuration
      */
     export interface ISearch {
+        /** 文档分组结果默认折叠，缺省为 false；仅影响新渲染的分组，手动展开或折叠不修改此偏好 */
+        groupFolded?: boolean;
         /**
          * Whether to search in block aliases
          */
@@ -1945,6 +1953,11 @@ declare namespace Config {
      * SiYuan synchronization related configuration
      */
     export interface ISync {
+        /**
+         * Whether this workspace has a current or prior sync association, including paused sync.
+         * Maintained by the kernel; may be omitted by older kernels.
+         */
+        readonly configured?: boolean;
         /**
          * Cloud workspace name
          */

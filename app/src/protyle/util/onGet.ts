@@ -31,7 +31,12 @@ import {
     queueHeadingNumberRefresh,
     renderHeadingNumbers
 } from "./headingNumber";
-import {containsCurrentSelection, updateDocumentBottomEof} from "./documentRange";
+import {
+    containsCurrentSelection,
+    markDocumentBoundaryLoaded,
+    updateDocumentBottomEof,
+    updateDocumentTopEof,
+} from "./documentRange";
 import {disabledWYSIWYG} from "./disabledWYSIWYG";
 import {getEmbeddedDocInfoResponse} from "./docInfo";
 import {updateWidgetCacheVersion} from "./widgetCache";
@@ -42,7 +47,7 @@ import {isAndroid, isIPhone, isPhablet} from "./compatibility";
 import {forEachPluginSubscriber} from "../../plugin/EventBusCore";
 import {disposeCustomBlocksInElement, setCustomBlockRootReady} from "../../plugin/customBlockRender";
 import {invalidateTrackedRanges, invalidateTrackedRangesInElement} from "./trackedRange";
-import {areProtylePluginExtensionsEnabled} from "../runtimeCapabilities";
+import {areProtylePluginExtensionsEnabled, ignoresProtyleEditLock} from "../runtimeCapabilities";
 import {updateBackgroundActions} from "../header/backgroundActions";
 import {recordRestoredSpellcheckFocus} from "./spellcheckFocus";
 import {applyPublishFoldStates} from "./viewFold";
@@ -116,7 +121,7 @@ export const onGet = (options: {
 
     if (options.data.data.eof && !options.scrollAttr) {
         if (options.action.includes(Constants.CB_GET_BEFORE)) {
-            options.protyle.wysiwyg.element.firstElementChild.setAttribute("data-eof", "1");
+            markDocumentBoundaryLoaded(options.protyle.wysiwyg.element, "before");
         } else {
             options.protyle.wysiwyg.element.lastElementChild.setAttribute("data-eof", "2");
         }
@@ -333,6 +338,7 @@ const setHTML = (options: {
                     removeElement = removeElement.nextElementSibling as HTMLElement;
                 }
                 if (removeElements.length > 0) {
+                    updateDocumentTopEof(protyle.wysiwyg.element, false);
                     const lastRemoveTop = removeElement.getBoundingClientRect().top;
                     removeElements.forEach(item => {
                         invalidateTrackedRangesInElement(protyle, item);
@@ -381,6 +387,7 @@ const setHTML = (options: {
             invalidateTrackedRanges(protyle);
             disposeCustomBlocksInElement(protyle.wysiwyg.element);
             protyle.wysiwyg.element.innerHTML = options.content;
+            updateDocumentTopEof(protyle.wysiwyg.element);
             // 设置 innerHTML 会导致浏览器将 scrollTop 重置为 0，此处立即恢复以避免页面跳转到开头
             // https://github.com/siyuan-note/siyuan/issues/17886
             if (options.scrollAttr && typeof options.scrollAttr.scrollTop === "number") {
@@ -391,9 +398,11 @@ const setHTML = (options: {
 
         void applyPublishFoldStates(protyle);
         if (options.eof) {
-            const eofElement = options.action.includes(Constants.CB_GET_BEFORE) ?
-                protyle.wysiwyg.element.firstElementChild : protyle.wysiwyg.element.lastElementChild;
-            eofElement?.setAttribute("data-eof", options.action.includes(Constants.CB_GET_BEFORE) ? "1" : "2");
+            if (options.action.includes(Constants.CB_GET_BEFORE)) {
+                markDocumentBoundaryLoaded(protyle.wysiwyg.element, "before");
+            } else {
+                protyle.wysiwyg.element.lastElementChild?.setAttribute("data-eof", "2");
+            }
         }
         updateDocumentBottomEof(protyle.wysiwyg.element);
 
@@ -461,7 +470,7 @@ const setHTML = (options: {
                 protyle.breadcrumb.element.nextElementSibling.textContent = "";
             }
             if (protyle.element.hasAttribute("disabled-forever")) {
-                if (protyle.wysiwyg.element.getAttribute(Constants.CUSTOM_SY_READONLY) !== "true") {
+                if (ignoresProtyleEditLock(protyle) || protyle.wysiwyg.element.getAttribute(Constants.CUSTOM_SY_READONLY) !== "true") {
                     protyle.disabled = false;
                 }
                 protyle.element.removeAttribute("disabled-forever");
@@ -595,6 +604,8 @@ export const disabledProtyle = (protyle: IProtyle) => {
         protyle.background.element.classList.remove("protyle-background--enable");
     }
     disabledWYSIWYG(protyle.wysiwyg.element);
+    // 点击只读正文时让滚动容器获得焦点，以便使用浏览器的键盘滚动。
+    protyle.contentElement.tabIndex = -1;
     // 搜索预览的只读正文无法持有焦点，交由可聚焦容器维持快捷键上下文。
     if (hadFocus && protyle.element.hasAttribute("tabindex") &&
         !protyle.element.contains(document.activeElement)) {
@@ -632,6 +643,7 @@ export const enableProtyle = (protyle: IProtyle) => {
     }
     /// #endif
     protyle.disabled = false;
+    protyle.contentElement.removeAttribute("tabindex");
     if (wasDisabled) {
         protyle.wysiwyg.tableControl?.clear();
         protyle.wysiwyg.element.querySelectorAll(".table__select").forEach(item => item.removeAttribute("style"));
@@ -870,16 +882,14 @@ const focusElementById = (protyle: IProtyle, action: string[], scrollAttr?: IScr
 };
 
 export const setReadonlyByConfig = (protyle: IProtyle, updateReadonly: boolean) => {
-    let readOnly = window.siyuan.config.readonly ? "true" : "false";
-    if (!updateReadonly) {
-        readOnly = protyle.disabled ? "true" : "false";
-    } else if (readOnly === "false") {
-        readOnly = window.siyuan.config.editor.readOnly ? "true" : "false";
-        if (readOnly === "false") {
-            readOnly = protyle.wysiwyg.element.getAttribute(Constants.CUSTOM_SY_READONLY);
-        }
+    const config = window.siyuan.config;
+    let readOnly = updateReadonly ? config.readonly : protyle.disabled;
+    if (ignoresProtyleEditLock(protyle)) {
+        readOnly ||= config.readonly;
+    } else if (updateReadonly) {
+        readOnly ||= config.editor.readOnly || protyle.wysiwyg.element.getAttribute(Constants.CUSTOM_SY_READONLY) === "true";
     }
-    if (readOnly === "true") {
+    if (readOnly) {
         disabledProtyle(protyle);
     } else {
         enableProtyle(protyle);
